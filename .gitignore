@@ -1,0 +1,26 @@
+# Ambiente
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# Dados — nunca versionar os arquivos da RFB
+etl/downloads/
+etl/extraidos/
+*.zip
+*.csv
+*.txt.gz
+
+# IDE
+.vscode/
+.idea/
+*.suo
