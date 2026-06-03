@@ -12,6 +12,11 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ConsumoModule } from './modules/consumo/consumo.module';
 import { EtlModule } from './modules/etl/etl.module';
 import { HealthModule } from './modules/health/health.module';
+import { PlanosModule } from './modules/planos/planos.module';
+import { ClientesModule } from './modules/clientes/clientes.module';
+import { AssinaturasModule } from './modules/assinaturas/assinaturas.module';
+import { FaturasModule } from './modules/faturas/faturas.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -33,17 +38,27 @@ import { HealthModule } from './modules/health/health.module';
 
     ScheduleModule.forRoot(),
 
-    // 3 req/min para plano gratuito (guard por token sobrescreve para pagos)
+    // Rate limit padrão para plano gratuito — AuthGuard sobrescreve para tokens pagos
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 3 }]),
 
+    // Infra
+    AdminModule,
+    AuthModule,
+
+    // API de dados
     CnpjModule,
     CnpjRaizModule,
     PesquisaModule,
     GeocodeModule,
-    AuthModule,
     ConsumoModule,
     EtlModule,
     HealthModule,
+
+    // Plataforma comercial
+    PlanosModule,
+    ClientesModule,
+    AssinaturasModule,
+    FaturasModule,
   ],
 })
 export class AppModule {}
