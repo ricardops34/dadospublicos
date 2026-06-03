@@ -1,50 +1,74 @@
-# RFB Data Service — Dados Públicos CNPJ
+# RFB Data Service — API de Dados Públicos CNPJ
 
-Serviço independente que consome a API **cnpj.ws** e os dados públicos da Receita Federal
-para oferecer **prospecção de clientes** e **enriquecimento de CNPJ** ao CRM Visão 360.
+Serviço REST completo que processa os dados públicos da **Receita Federal do Brasil**
+e os disponibiliza via API — similar ao [cnpj.ws](https://www.cnpj.ws), porém **self-hosted e open-source**.
 
 ---
 
-## Arquitetura
+## Visão do produto
 
 ```
-[cnpj.ws API]          ← busca/enriquecimento individual
-      │
-      ▼
-[RFB Data Service]     ← NestJS 11 / Node 20
-      │  cache + filtros avançados
-      ▼
-[PostgreSQL 16]        ← banco dedicado (dados_rfb)
-      │
-      ▼
-[CRM Visão 360]        ← consome via API REST
+[Receita Federal — dados.gov.br]   Fontes estaduais (Sintegra)
+          │  ETL mensal                     │
+          └──────────────┬──────────────────┘
+                         ▼
+              [PostgreSQL 16 — schema rfb]
+                         │
+                         ▼
+              [API NestJS — RFB Data Service]
+                         │
+              ┌──────────┼──────────┐
+              ▼          ▼          ▼
+           [CRM]   [Sistemas]  [Público]
+        Visão 360   próprios   (planos)
 ```
 
 ---
 
-## Fonte de dados
+## Funcionalidades (espelho do cnpj.ws)
 
-| Fonte | Uso | Plano |
-|---|---|---|
-| **cnpj.ws** | Lookup individual, enriquecimento, filtros avançados | Gratuito (3 req/min) → Pago (2000 req/min) |
-| **RFB bulk** (opcional) | Carga completa para prospecção offline | Download mensal ~4,7 GB compactado |
-
-> Para prospecção em escala (centenas de leads) o plano pago do cnpj.ws ou a carga bulk da RFB
-> são necessários. O plano gratuito cobre enriquecimento pontual e demonstração.
+| Funcionalidade | Gratuito | Básico | Premium |
+|---|:---:|:---:|:---:|
+| Consulta CNPJ individual | ✅ | ✅ | ✅ |
+| Dados de estabelecimento completo | ✅ | ✅ | ✅ |
+| Dados de sócios | ✅ | ✅ | ✅ |
+| Simples Nacional / MEI | ✅ | ✅ | ✅ |
+| Filiais por CNPJ raiz | ❌ | ✅ | ✅ |
+| Inscrições estaduais | ❌ | ✅ | ✅ |
+| Validação Suframa | ❌ | ✅ | ✅ |
+| Regimes tributários | ❌ | ❌ | ✅ |
+| Pesquisa avançada (18 filtros) | ❌ | ❌ | ✅ |
+| Paginação por cursor | ❌ | ❌ | ✅ |
+| Monitoramento de consumo | ❌ | ✅ | ✅ |
+| Rate limit | 3 req/min | 2000 req/min | 2000 req/min |
 
 ---
 
-## Stack
+## Endpoints
 
-| Camada | Tecnologia | Igual ao CRM? |
-|---|---|---|
-| API | NestJS 11 | ✅ |
-| Linguagem | TypeScript 5 | ✅ |
-| Banco | TypeORM 0.3 + PostgreSQL 16 | ✅ |
-| Runtime | Node.js 20 | ✅ |
-| Variáveis | dotenv / @nestjs/config | ✅ |
-| Geocodificação | ViaCEP + Nominatim (OSM) | — |
-| Mapa | Leaflet.js (consumido pelo CRM) | — |
+| Método | Rota | Auth | Plano mínimo |
+|---|---|---|---|
+| GET | `/cnpj/:cnpj` | Nenhuma | Gratuito |
+| GET | `/cnpj-raiz/:cnpj_raiz` | Token | Básico |
+| GET | `/v2/pesquisa` | Token | Premium |
+| POST | `/suframa` | Token | Básico |
+| GET | `/consumo` | Token | Básico |
+| GET | `/geocode/cep/:cep` | Token | Básico |
+| GET | `/mapa` | Token | Premium |
+| GET | `/health` | Nenhuma | — |
+
+---
+
+## Stack — mesma do CRM Visão 360
+
+| Camada | Tecnologia |
+|---|---|
+| API | NestJS 11 |
+| Linguagem | TypeScript 5 |
+| Banco | TypeORM 0.3 + PostgreSQL 16 |
+| ETL | Python 3.11 |
+| Runtime | Node.js 20 |
+| Cache geocode | ViaCEP + Nominatim (OSM) |
 
 ---
 
@@ -54,35 +78,32 @@ para oferecer **prospecção de clientes** e **enriquecimento de CNPJ** ao CRM V
 dadospublicos/
 ├── src/
 │   ├── modules/
-│   │   ├── cnpj/          # Lookup e enriquecimento via cnpj.ws
-│   │   ├── prospeccao/    # Busca e filtros de prospecção
-│   │   ├── geocode/       # CEP → lat/lng (ViaCEP + Nominatim)
-│   │   └── saude/         # Health check
-│   ├── entities/          # TypeORM entities
-│   ├── database/          # Config DataSource
+│   │   ├── cnpj/           # GET /cnpj/:cnpj
+│   │   ├── cnpj-raiz/      # GET /cnpj-raiz/:cnpj_raiz
+│   │   ├── pesquisa/       # GET /v2/pesquisa (Premium)
+│   │   ├── suframa/        # POST /suframa
+│   │   ├── consumo/        # GET /consumo
+│   │   ├── geocode/        # CEP → lat/lng
+│   │   ├── mapa/           # GeoJSON para Leaflet
+│   │   └── auth/           # Tokens e planos
+│   ├── entities/
+│   ├── database/
 │   └── main.ts
+├── etl/                    # Scripts Python (carga RFB)
+│   ├── etl_rfb.py
+│   ├── etl_sintegra.py
+│   └── requirements.txt
 ├── docs/
-│   ├── database.md
-│   ├── api.md
-│   ├── mapa-prospeccao.md
-│   └── integracao-crm.md
+│   ├── database.md         # Schema do banco
+│   ├── api.md              # Endpoints detalhados
+│   ├── etl.md              # Pipeline de carga
+│   ├── planos.md           # Planos e rate limiting
+│   ├── mapa-prospeccao.md  # Módulo de mapa Leaflet
+│   └── integracao.md       # Integração com CRM
 ├── .env.example
 ├── .gitignore
-├── package.json
 └── README.md
 ```
-
----
-
-## Endpoints principais
-
-| Método | Rota | Descrição |
-|---|---|---|
-| GET | `/cnpj/:cnpj` | Retorna cartão CNPJ completo via cnpj.ws |
-| GET | `/prospeccao/busca` | Filtra empresas por CNAE/UF/município/porte |
-| GET | `/prospeccao/mapa` | Retorna GeoJSON para Leaflet |
-| POST | `/prospeccao/exportar` | Exporta lista filtrada (CSV/JSON) |
-| GET | `/geocode/cep/:cep` | CEP → lat/lng (com cache) |
 
 ---
 
@@ -91,10 +112,18 @@ dadospublicos/
 ```bash
 git clone https://github.com/ricardops34/dadospublicos.git
 cd dadospublicos
-cp .env.example .env   # preencher CNPJWS_TOKEN e credenciais do banco
-npm install
-npm run start:dev
+
+# Configurar
+cp .env.example .env
+
+# ETL — carga inicial (requer ~25 GB disco, demora horas)
+cd etl && pip install -r requirements.txt && python etl_rfb.py
+
+# API
+npm install && npm run start:dev
 ```
+
+> **Requisito de disco:** 25 GB livres para ETL inicial.
 
 ---
 
@@ -102,5 +131,16 @@ npm run start:dev
 
 - [Banco de dados](docs/database.md)
 - [API — endpoints detalhados](docs/api.md)
+- [ETL — pipeline de carga RFB](docs/etl.md)
+- [Planos e rate limiting](docs/planos.md)
 - [Mapa de prospecção](docs/mapa-prospeccao.md)
-- [Integração com o CRM](docs/integracao-crm.md)
+- [Integração com o CRM](docs/integracao.md)
+
+---
+
+## Referências
+
+- Fonte de dados: https://dados.gov.br/dados/conjuntos-dados/cadastro-nacional-da-pessoa-juridica---cnpj
+- Metadados RFB: https://www.gov.br/receitafederal/dados/cnpj-metadados.pdf
+- ETL de referência: https://github.com/aphonsoar/Receita_Federal_do_Brasil_-_Dados_Publicos_CNPJ
+- Produto de referência: https://www.cnpj.ws
