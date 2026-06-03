@@ -24,8 +24,7 @@ services:
     container_name: rfb_api
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     environment:
       PORT: 3001
       DB_HOST: postgres
