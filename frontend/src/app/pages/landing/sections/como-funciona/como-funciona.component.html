@@ -1,0 +1,34 @@
+<section class="rfb-cf" id="como-funciona">
+  <div class="rfb-cf__container">
+
+    <div class="rfb-section-header">
+      <h2>Como funciona</h2>
+      <p>Do cadastro ao primeiro retorno em minutos</p>
+    </div>
+
+    <div class="rfb-cf__passos">
+      <div class="rfb-cf__passo" *ngFor="let p of passos; let i = index">
+        <div class="rfb-cf__num">{{ i + 1 }}</div>
+        <span class="rfb-cf__icone" [ngClass]="p.icone"></span>
+        <h3>{{ p.titulo }}</h3>
+        <p>{{ p.descricao }}</p>
+      </div>
+    </div>
+
+    <div class="rfb-section-header" style="margin-top: 64px">
+      <h2>Fontes de dados</h2>
+      <p>Informações oficiais, atualizadas mensalmente</p>
+    </div>
+
+    <div class="rfb-cf__fontes">
+      <div class="rfb-cf__fonte" *ngFor="let f of fontes">
+        <span class="rfb-cf__fonte-icone" [ngClass]="f.icone"></span>
+        <div>
+          <strong>{{ f.nome }}</strong>
+          <p>{{ f.descricao }}</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

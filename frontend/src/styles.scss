@@ -1,0 +1,18 @@
+/* PO-UI styles são carregados via angular.json */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-family-theme, 'Inter', sans-serif);
+  background: #f5f5f5;
+}
+
+// ── Variáveis de tema ──────────────────────────────────────────
+:root {
+  --rfb-primary:   #1a56db;   // azul principal
+  --rfb-secondary: #0e9f6e;   // verde dados/sucesso
+  --rfb-dark:      #111827;
+  --rfb-gray:      #6b7280;
+  --rfb-light:     #f9fafb;
+}

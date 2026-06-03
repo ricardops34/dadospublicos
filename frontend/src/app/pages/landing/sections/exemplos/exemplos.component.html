@@ -1,0 +1,59 @@
+<section class="rfb-exemplos" id="exemplos">
+  <div class="rfb-exemplos__container">
+
+    <div class="rfb-section-header">
+      <h2>Exemplos de uso</h2>
+      <p>Integre em qualquer linguagem em minutos</p>
+    </div>
+
+    <!-- Tabs de linguagem -->
+    <div class="rfb-exemplos__tabs" role="tablist">
+      <button
+        *ngFor="let ex of exemplos; let i = index"
+        class="rfb-exemplos__tab"
+        [class.rfb-exemplos__tab--ativo]="abaAtiva === i"
+        (click)="selecionarAba(i)"
+        [attr.aria-selected]="abaAtiva === i"
+        role="tab">
+        <span [ngClass]="ex.icone"></span>
+        {{ ex.linguagem }}
+      </button>
+    </div>
+
+    <!-- Bloco de código -->
+    <div class="rfb-exemplos__editor">
+      <div class="rfb-exemplos__editor-bar">
+        <div class="rfb-exemplos__dot rfb-exemplos__dot--red"></div>
+        <div class="rfb-exemplos__dot rfb-exemplos__dot--yellow"></div>
+        <div class="rfb-exemplos__dot rfb-exemplos__dot--green"></div>
+        <span class="rfb-exemplos__linguagem-label">
+          <span [ngClass]="exemplos[abaAtiva].icone"></span>
+          {{ exemplos[abaAtiva].linguagem }}
+        </span>
+        <button class="rfb-exemplos__copiar" (click)="copiar()" title="Copiar código">
+          <span class="an an-copy"></span>
+          {{ copiado ? 'Copiado!' : 'Copiar' }}
+        </button>
+      </div>
+      <pre class="rfb-exemplos__codigo"><code>{{ exemplos[abaAtiva].codigo }}</code></pre>
+    </div>
+
+    <!-- CTA -->
+    <div class="rfb-exemplos__cta">
+      <po-button
+        p-label="Ver documentação completa"
+        p-kind="secondary"
+        p-icon="an an-book-open"
+        p-url="/docs"
+        p-target="_blank">
+      </po-button>
+      <po-button
+        p-label="Começar grátis agora"
+        p-kind="primary"
+        p-icon="an an-rocket-launch"
+        p-url="/cliente/cadastro">
+      </po-button>
+    </div>
+
+  </div>
+</section>

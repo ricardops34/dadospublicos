@@ -1,0 +1,74 @@
+<section class="rfb-planos" id="planos">
+  <div class="rfb-planos__container">
+
+    <div class="rfb-section-header">
+      <h2>Planos e preços</h2>
+      <p>Comece grátis, escale conforme sua necessidade</p>
+    </div>
+
+    <div class="rfb-planos__grid">
+      <div
+        class="rfb-planos__card"
+        [class.rfb-planos__card--destaque]="p.destaque"
+        *ngFor="let p of planos">
+
+        <div class="rfb-planos__destaque-badge" *ngIf="p.destaque">Mais popular</div>
+
+        <div class="rfb-planos__header">
+          <h3 class="rfb-planos__nome">{{ p.nome }}</h3>
+          <p class="rfb-planos__desc">{{ p.descricao }}</p>
+          <div class="rfb-planos__preco">
+            <span class="rfb-planos__valor">{{ formatarPreco(p.precoMensal) }}</span>
+            <span class="rfb-planos__periodo" *ngIf="p.precoMensal > 0">/mês</span>
+          </div>
+        </div>
+
+        <ul class="rfb-planos__features">
+          <li>
+            <span class="an an-gauge rfb-planos__fi"></span>
+            <strong>{{ p.rateLimitPorMinuto }} req/min</strong>
+          </li>
+          <li>
+            <span class="an an-calendar-blank rfb-planos__fi"></span>
+            {{ p.limiteMensal ? (p.limiteMensal | number) + ' req/mês' : 'Ilimitado*' }}
+          </li>
+          <li [class.rfb-planos__feat--off]="!p.acessoCnpj">
+            <span class="an rfb-planos__fi" [ngClass]="p.acessoCnpj ? 'an-check-circle' : 'an-x-circle'"></span>
+            Consulta CNPJ
+          </li>
+          <li [class.rfb-planos__feat--off]="!p.acessoCnpjRaiz">
+            <span class="an rfb-planos__fi" [ngClass]="p.acessoCnpjRaiz ? 'an-check-circle' : 'an-x-circle'"></span>
+            Filiais (CNPJ raiz)
+          </li>
+          <li [class.rfb-planos__feat--off]="!p.acessoGeocode">
+            <span class="an rfb-planos__fi" [ngClass]="p.acessoGeocode ? 'an-check-circle' : 'an-x-circle'"></span>
+            Geocodificação de CEP
+          </li>
+          <li [class.rfb-planos__feat--off]="!p.acessoMapa">
+            <span class="an rfb-planos__fi" [ngClass]="p.acessoMapa ? 'an-check-circle' : 'an-x-circle'"></span>
+            Mapa de prospecção
+          </li>
+          <li [class.rfb-planos__feat--off]="!p.acessoPesquisa">
+            <span class="an rfb-planos__fi" [ngClass]="p.acessoPesquisa ? 'an-check-circle' : 'an-x-circle'"></span>
+            Pesquisa avançada (14 filtros)
+          </li>
+        </ul>
+
+        <po-button
+          [p-label]="p.precoMensal === 0 ? 'Começar grátis' : 'Assinar'"
+          [p-kind]="p.destaque ? 'primary' : 'secondary'"
+          p-size="large"
+          class="rfb-planos__cta"
+          p-url="/cliente/cadastro">
+        </po-button>
+
+      </div>
+    </div>
+
+    <p class="rfb-planos__nota">
+      * Plano gratuito limitado a 3 req/min por IP.
+      Após limite mensal dos planos pagos, rate cai para 4 req/min até o próximo ciclo.
+    </p>
+
+  </div>
+</section>

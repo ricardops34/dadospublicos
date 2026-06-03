@@ -1,0 +1,138 @@
+.rfb-exemplos {
+  padding: 80px 24px;
+  background: var(--rfb-light);
+
+  &__container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  // ── Tabs ──────────────────────────────────────────
+  &__tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0;
+  }
+
+  &__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    color: var(--rfb-gray);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    border-radius: 8px 8px 0 0;
+    transition: color .2s, border-color .2s, background .2s;
+
+    &:hover {
+      color: var(--rfb-primary);
+      background: #eff6ff;
+    }
+
+    &--ativo {
+      color: var(--rfb-primary);
+      border-bottom-color: var(--rfb-primary);
+      background: #fff;
+    }
+
+    span { font-size: 1rem; }
+  }
+
+  // ── Editor ────────────────────────────────────────
+  &__editor {
+    background: #1e293b;
+    border-radius: 0 12px 12px 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .15);
+  }
+
+  &__editor-bar {
+    background: #334155;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+
+    &--red    { background: #ef4444; }
+    &--yellow { background: #f59e0b; }
+    &--green  { background: #22c55e; }
+  }
+
+  &__linguagem-label {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+  }
+
+  &__copiar {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, .08);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    margin-left: auto;
+
+    &:hover {
+      background: rgba(255, 255, 255, .16);
+      color: #e2e8f0;
+    }
+  }
+
+  &__codigo {
+    margin: 0;
+    padding: 24px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #a5f3fc;
+    overflow-x: auto;
+    min-height: 140px;
+
+    code { color: #7dd3fc; }
+  }
+
+  // ── CTA ───────────────────────────────────────────
+  &__cta {
+    margin-top: 40px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+// Compartilhado — rfb-section-header aparece em vários módulos
+.rfb-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; margin: 0 0 8px; color: var(--rfb-dark); }
+  p  { color: var(--rfb-gray); margin: 0; }
+}

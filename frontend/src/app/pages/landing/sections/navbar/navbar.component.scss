@@ -1,0 +1,65 @@
+.rfb-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--rfb-dark);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  &__logo-icon {
+    font-size: 1.5rem;
+    color: var(--rfb-primary);
+  }
+
+  &__logo-text {
+    letter-spacing: -0.5px;
+    strong { color: var(--rfb-primary); }
+  }
+
+  &__links {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+
+    a {
+      text-decoration: none;
+      color: var(--rfb-gray);
+      font-size: 0.9rem;
+      transition: color .2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      &:hover { color: var(--rfb-primary); }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+}

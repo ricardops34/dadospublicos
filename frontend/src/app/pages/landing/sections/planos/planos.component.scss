@@ -1,0 +1,158 @@
+.rfb-planos {
+  padding: 80px 24px;
+  background: var(--rfb-light);
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  // ── Grid de cards ────────────────────────────────
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    align-items: start;
+
+    @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 600px)  { grid-template-columns: 1fr; }
+  }
+
+  // ── Card ─────────────────────────────────────────
+  &__card {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    border: 2px solid #e5e7eb;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    transition: box-shadow .25s, border-color .25s, transform .25s;
+
+    &:hover {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .08);
+      transform: translateY(-2px);
+    }
+
+    // Card em destaque
+    &--destaque {
+      border-color: var(--rfb-primary);
+      box-shadow: 0 8px 40px rgba(26, 86, 219, .18);
+      transform: scale(1.03);
+      background: linear-gradient(180deg, #eff6ff 0%, #fff 60%);
+
+      &:hover { transform: scale(1.03) translateY(-2px); }
+    }
+  }
+
+  // Badge "Mais popular"
+  &__destaque-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--rfb-primary);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 14px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+
+  // ── Header do card ───────────────────────────────
+  &__header { display: flex; flex-direction: column; gap: 6px; }
+
+  &__nome {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--rfb-dark);
+    margin: 0;
+  }
+
+  &__desc {
+    font-size: 0.8rem;
+    color: var(--rfb-gray);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  &__preco {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  &__valor {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--rfb-dark);
+    line-height: 1;
+  }
+
+  &__periodo {
+    font-size: 0.8rem;
+    color: var(--rfb-gray);
+  }
+
+  // ── Lista de features ────────────────────────────
+  &__features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: var(--rfb-dark);
+      line-height: 1.4;
+    }
+  }
+
+  // Ícone de feature
+  &__fi {
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: var(--rfb-secondary);
+  }
+
+  // Feature desabilitada
+  &__feat--off {
+    color: #9ca3af;
+
+    .rfb-planos__fi { color: #d1d5db; }
+  }
+
+  // ── CTA ──────────────────────────────────────────
+  &__cta {
+    width: 100%;
+    display: block;
+  }
+
+  // ── Nota de rodapé ───────────────────────────────
+  &__nota {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 0.8rem;
+    color: var(--rfb-gray);
+  }
+}
+
+// ── Cabeçalho de seção (compartilhado) ───────────────
+.rfb-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; margin: 0 0 8px; color: var(--rfb-dark); }
+  p  { color: var(--rfb-gray); margin: 0; }
+}

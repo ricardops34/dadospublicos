@@ -1,0 +1,85 @@
+<footer class="rfb-footer">
+  <div class="rfb-footer__container">
+
+    <!-- Topo: marca + CTA -->
+    <div class="rfb-footer__topo">
+      <div class="rfb-footer__marca">
+        <span class="rfb-footer__logo">
+          <span class="an an-database-duotone"></span>
+          RFB Data Service
+        </span>
+        <p class="rfb-footer__tagline">
+          API de dados públicos de CNPJ.<br>
+          Self-hosted, rápida e confiável.
+        </p>
+        <div class="rfb-footer__social">
+          <a href="https://github.com/ricardops34/dadospublicos"
+             target="_blank"
+             rel="noopener"
+             class="rfb-footer__social-btn"
+             title="GitHub">
+            <span class="an an-github-logo"></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Colunas de links -->
+      <div class="rfb-footer__colunas">
+        <div class="rfb-footer__coluna" *ngFor="let grupo of links">
+          <h4 class="rfb-footer__col-titulo">{{ grupo.titulo }}</h4>
+          <ul class="rfb-footer__col-lista">
+            <li *ngFor="let item of grupo.itens">
+              <!-- Link externo -->
+              <a *ngIf="item.href && item.externo"
+                 [href]="item.href"
+                 target="_blank"
+                 rel="noopener"
+                 class="rfb-footer__link">
+                {{ item.label }}
+                <span class="an an-arrow-square-out rfb-footer__ext"></span>
+              </a>
+              <!-- Âncora interna -->
+              <a *ngIf="item.href && !item.externo"
+                 [href]="item.href"
+                 class="rfb-footer__link">
+                {{ item.label }}
+              </a>
+              <!-- Rota Angular -->
+              <a *ngIf="item.rota"
+                 [routerLink]="item.rota"
+                 class="rfb-footer__link">
+                {{ item.label }}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Linha divisória -->
+    <hr class="rfb-footer__divider">
+
+    <!-- Rodapé inferior -->
+    <div class="rfb-footer__base">
+      <p class="rfb-footer__copy">
+        © {{ anoAtual }} RFB Data Service. Dados públicos da
+        <a href="https://www.gov.br/receitafederal" target="_blank" rel="noopener">Receita Federal do Brasil</a>.
+      </p>
+      <div class="rfb-footer__badges">
+        <span class="rfb-footer__badge">
+          <span class="an an-lock-simple"></span>
+          HTTPS
+        </span>
+        <span class="rfb-footer__badge">
+          <span class="an an-arrow-clockwise"></span>
+          Atualização mensal
+        </span>
+        <span class="rfb-footer__badge">
+          <span class="an an-code"></span>
+          Open source
+        </span>
+      </div>
+    </div>
+
+  </div>
+</footer>

@@ -1,0 +1,104 @@
+.rfb-hero {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  padding: 80px 24px;
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #dbeafe;
+    color: var(--rfb-primary);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  &__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    color: var(--rfb-dark);
+    line-height: 1.1;
+    margin: 0 0 20px;
+
+    &--highlight { color: var(--rfb-primary); }
+  }
+
+  &__subtitle {
+    font-size: 1.1rem;
+    color: var(--rfb-gray);
+    line-height: 1.7;
+    margin: 0 0 32px;
+    max-width: 480px;
+  }
+
+  &__ctas {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  &__stats {
+    display: flex;
+    gap: 32px;
+
+    strong { display: block; font-size: 1.5rem; font-weight: 800; color: var(--rfb-dark); }
+    span   { font-size: 0.8rem; color: var(--rfb-gray); }
+  }
+
+  // ── Preview JSON ──────────────────────────────
+
+  &__preview {
+    background: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  }
+
+  &__preview-bar {
+    background: #334155;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__preview-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    &--red    { background: #ef4444; }
+    &--yellow { background: #f59e0b; }
+    &--green  { background: #22c55e; }
+  }
+
+  &__preview-url {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-left: 8px;
+  }
+
+  &__preview-code {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #7dd3fc;
+    overflow-x: auto;
+
+    code { color: #a5f3fc; }
+  }
+}

@@ -1,0 +1,70 @@
+<section class="rfb-hero">
+  <div class="rfb-hero__container">
+
+    <!-- Esquerda: texto -->
+    <div class="rfb-hero__text">
+      <span class="rfb-hero__badge">
+        <span class="an an-database-duotone"></span>
+        Dados da Receita Federal em JSON
+      </span>
+
+      <h1 class="rfb-hero__title">
+        API de <span class="rfb-hero__title--highlight">CNPJ</span><br>
+        simples e rápida
+      </h1>
+
+      <p class="rfb-hero__subtitle">
+        Consulte dados de qualquer empresa brasileira em milissegundos.
+        Endereço, CNAE, sócios, Simples Nacional e muito mais —
+        direto da Receita Federal, em formato JSON.
+      </p>
+
+      <div class="rfb-hero__ctas">
+        <po-button
+          p-label="Começar grátis"
+          p-kind="primary"
+          p-size="large"
+          p-icon="an an-rocket-launch"
+        p-url="/cliente/cadastro">
+        </po-button>
+        <po-button
+          p-label="Ver documentação"
+          p-kind="secondary"
+          p-size="large"
+          p-icon="an an-book-open"
+          p-url="/docs"
+          p-target="_blank">
+        </po-button>
+      </div>
+
+      <div class="rfb-hero__stats">
+        <div class="rfb-hero__stat">
+          <strong>50M+</strong>
+          <span>Empresas</span>
+        </div>
+        <div class="rfb-hero__stat">
+          <strong>&lt; 50ms</strong>
+          <span>Resposta média</span>
+        </div>
+        <div class="rfb-hero__stat">
+          <strong>99.9%</strong>
+          <span>Disponibilidade</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direita: preview da resposta JSON -->
+    <div class="rfb-hero__preview">
+      <div class="rfb-hero__preview-bar">
+        <div class="rfb-hero__preview-dot rfb-hero__preview-dot--red"></div>
+        <div class="rfb-hero__preview-dot rfb-hero__preview-dot--yellow"></div>
+        <div class="rfb-hero__preview-dot rfb-hero__preview-dot--green"></div>
+        <span class="rfb-hero__preview-url">
+          GET /cnpj/{{ cnpjExemplo }}
+        </span>
+      </div>
+      <pre class="rfb-hero__preview-code"><code>{{ respostaExemplo }}</code></pre>
+    </div>
+
+  </div>
+</section>
