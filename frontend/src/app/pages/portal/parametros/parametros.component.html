@@ -25,17 +25,25 @@
       name="chave"
       p-label="Chave"
       [(ngModel)]="currentItem.chave"
-      [p-disabled]="isEditing"
+      [p-disabled]="isEditing ? 'true' : 'false'"
       p-required>
     </po-input>
 
     <po-input
+      *ngIf="currentItem.chave !== 'SMTP_PASS'"
       name="valor"
       p-label="Valor"
       [(ngModel)]="currentItem.valor"
-      [p-password]="currentItem.chave === 'SMTP_PASS'"
       p-required>
     </po-input>
+
+    <po-password
+      *ngIf="currentItem.chave === 'SMTP_PASS'"
+      name="valorSenha"
+      p-label="Valor"
+      [(ngModel)]="currentItem.valor"
+      p-required>
+    </po-password>
 
     <po-input
       name="descricao"
