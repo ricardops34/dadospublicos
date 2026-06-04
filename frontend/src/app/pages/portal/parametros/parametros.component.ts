@@ -1,7 +1,8 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { PoModalAction, PoModalComponent, PoNotificationService, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
+import { PoModalAction, PoModalComponent, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
+import { NotifService } from '../../../services/notif.service';
 
 @Component({
   selector: 'app-parametros',
@@ -38,7 +39,7 @@ export class ParametrosComponent implements OnInit {
     label: 'Cancelar'
   };
 
-  constructor(private http: HttpClient, private poNotification: PoNotificationService) {}
+  constructor(private http: HttpClient, private notif: NotifService) {}
 
   ngOnInit() {
     this.loadData();
@@ -59,7 +60,7 @@ export class ParametrosComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.poNotification.error('Erro ao carregar parâmetros');
+        this.notif.error('Erro ao carregar parâmetros');
         this.loading = false;
       }
     });
@@ -82,16 +83,16 @@ export class ParametrosComponent implements OnInit {
 
   save() {
     if (!this.currentItem.chave) {
-      return this.poNotification.warning('A chave é obrigatória');
+      return this.notif.warning('A chave é obrigatória');
     }
     
     this.http.post(`${environment.apiUrl}/admin/parametros/${this.currentItem.chave}`, this.currentItem).subscribe({
       next: () => {
-        this.poNotification.success('Parâmetro salvo com sucesso!');
+        this.notif.success('Parâmetro salvo com sucesso!');
         this.modalEdit.close();
         this.loadData();
       },
-      error: () => this.poNotification.error('Erro ao salvar o parâmetro')
+      error: () => this.notif.error('Erro ao salvar o parâmetro')
     });
   }
 
@@ -99,10 +100,10 @@ export class ParametrosComponent implements OnInit {
     if (confirm(`Tem certeza que deseja excluir o parâmetro ${item.chave}?`)) {
       this.http.delete(`${environment.apiUrl}/admin/parametros/${item.chave}`).subscribe({
         next: () => {
-          this.poNotification.success('Parâmetro excluído!');
+          this.notif.success('Parâmetro excluído!');
           this.loadData();
         },
-        error: () => this.poNotification.error('Erro ao excluir parâmetro')
+        error: () => this.notif.error('Erro ao excluir parâmetro')
       });
     }
   }

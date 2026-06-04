@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
 
 import { CnpjModule } from './modules/cnpj/cnpj.module';
 import { CnpjRaizModule } from './modules/cnpj-raiz/cnpj-raiz.module';
@@ -23,6 +24,8 @@ import { AccessLogModule } from './modules/access-log/access-log.module';
 import { AccessLogMiddleware } from './modules/access-log/access-log.middleware';
 import { SuporteModule } from './modules/suporte/suporte.module';
 import { ParametrosModule } from './modules/parametros/parametros.module';
+import { ParametrosService } from './modules/parametros/parametros.service';
+import { InterPixModule } from './modules/inter-pix/inter-pix.module';
 
 @Module({
   imports: [
@@ -44,8 +47,19 @@ import { ParametrosModule } from './modules/parametros/parametros.module';
 
     ScheduleModule.forRoot(),
 
-    // Rate limit padrão para plano gratuito — AuthGuard sobrescreve para tokens pagos
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 3 }]),
+    // Rate limit padrão para plano gratuito — ApiRateLimitGuard customizado validará os tokens
+    ThrottlerModule.forRootAsync({
+      imports: [ParametrosModule],
+      inject: [ParametrosService],
+      useFactory: async (params: ParametrosService) => {
+        const host = await params.getValor('REDIS_HOST', 'localhost');
+        const port = await params.getValor('REDIS_PORT', '6379');
+        return {
+          throttlers: [{ ttl: 60000, limit: 3 }],
+          storage: new ThrottlerStorageRedisService(`redis://${host}:${port}`),
+        };
+      },
+    }),
 
     // Infra
     AdminModule,

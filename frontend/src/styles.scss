@@ -89,3 +89,37 @@ app-exemplos, app-como-funciona, app-footer, app-docs {
     }
   }
 }
+
+// ── Tema escuro: garante legibilidade nos inputs PO-UI ──────────────
+// PO-UI usa fundo branco próprio nos inputs. Em dark mode, body herda
+// color: #f1f5f9 (quase branco), tornando o texto invisível.
+// Forçamos cor escura dentro dos campos em qualquer contexto.
+[data-theme="escuro"] {
+  .po-input,
+  .po-input-container .po-input,
+  .po-field-container input,
+  .po-field-container textarea,
+  .po-select-button,
+  .po-input-icon-right input,
+  .po-password .po-input {
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+  }
+
+  // Labels e textos auxiliares dos campos
+  .po-field-label,
+  .po-input-label,
+  .po-field-container .po-label {
+    color: var(--rfb-gray) !important;
+  }
+
+  // Fundo do card de login/auth — mantém visual claro
+  .auth__card {
+    background: #ffffff !important;
+    color: #1e293b !important;
+  }
+  .auth__section h1 { color: #0f172a !important; }
+  .auth__sub,
+  .auth__card-footer,
+  .auth__footer { color: #64748b !important; }
+}

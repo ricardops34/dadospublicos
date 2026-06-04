@@ -1,5 +1,6 @@
+import { NotifService } from '../../../../services/notif.service';
 import { Component, OnInit } from '@angular/core';
-import { PoNotificationService, PoTableAction, PoTableColumn, PoSelectOption } from '@po-ui/ng-components';
+import { PoTableAction, PoTableColumn, PoSelectOption } from '@po-ui/ng-components';
 import { AdminService } from '../admin.service';
 
 @Component({
@@ -54,7 +55,7 @@ export class PortalAssinaturasComponent implements OnInit {
     },
   ];
 
-  constructor(private svc: AdminService, private notif: PoNotificationService) {}
+  constructor(private svc: AdminService, private notif: NotifService) {}
 
   ngOnInit() { this.carregar(); }
 

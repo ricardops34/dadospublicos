@@ -2,8 +2,15 @@
 </po-header>
 
 <div class="po-wrapper">
-  <po-menu [p-menus]="menuItems" [p-collapsed]="true" [p-automatic-toggle]="true" [p-filter]="true">
+  <po-menu
+    [p-menus]="menuItems"
+    [p-collapsed]="menuCollapsed"
+    [p-automatic-toggle]="true"
+    [p-filter]="true"
+    (p-toggle)="menuCollapsed = $event">
   </po-menu>
 
   <router-outlet></router-outlet>
 </div>
+
+<app-whatsapp-button></app-whatsapp-button>

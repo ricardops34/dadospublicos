@@ -1,7 +1,8 @@
+import { NotifService } from '../../../../services/notif.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
-import { PoNotificationService, PoTableColumn } from '@po-ui/ng-components';
+import { PoTableColumn } from '@po-ui/ng-components';
 
 interface Progresso {
   fase: string;
@@ -77,7 +78,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private notif: PoNotificationService,
+    private notif: NotifService,
   ) {}
 
   ngOnInit() {

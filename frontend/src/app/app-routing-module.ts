@@ -18,8 +18,8 @@ const routes: Routes = [
   // Login único
   { path: 'login', loadChildren: () => import('./pages/login/login.module').then((m) => m.LoginModule) },
 
-  // Cadastro público (mantido para link da landing)
-  { path: 'cliente/cadastro', loadChildren: () => import('./pages/cliente/cadastro/cliente-cadastro.module').then((m) => m.ClienteCadastroModule) },
+  // Cadastro — redireciona para a página unificada de auth com tab=cadastro
+  { path: 'cliente/cadastro', redirectTo: '/login?tab=cadastro', pathMatch: 'full' },
 
   // Portal unificado (admin + cliente — guarda apenas exige JWT válido)
   {

@@ -8,6 +8,15 @@ export class CreateClienteDto {
   @ApiPropertyOptional({ example: '12.345.678/0001-90' }) @IsOptional() @IsString() cnpj?: string;
   @ApiPropertyOptional()                      @IsOptional() @IsString() razaoSocial?: string;
   @ApiPropertyOptional()                      @IsOptional() @IsString() telefone?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() cep?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() logradouro?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() numero?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() complemento?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() bairro?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() municipio?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() uf?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() inscricaoEstadual?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() inscricaoMunicipal?: string;
 }
 
 export class LoginClienteDto {
@@ -15,9 +24,22 @@ export class LoginClienteDto {
   @ApiProperty() @IsString()  senha: string;
 }
 
+export class RecuperarSenhaDto {
+  @ApiProperty({ example: 'joao@empresa.com' }) @IsEmail() email: string;
+}
+
 export class UpdateClienteDto {
   @ApiPropertyOptional() @IsOptional() @IsString() nome?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() cnpj?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() razaoSocial?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() telefone?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() cep?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() logradouro?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() numero?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() complemento?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() bairro?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() municipio?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() uf?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() inscricaoEstadual?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() inscricaoMunicipal?: string;
 }

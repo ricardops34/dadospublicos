@@ -9,6 +9,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './portal-shell.component.html',
 })
 export class PortalShellComponent implements OnInit {
+  menuCollapsed = true;
   menuItems: PoMenuItem[] = [];
 
   headerBrand: PoHeaderBrand = {
@@ -47,8 +48,10 @@ export class PortalShellComponent implements OnInit {
     ]},
     { label: 'Configurações', icon: 'an an-gear', subItems: [
         { label: 'Parâmetros', link: '/portal/parametros' },
+        { label: 'Config. E-mail', link: '/portal/config-email' },
         { label: 'ETL / Sistema', link: '/portal/etl' }
-    ]}
+    ]},
+    { label: 'Sair', icon: 'an an-sign-out', action: () => this.sair(), type: 'danger' }
   ];
 
   private readonly MENUS_CLIENTE: PoMenuItem[] = [
@@ -58,6 +61,7 @@ export class PortalShellComponent implements OnInit {
     { label: 'Meu Token API',    icon: 'an an-key',          link: '/portal/meu-token' },
     { label: 'Consumo',          icon: 'an an-chart-bar',    link: '/portal/consumo' },
     { label: 'Faturas',          icon: 'an an-receipt',      link: '/portal/minhas-faturas' },
+    { label: 'Sair',             icon: 'an an-sign-out',     action: () => this.sair(), type: 'danger' }
   ];
 
   constructor(private auth: AuthService, private router: Router) {}
@@ -71,9 +75,7 @@ export class PortalShellComponent implements OnInit {
 
     if (perfil === 'admin') {
       this.headerActionsTools = [
-        { icon: 'an an-gear', action: () => console.log('Configurações') },
-        { icon: 'an an-squares-four', action: () => console.log('Apps') },
-        { icon: 'an an-chat-circle', action: () => console.log('Mensagens') }
+        { icon: 'an an-gear', tooltip: 'Configuração de E-mail', action: () => this.router.navigate(['/portal/config-email']) },
       ];
     }
   }

@@ -26,13 +26,13 @@ export class WhatsappButtonComponent implements OnInit, AfterViewChecked {
   atendente  = environment.whatsappAtendente;
   whatsappNumero = environment.whatsappNumero;
 
-  userData = { nome: '', telefone: '', email: '', mensagem: '' };
+  userData = { nome: '', email: '', whatsapp: '', mensagem: '' };
 
   private perguntas: Array<(nome?: string) => string> = [
-    (nome = '') => `Prazer, ${nome}! Qual o seu telefone de contato?`,
-    ()          => `Legal! E qual o seu melhor e-mail?`,
-    ()          => `Entendido. Por fim, como podemos te ajudar hoje?`,
-    ()          => `Obrigado! Suas informações foram enviadas com sucesso. Entraremos em contato em breve. 🚀`,
+    (nome = '') => `Seja bem vindo, ${nome}! Qual o seu e-mail?`,
+    ()          => `E qual o seu número de WhatsApp?`,
+    ()          => `Como posso te ajudar hoje?`,
+    ()          => `Sua solicitação foi enviada para o suporte, logo entraremos em contato.`,
   ];
 
   constructor(private http: HttpClient) {}
@@ -51,7 +51,7 @@ export class WhatsappButtonComponent implements OnInit, AfterViewChecked {
     });
 
     // Mensagem inicial padrão
-    this.mensagens = [{ texto: 'Olá! Sou a Beatriz. Como posso te chamar?', tipo: 'bot' }];
+    this.mensagens = [{ texto: 'Olá! Como posso te chamar?', tipo: 'bot' }];
   }
 
   ngAfterViewChecked() {
@@ -74,10 +74,10 @@ export class WhatsappButtonComponent implements OnInit, AfterViewChecked {
     this.mensagens.push({ texto, tipo: 'usuario' });
 
     // Armazena dado conforme passo
-    if (this.passo === 0) this.userData.nome     = texto;
-    if (this.passo === 1) this.userData.telefone = texto;
-    if (this.passo === 2) this.userData.email    = texto;
-    if (this.passo === 3) this.userData.mensagem = texto;
+    if (this.passo === 0) this.userData.nome      = texto;
+    if (this.passo === 1) this.userData.email     = texto;
+    if (this.passo === 2) this.userData.whatsapp  = texto;
+    if (this.passo === 3) this.userData.mensagem  = texto;
 
     if (this.passo < 3) {
       this.mostrarDigitando(() => {
@@ -106,7 +106,7 @@ export class WhatsappButtonComponent implements OnInit, AfterViewChecked {
     const payload = {
       nome: this.userData.nome,
       email: this.userData.email,
-      mensagem: `Telefone: ${this.userData.telefone}\nMensagem: ${mensagemFinal}`,
+      mensagem: `WhatsApp: ${this.userData.whatsapp}\nMensagem: ${mensagemFinal}`,
     };
 
     this.http.post(`${environment.apiUrl}/suporte/contato`, payload).subscribe({

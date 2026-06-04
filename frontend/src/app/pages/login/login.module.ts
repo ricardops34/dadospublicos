@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PoModule } from '@po-ui/ng-components';
-import { PoTemplatesModule } from '@po-ui/ng-templates';
 import { LoginComponent } from './login.component';
 
-const routes: Routes = [{ path: '', component: LoginComponent }];
+const routes: Routes = [
+  { path: '', component: LoginComponent },
+  { path: 'cadastro', component: LoginComponent, data: { tab: 'cadastro' } },
+];
 
 @NgModule({
   declarations: [LoginComponent],
-  imports: [CommonModule, FormsModule, PoModule, PoTemplatesModule, RouterModule.forChild(routes)],
+  imports: [CommonModule, FormsModule, PoModule, RouterModule.forChild(routes)],
 })
 export class LoginModule {}

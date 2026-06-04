@@ -1,7 +1,8 @@
+import { NotifService } from '../../../../services/notif.service';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import {
   PoModalComponent, PoModalAction,
-  PoNotificationService, PoTableAction, PoTableColumn, PoSelectOption,
+  PoTableAction, PoTableColumn, PoSelectOption,
 } from '@po-ui/ng-components';
 import { AdminService } from '../admin.service';
 
@@ -73,7 +74,7 @@ export class PortalFaturasComponent implements OnInit {
     action: () => this.modalPagamento.close(),
   };
 
-  constructor(private svc: AdminService, private notif: PoNotificationService) {}
+  constructor(private svc: AdminService, private notif: NotifService) {}
 
   ngOnInit() { this.carregar(); }
 

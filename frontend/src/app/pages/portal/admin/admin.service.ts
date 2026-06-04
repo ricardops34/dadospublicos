@@ -22,6 +22,14 @@ export class AdminService {
     return this.http.patch<any>(`${API}/clientes/${id}/ativo`, { ativo });
   }
 
+  confirmarEmailCliente(id: string) {
+    return this.http.patch<any>(`${API}/clientes/${id}/confirmar-email`, {});
+  }
+
+  enviarResetSenhaCliente(id: string) {
+    return this.http.post<any>(`${API}/clientes/${id}/enviar-reset-senha`, {});
+  }
+
   // ─── Assinaturas ──────────────────────────────────────────────────────────
   listarAssinaturas(pagina = 1, limite = 20) {
     const params = new HttpParams().set('pagina', pagina).set('limite', limite);

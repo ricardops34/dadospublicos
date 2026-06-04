@@ -42,6 +42,19 @@
         <po-info class="po-md-4" p-label="CNPJ"        [p-value]="perfil.cnpj || '—'"></po-info>
         <po-info class="po-md-4" p-label="Razão social" [p-value]="perfil.razaoSocial || '—'"></po-info>
       </div>
+      <div class="po-row">
+        <po-info class="po-md-6" p-label="Inscrição Estadual" [p-value]="perfil.inscricaoEstadual || '—'"></po-info>
+        <po-info class="po-md-6" p-label="Inscrição Municipal" [p-value]="perfil.inscricaoMunicipal || '—'"></po-info>
+      </div>
+      <div class="po-row">
+        <po-info class="po-md-8" p-label="Endereço" [p-value]="(perfil.logradouro ? perfil.logradouro + ', ' + perfil.numero + ' ' + (perfil.complemento || '') : '—')"></po-info>
+        <po-info class="po-md-4" p-label="Bairro" [p-value]="perfil.bairro || '—'"></po-info>
+      </div>
+      <div class="po-row">
+        <po-info class="po-md-4" p-label="CEP" [p-value]="perfil.cep || '—'"></po-info>
+        <po-info class="po-md-6" p-label="Município" [p-value]="perfil.municipio || '—'"></po-info>
+        <po-info class="po-md-2" p-label="UF" [p-value]="perfil.uf || '—'"></po-info>
+      </div>
     </ng-container>
 
     <!-- Modo edição -->
@@ -53,6 +66,21 @@
       <div class="po-row">
         <po-input class="po-md-4" p-label="CNPJ"          [(ngModel)]="form.cnpj" p-mask="99.999.999/9999-99"></po-input>
         <po-input class="po-md-8" p-label="Razão social"  [(ngModel)]="form.razaoSocial"></po-input>
+      </div>
+      <div class="po-row">
+        <po-input class="po-md-6" p-label="Inscrição Estadual" [(ngModel)]="form.inscricaoEstadual"></po-input>
+        <po-input class="po-md-6" p-label="Inscrição Municipal" [(ngModel)]="form.inscricaoMunicipal"></po-input>
+      </div>
+      <div class="po-row">
+        <po-input class="po-md-4" p-label="CEP" [(ngModel)]="form.cep" p-mask="99999-999"></po-input>
+        <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="form.logradouro"></po-input>
+        <po-input class="po-md-2" p-label="Nº" [(ngModel)]="form.numero"></po-input>
+      </div>
+      <div class="po-row">
+        <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="form.complemento"></po-input>
+        <po-input class="po-md-4" p-label="Bairro" [(ngModel)]="form.bairro"></po-input>
+        <po-input class="po-md-3" p-label="Município" [(ngModel)]="form.municipio"></po-input>
+        <po-input class="po-md-1" p-label="UF" [(ngModel)]="form.uf"></po-input>
       </div>
       <div class="po-row" style="justify-content:flex-end; gap:8px; margin-top:8px;">
         <po-button p-label="Cancelar" p-kind="tertiary" (p-click)="cancelarEdicao()"></po-button>

@@ -13,11 +13,25 @@ import { AuthService } from '../../../services/auth.service';
           <strong>BuscaDados</strong>
         </div>
         <h1>Criar conta grátis</h1>
-        <p class="cl-cadastro__sub">Comece a consultar CNPJs agora, sem cartão de crédito.</p>
-
+       
         <po-input p-label="Nome" [(ngModel)]="nome" p-placeholder="Seu nome completo"></po-input>
         <po-input p-label="E-mail" p-type="email" [(ngModel)]="email" p-placeholder="seu@email.com"></po-input>
         <po-input p-label="Senha" p-type="password" [(ngModel)]="senha" p-placeholder="Mínimo 8 caracteres"></po-input>
+
+        <po-divider p-label="Dados de Faturamento (Opcional)"></po-divider>
+        <div class="po-row">
+          <po-input class="po-md-6" p-label="CNPJ" [(ngModel)]="cnpj" p-mask="99.999.999/9999-99"></po-input>
+          <po-input class="po-md-6" p-label="Razão Social" [(ngModel)]="razaoSocial"></po-input>
+          <po-input class="po-md-6" p-label="Inscrição Estadual" [(ngModel)]="inscricaoEstadual"></po-input>
+          <po-input class="po-md-6" p-label="Inscrição Municipal" [(ngModel)]="inscricaoMunicipal"></po-input>
+          <po-input class="po-md-4" p-label="CEP" [(ngModel)]="cep" p-mask="99999-999"></po-input>
+          <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="logradouro"></po-input>
+          <po-input class="po-md-2" p-label="Nº" [(ngModel)]="numero"></po-input>
+          <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="complemento"></po-input>
+          <po-input class="po-md-4" p-label="Bairro" [(ngModel)]="bairro"></po-input>
+          <po-input class="po-md-3" p-label="Município" [(ngModel)]="municipio"></po-input>
+          <po-input class="po-md-1" p-label="UF" [(ngModel)]="uf"></po-input>
+        </div>
 
         <po-button p-label="Criar conta" p-kind="primary" p-icon="an an-user-plus"
           (p-click)="cadastrar()">
@@ -26,7 +40,7 @@ import { AuthService } from '../../../services/auth.service';
         <p *ngIf="erro" class="cl-cadastro__erro">{{ erro }}</p>
 
         <div class="cl-cadastro__links">
-          <a routerLink="/cliente/login">Já tem conta? Entrar</a>
+          <a routerLink="/login">Já tem conta? Entrar</a>
           <a routerLink="/">← Voltar ao início</a>
         </div>
       </div>
@@ -36,10 +50,11 @@ import { AuthService } from '../../../services/auth.service';
     .cl-cadastro {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+      padding: 40px 0;
     }
     .cl-cadastro__card {
       background: #fff; padding: 48px; border-radius: 16px;
-      box-shadow: 0 8px 40px rgba(0,0,0,.1); min-width: 380px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.1); min-width: 600px; max-width: 800px;
       display: flex; flex-direction: column; gap: 16px;
       h1 { font-size: 1.3rem; font-weight: 800; margin: 0; color: #111827; }
     }
@@ -58,20 +73,27 @@ import { AuthService } from '../../../services/auth.service';
   `],
 })
 export class ClienteCadastroComponent {
-  nome = '';
-  email = '';
-  senha = '';
-  erro = '';
+  nome = ''; email = ''; senha = ''; erro = '';
+  cnpj = ''; razaoSocial = ''; inscricaoEstadual = ''; inscricaoMunicipal = '';
+  cep = ''; logradouro = ''; numero = ''; complemento = ''; bairro = ''; municipio = ''; uf = '';
 
   constructor(private auth: AuthService, private router: Router) {}
 
   cadastrar() {
-    if (!this.nome || !this.email || !this.senha) { this.erro = 'Preencha todos os campos.'; return; }
+    if (!this.nome || !this.email || !this.senha) { this.erro = 'Preencha os campos obrigatórios (Nome, E-mail, Senha).'; return; }
     if (this.senha.length < 8) { this.erro = 'Senha deve ter no mínimo 8 caracteres.'; return; }
-    this.auth.signupApi({ nome: this.nome, email: this.email, senha: this.senha }).subscribe({
+    
+    const payload = {
+      nome: this.nome, email: this.email, senha: this.senha,
+      cnpj: this.cnpj, razaoSocial: this.razaoSocial, inscricaoEstadual: this.inscricaoEstadual,
+      inscricaoMunicipal: this.inscricaoMunicipal, cep: this.cep, logradouro: this.logradouro,
+      numero: this.numero, complemento: this.complemento, bairro: this.bairro, municipio: this.municipio, uf: this.uf
+    };
+
+    this.auth.signupApi(payload).subscribe({
       next: (res: any) => {
-        this.auth.loginCliente(res.id, res.nome);
-        this.router.navigate(['/cliente/dashboard']);
+        // Redireciona para o login informando o sucesso
+        this.router.navigate(['/login']);
       },
       error: (err: any) => {
         this.erro = err?.error?.message ?? 'Erro ao criar conta. Tente novamente.';

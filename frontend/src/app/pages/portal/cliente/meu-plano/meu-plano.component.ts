@@ -1,5 +1,6 @@
+import { NotifService } from '../../../../services/notif.service';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { PoModalComponent, PoModalAction, PoNotificationService } from '@po-ui/ng-components';
+import { PoModalComponent, PoModalAction } from '@po-ui/ng-components';
 import { ClientePortalService } from '../cliente.service';
 
 @Component({
@@ -32,7 +33,7 @@ export class MeuPlanoComponent implements OnInit {
   };
   acaoFecharContratar: PoModalAction = { label: 'Cancelar', action: () => this.modalContratar.close() };
 
-  constructor(private svc: ClientePortalService, private notif: PoNotificationService) {}
+  constructor(private svc: ClientePortalService, private notif: NotifService) {}
 
   ngOnInit() {
     this.svc.minhaAssinatura().subscribe({

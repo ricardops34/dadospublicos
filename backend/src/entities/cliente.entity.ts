@@ -24,6 +24,33 @@ export class ClienteApi {
   @Column({ type: 'varchar', length: 20, nullable: true })
   telefone: string | null;
 
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  cep: string | null;
+
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  logradouro: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  numero: string | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  complemento: string | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  bairro: string | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  municipio: string | null;
+
+  @Column({ type: 'varchar', length: 2, nullable: true })
+  uf: string | null;
+
+  @Column({ name: 'inscricao_estadual', type: 'varchar', length: 50, nullable: true })
+  inscricaoEstadual: string | null;
+
+  @Column({ name: 'inscricao_municipal', type: 'varchar', length: 50, nullable: true })
+  inscricaoMunicipal: string | null;
+
   @Column({ type: 'varchar', length: 20, default: 'cliente' })
   perfil: 'admin' | 'cliente';
 

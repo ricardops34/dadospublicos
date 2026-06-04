@@ -1,0 +1,22 @@
+<po-page-default p-title="Ativação de Conta">
+  <div style="max-width: 600px; margin: 50px auto; text-align: center;">
+    
+    <div *ngIf="verificando">
+      <po-loading-overlay p-text="Verificando e-mail..."></po-loading-overlay>
+    </div>
+
+    <div *ngIf="!verificando">
+      <span *ngIf="sucesso" class="an an-check-circle" style="font-size: 4rem; color: #10b981;"></span>
+      <span *ngIf="!sucesso" class="an an-warning" style="font-size: 4rem; color: #ef4444;"></span>
+      
+      <h2 style="margin-top: 20px;">{{ sucesso ? 'Tudo pronto!' : 'Ops...' }}</h2>
+      <p style="font-size: 1.1rem; color: #4b5563; margin-bottom: 30px;">{{ mensagem }}</p>
+
+      <po-button 
+        p-label="Ir para Login" 
+        [p-kind]="sucesso ? 'primary' : 'secondary'"
+        (p-click)="irParaLogin()">
+      </po-button>
+    </div>
+  </div>
+</po-page-default>

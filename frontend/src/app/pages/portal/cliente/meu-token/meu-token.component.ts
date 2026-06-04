@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PoNotificationService } from '@po-ui/ng-components';
+import { NotifService } from '../../../../services/notif.service';
 import { ClientePortalService } from '../cliente.service';
 
 @Component({
@@ -16,7 +16,7 @@ export class MeuTokenComponent implements OnInit {
   regerando = false;
   novoToken: string | null = null;
 
-  constructor(private svc: ClientePortalService, private notif: PoNotificationService) {}
+  constructor(private svc: ClientePortalService, private notif: NotifService) {}
 
   ngOnInit() {
     this.svc.meuPerfil().subscribe({

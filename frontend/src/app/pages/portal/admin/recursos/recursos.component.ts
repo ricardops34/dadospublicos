@@ -1,5 +1,6 @@
+import { NotifService } from '../../../../services/notif.service';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { PoModalComponent, PoModalAction, PoNotificationService, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
+import { PoModalComponent, PoModalAction, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
 import { AdminService } from '../admin.service';
 
 @Component({
@@ -39,7 +40,7 @@ export class PortalRecursosComponent implements OnInit {
   };
   acaoCancelar: PoModalAction = { label: 'Cancelar', action: () => this.modal.close() };
 
-  constructor(private svc: AdminService, private notif: PoNotificationService) {}
+  constructor(private svc: AdminService, private notif: NotifService) {}
 
   ngOnInit() { this.carregar(); }
 

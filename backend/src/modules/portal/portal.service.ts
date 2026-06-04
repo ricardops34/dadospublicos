@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -21,6 +21,10 @@ export class PortalService {
 
     const ok = await bcrypt.compare(dto.senha, cliente.senhaHash);
     if (!ok) throw new UnauthorizedException('Credenciais inválidas.');
+
+    if (!cliente.emailVerificado && cliente.perfil !== 'admin') {
+      throw new ForbiddenException('EMAIL_NAO_VERIFICADO');
+    }
 
     cliente.ultimoLogin = new Date();
     await this.clientes.save(cliente);

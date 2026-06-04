@@ -35,6 +35,10 @@ export class AuthService {
     return this.http.post<any>(`${environment.apiUrl}/clientes/signup`, dados);
   }
 
+  recuperarSenha(email: string) {
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/recuperar-senha`, { email });
+  }
+
   loginCliente(id: string, nome: string) {
     localStorage.setItem(this.CLIENTE_ID, id);
     localStorage.setItem(this.CLIENTE_NOME, nome);

@@ -1,5 +1,6 @@
+import { NotifService } from '../../../../services/notif.service';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { PoModalComponent, PoModalAction, PoNotificationService, PoTableAction, PoTableColumn, PoSelectOption } from '@po-ui/ng-components';
+import { PoModalComponent, PoModalAction, PoTableAction, PoTableColumn, PoSelectOption } from '@po-ui/ng-components';
 import { AdminService } from '../admin.service';
 
 @Component({
@@ -46,7 +47,7 @@ export class RecursosPlanosComponent implements OnInit {
   };
   acaoCancelarEdit: PoModalAction = { label: 'Cancelar', action: () => this.modalEdit.close() };
 
-  constructor(private svc: AdminService, private notif: PoNotificationService) {}
+  constructor(private svc: AdminService, private notif: NotifService) {}
 
   ngOnInit() {
     this.svc.listarPlanos().subscribe((p) => {

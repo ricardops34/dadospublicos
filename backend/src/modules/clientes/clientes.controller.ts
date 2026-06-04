@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ClientesService } from './clientes.service';
-import { CreateClienteDto, LoginClienteDto, UpdateClienteDto } from './dto/create-cliente.dto';
+import { CreateClienteDto, LoginClienteDto, RecuperarSenhaDto, UpdateClienteDto } from './dto/create-cliente.dto';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { Perfil } from '../portal/perfil.decorator';
 
@@ -22,6 +22,12 @@ export class ClientesController {
   @ApiOperation({ summary: 'Login do cliente (retorna dados + assinatura ativa)' })
   login(@Body() dto: LoginClienteDto) {
     return this.service.login(dto);
+  }
+
+  @Post('recuperar-senha')
+  @ApiOperation({ summary: 'Solicita link de redefinição de senha por e-mail' })
+  recuperarSenha(@Body() dto: RecuperarSenhaDto) {
+    return this.service.solicitarResetSenha(dto.email);
   }
 
   @Get('verificar-email/:token')
@@ -75,5 +81,23 @@ export class ClientesController {
   @ApiOperation({ summary: '[Admin] Ativa ou suspende cliente' })
   ativar(@Param('id') id: string, @Body('ativo') ativo: boolean) {
     return this.service.ativar(id, ativo);
+  }
+
+  @Patch(':id/confirmar-email')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: '[Admin] Marca e-mail do cliente como verificado' })
+  confirmarEmail(@Param('id') id: string) {
+    return this.service.confirmarEmail(id);
+  }
+
+  @Post(':id/enviar-reset-senha')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: '[Admin] Envia link de redefinição de senha ao cliente' })
+  enviarResetSenha(@Param('id') id: string) {
+    return this.service.enviarResetPorAdmin(id);
   }
 }

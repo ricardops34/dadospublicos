@@ -8,6 +8,7 @@ import { PoTemplatesModule } from '@po-ui/ng-templates';
 import { PortalShellComponent } from './portal-shell.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { adminGuard } from '../../guards/auth.guard';
+import { WhatsappButtonModule } from '../../shared/whatsapp-button/whatsapp-button.module';
 
 const routes: Routes = [
   {
@@ -27,6 +28,7 @@ const routes: Routes = [
       { path: 'etl',             canActivate: [adminGuard], loadChildren: () => import('./admin/etl/etl.module').then((m) => m.PortalEtlModule) },
       { path: 'analytics',       canActivate: [adminGuard], loadChildren: () => import('./admin/analytics/analytics.module').then((m) => m.PortalAnalyticsModule) },
       { path: 'parametros',      canActivate: [adminGuard], loadChildren: () => import('./parametros/parametros.module').then((m) => m.ParametrosModule) },
+      { path: 'config-email',    canActivate: [adminGuard], loadChildren: () => import('./admin/config-email/config-email.module').then((m) => m.ConfigEmailModule) },
 
       // Área Cliente (lazy)
       {
@@ -57,7 +59,7 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [PortalShellComponent, DashboardComponent],
-  imports: [CommonModule, FormsModule, PoModule, PoTemplatesModule, RouterModule.forChild(routes)],
+  imports: [CommonModule, FormsModule, PoModule, PoTemplatesModule, RouterModule.forChild(routes), WhatsappButtonModule],
   providers: [],
 })
 export class PortalModule {}

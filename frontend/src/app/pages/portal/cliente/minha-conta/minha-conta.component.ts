@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PoNotificationService } from '@po-ui/ng-components';
+import { NotifService } from '../../../../services/notif.service';
 import { ClientePortalService } from '../cliente.service';
 
 @Component({
@@ -13,19 +13,23 @@ export class MinhaContaComponent implements OnInit {
   salvando = false;
   editando = false;
 
-  form = { nome: '', telefone: '', cnpj: '', razaoSocial: '' };
+  form = { 
+    nome: '', telefone: '', cnpj: '', razaoSocial: '',
+    cep: '', logradouro: '', numero: '', complemento: '', bairro: '', 
+    municipio: '', uf: '', inscricaoEstadual: '', inscricaoMunicipal: ''
+  };
 
-  constructor(private svc: ClientePortalService, private notif: PoNotificationService) {}
+  constructor(private svc: ClientePortalService, private notif: NotifService) {}
 
   ngOnInit() {
     this.svc.meuPerfil().subscribe({
       next: (p) => {
         this.perfil = p;
         this.form = {
-          nome: p.nome ?? '',
-          telefone: p.telefone ?? '',
-          cnpj: p.cnpj ?? '',
-          razaoSocial: p.razaoSocial ?? '',
+          nome: p.nome ?? '', telefone: p.telefone ?? '', cnpj: p.cnpj ?? '', razaoSocial: p.razaoSocial ?? '',
+          cep: p.cep ?? '', logradouro: p.logradouro ?? '', numero: p.numero ?? '', complemento: p.complemento ?? '',
+          bairro: p.bairro ?? '', municipio: p.municipio ?? '', uf: p.uf ?? '', 
+          inscricaoEstadual: p.inscricaoEstadual ?? '', inscricaoMunicipal: p.inscricaoMunicipal ?? ''
         };
         this.carregando = false;
       },
@@ -38,10 +42,10 @@ export class MinhaContaComponent implements OnInit {
   cancelarEdicao() {
     this.editando = false;
     this.form = {
-      nome: this.perfil.nome ?? '',
-      telefone: this.perfil.telefone ?? '',
-      cnpj: this.perfil.cnpj ?? '',
-      razaoSocial: this.perfil.razaoSocial ?? '',
+      nome: this.perfil.nome ?? '', telefone: this.perfil.telefone ?? '', cnpj: this.perfil.cnpj ?? '', razaoSocial: this.perfil.razaoSocial ?? '',
+      cep: this.perfil.cep ?? '', logradouro: this.perfil.logradouro ?? '', numero: this.perfil.numero ?? '', complemento: this.perfil.complemento ?? '',
+      bairro: this.perfil.bairro ?? '', municipio: this.perfil.municipio ?? '', uf: this.perfil.uf ?? '', 
+      inscricaoEstadual: this.perfil.inscricaoEstadual ?? '', inscricaoMunicipal: this.perfil.inscricaoMunicipal ?? ''
     };
   }
 

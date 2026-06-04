@@ -1,7 +1,8 @@
+import { NotifService } from '../../../../services/notif.service';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import {
   PoModalComponent, PoModalAction,
-  PoNotificationService, PoTableAction, PoTableColumn,
+  PoTableAction, PoTableColumn,
 } from '@po-ui/ng-components';
 import { AdminService } from '../admin.service';
 
@@ -84,7 +85,7 @@ export class PortalPlanosComponent implements OnInit {
     action: () => this.modalPlano.close(),
   };
 
-  constructor(private svc: AdminService, private notif: PoNotificationService) {}
+  constructor(private svc: AdminService, private notif: NotifService) {}
 
   ngOnInit() { this.carregar(); }
 

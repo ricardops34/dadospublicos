@@ -42,6 +42,13 @@ export class Fatura {
   @Column({ name: 'observacao', type: 'text', nullable: true })
   observacao: string | null;
 
+  // Integração PIX
+  @Column({ name: 'pix_txid', type: 'varchar', length: 100, nullable: true })
+  pixTxid: string | null;
+
+  @Column({ name: 'pix_copia_cola', type: 'text', nullable: true })
+  pixCopiaECola: string | null;
+
   @CreateDateColumn({ name: 'criado_em' })
   criadoEm: Date;
 
