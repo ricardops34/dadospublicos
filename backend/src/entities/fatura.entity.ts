@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGenerat
 import { Assinatura } from './assinatura.entity';
 
 export type FaturaStatus = 'pendente' | 'paga' | 'vencida' | 'cancelada';
+export type FaturaTipo   = 'mensal' | 'upgrade';
 
 @Entity('faturas')
 export class Fatura {
@@ -41,6 +42,9 @@ export class Fatura {
 
   @Column({ name: 'observacao', type: 'text', nullable: true })
   observacao: string | null;
+
+  @Column({ type: 'varchar', length: 20, default: 'mensal' })
+  tipo: FaturaTipo;
 
   // Integração PIX
   @Column({ name: 'pix_txid', type: 'varchar', length: 100, nullable: true })

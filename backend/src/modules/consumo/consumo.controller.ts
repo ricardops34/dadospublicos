@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -8,13 +8,15 @@ import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { Perfil } from '../portal/perfil.decorator';
 import { Consumo } from '../../entities/consumo.entity';
 import { Token } from '../../entities/token.entity';
+import { RedisCacheService } from '../redis-cache/redis-cache.service';
 
 @ApiTags('Consumo')
 @Controller('consumo')
 export class ConsumoController {
   constructor(
-    @InjectRepository(Consumo) private consumos: Repository<Consumo>,
-    @InjectRepository(Token) private tokens: Repository<Token>,
+    @InjectRepository(Consumo, 'buscadados') private consumos: Repository<Consumo>,
+    @InjectRepository(Token, 'buscadados') private tokens: Repository<Token>,
+    private cache: RedisCacheService,
   ) {}
 
   @Get()
@@ -44,6 +46,10 @@ export class ConsumoController {
   @ApiOperation({ summary: 'Histórico de consumo do cliente logado (portal JWT)' })
   async consumoPortal(@Req() req: any) {
     const clienteId = req['usuario'].sub;
+    const cacheKey = `consumo:portal:${clienteId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const rows = await this.consumos
       .createQueryBuilder('c')
       .innerJoin('tokens', 't', 't.id = c.token_id')
@@ -53,7 +59,24 @@ export class ConsumoController {
       .orderBy('c.ano', 'DESC')
       .addOrderBy('c.mes', 'DESC')
       .getRawMany();
-    return rows.map(r => ({ ano: +r.ano, mes: +r.mes, quantidade: +r.quantidade, atualizadoEm: r.atualizado_em }));
+    const result = rows.map(r => ({ ano: +r.ano, mes: +r.mes, quantidade: +r.quantidade, atualizadoEm: r.atualizado_em }));
+    await this.cache.set(cacheKey, result, 3600); // 1h
+    return result;
+  }
+
+  @Patch('admin/:id')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: '[Admin] Edita quantidade de um registro de consumo' })
+  async editarConsumoAdmin(@Param('id') id: string, @Body('quantidade') quantidade: number) {
+    const consumo = await this.consumos.findOne({ where: { id } });
+    if (!consumo) throw new NotFoundException('Registro de consumo não encontrado.');
+    consumo.quantidade = +quantidade;
+    consumo.atualizadoEm = new Date();
+    const result = await this.consumos.save(consumo);
+    await this.cache.delPattern('consumo:admin:*');
+    return result;
   }
 
   @Get('admin')
@@ -67,6 +90,10 @@ export class ConsumoController {
     const now = new Date();
     const mesQ = mes ? +mes : now.getMonth() + 1;
     const anoQ = ano ? +ano : now.getFullYear();
+
+    const cacheKey = `consumo:admin:${anoQ}:${mesQ}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
 
     const rows = await this.consumos
       .createQueryBuilder('c')
@@ -87,7 +114,7 @@ export class ConsumoController {
       .orderBy('c.quantidade', 'DESC')
       .getRawMany();
 
-    return rows.map(r => ({
+    const result = rows.map(r => ({
       cliente: r.cliente,
       email: r.email,
       plano: r.plano,
@@ -96,5 +123,7 @@ export class ConsumoController {
       mes: +r.mes,
       ano: +r.ano,
     }));
+    await this.cache.set(cacheKey, result, 1800); // 30 min
+    return result;
   }
 }

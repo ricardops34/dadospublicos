@@ -7,8 +7,8 @@ import { EventoLp, TipoEvento } from '../../entities/evento-lp.entity';
 @Injectable()
 export class AnalyticsLpService {
   constructor(
-    @InjectRepository(VisitaLp) private visitas: Repository<VisitaLp>,
-    @InjectRepository(EventoLp) private eventos: Repository<EventoLp>,
+    @InjectRepository(VisitaLp, 'buscadados') private visitas: Repository<VisitaLp>,
+    @InjectRepository(EventoLp, 'buscadados') private eventos: Repository<EventoLp>,
   ) {}
 
   async registrarVisita(dto: {

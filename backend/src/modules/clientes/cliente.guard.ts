@@ -6,7 +6,7 @@ import { ClienteApi } from '../../entities/cliente.entity';
 // Guard simples por ID+token de sessão (pode evoluir para JWT futuramente)
 @Injectable()
 export class ClienteGuard implements CanActivate {
-  constructor(@InjectRepository(ClienteApi) private clientes: Repository<ClienteApi>) {}
+  constructor(@InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest();

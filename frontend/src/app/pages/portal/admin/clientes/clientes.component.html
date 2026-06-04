@@ -1,68 +1,119 @@
-<po-page-default p-title="Clientes">
+<po-page-list p-title="Clientes" [p-breadcrumb]="breadcrumb" [p-actions]="pageActions" [p-filter]="pageFilter">
 
   <po-table
+    p-container="shadow"
     [p-columns]="colunas"
     [p-items]="clientes"
-    [p-actions]="acoes"
+    [p-actions]="acoesTabela"
     [p-loading]="carregando"
     p-striped="true"
     p-sort="true"
+    [p-hide-columns-manager]="true"
+    (p-show-more)="carregarMais()"
+    [p-show-more-disabled]="!temMaisResultados"
     [p-height]="500">
 
-    <ng-template p-table-row-template let-row="row" let-column="column">
+    <ng-template p-table-cell-template let-column="column" let-row="row">
+
+      <ng-container *ngIf="column.property === 'ativoStatus'">
+        <span *ngIf="row.ativoStatus === 1"
+          class="an an-check-circle"
+          style="font-size:1.25rem; color:var(--color-10)"
+          title="Ativo"></span>
+        <span *ngIf="row.ativoStatus === 0"
+          class="an an-lock"
+          style="font-size:1.25rem; color:var(--color-07)"
+          title="Suspenso"></span>
+      </ng-container>
+
       <ng-container *ngIf="column.property === 'plano'">
         <po-tag *ngIf="row.plano !== '—'" [p-value]="row.plano" p-color="color-08"></po-tag>
         <span *ngIf="row.plano === '—'" style="color:#9ca3af">—</span>
       </ng-container>
+
+      <ng-container *ngIf="column.property === 'emailVerificado'">
+        <span *ngIf="row.emailVerificado === 1"
+          class="an an-check-circle"
+          style="font-size:1.25rem; color:var(--color-10)"
+          title="E-mail verificado"></span>
+        <span *ngIf="row.emailVerificado === 0"
+          class="an an-x-circle"
+          style="font-size:1.25rem; color:var(--color-07)"
+          title="Não verificado"></span>
+      </ng-container>
+
     </ng-template>
 
   </po-table>
 
-  <div class="po-row" style="margin-top:16px; justify-content:flex-end;">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <span style="color:#64748b; font-size:0.875rem;">Página {{ pagina }}</span>
-      <po-button
-        p-label="Anterior"
-        p-kind="tertiary"
-        [p-disabled]="pagina <= 1"
-        (p-click)="onPaginaChange(pagina - 1)">
-      </po-button>
-      <po-button
-        p-label="Próxima"
-        p-kind="tertiary"
-        [p-disabled]="pagina * limite >= total"
-        (p-click)="onPaginaChange(pagina + 1)">
-      </po-button>
-    </div>
+</po-page-list>
+
+<!-- ── Modal Incluir ── -->
+<po-modal #modalIncluir p-title="Incluir Cliente" p-size="md"
+  [p-primary-action]="acaoSalvarIncluir" [p-secondary-action]="acaoCancelarIncluir">
+  <div class="po-row">
+    <po-input class="po-md-12" p-label="Nome" [(ngModel)]="incluindo.nome" p-required="true"></po-input>
+    <po-email class="po-md-12" p-label="E-mail" [(ngModel)]="incluindo.email" p-required="true"></po-email>
+    <po-password class="po-md-12" p-label="Senha provisória" [(ngModel)]="incluindo.senha" p-required="true"></po-password>
+    <po-divider class="po-md-12" p-label="Endereço"></po-divider>
+    <po-input class="po-md-4" p-label="CEP" [(ngModel)]="incluindo.cep" (p-change)="buscarCep(incluindo)" p-mask="99999-999"></po-input>
+    <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="incluindo.logradouro"></po-input>
+    <po-input class="po-md-2" p-label="Número" [(ngModel)]="incluindo.numero"></po-input>
+    <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="incluindo.complemento"></po-input>
+    <po-input class="po-md-3" p-label="Bairro" [(ngModel)]="incluindo.bairro"></po-input>
+    <po-input class="po-md-3" p-label="Município" [(ngModel)]="incluindo.municipio"></po-input>
+    <po-input class="po-md-2" p-label="UF" [(ngModel)]="incluindo.uf"></po-input>
   </div>
+</po-modal>
 
-</po-page-default>
+<!-- ── Modal Busca Avançada ── -->
+<po-modal #modalBuscaAvancada p-title="Busca Avançada" p-size="md"
+  [p-primary-action]="acaoAplicarBusca" [p-secondary-action]="acaoCancelarBusca">
+  <div class="po-row">
+    <po-select class="po-md-12" p-label="Status" name="statusFiltroTemp" 
+      [ngModel]="statusFiltroTemp" (ngModelChange)="statusFiltroTemp = $event"
+      [p-options]="[{label: 'Todos', value: ''}, {label: 'Ativos', value: 'ativo'}, {label: 'Suspensos', value: 'suspenso'}]">
+    </po-select>
+  </div>
+</po-modal>
 
-<!-- Modal de detalhe -->
-<po-modal
-  #modalDetalhe
-  p-title="Detalhe do cliente"
-  p-size="lg"
-  [p-hide-close]="false">
+<!-- ── Modal Editar ── -->
+<po-modal #modalEditar p-title="Editar Cliente" p-size="md"
+  [p-primary-action]="acaoSalvar" [p-secondary-action]="acaoCancelarEdit">
+  <div class="po-row">
+    <po-input  class="po-md-12" p-label="Nome"        [(ngModel)]="editando.nome"></po-input>
+    <po-email  class="po-md-12" p-label="E-mail"      [(ngModel)]="editando.email"></po-email>
+    <po-input  class="po-md-6"  p-label="Telefone"    [(ngModel)]="editando.telefone"></po-input>
+    <po-input  class="po-md-6"  p-label="CNPJ"        [(ngModel)]="editando.cnpj" p-mask="99.999.999/9999-99"></po-input>
+    <po-input  class="po-md-12" p-label="Razão Social" [(ngModel)]="editando.razaoSocial"></po-input>
+    <po-divider class="po-md-12" p-label="Endereço"></po-divider>
+    <po-input class="po-md-4" p-label="CEP" [(ngModel)]="editando.cep" (p-change)="buscarCep(editando)" p-mask="99999-999"></po-input>
+    <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="editando.logradouro"></po-input>
+    <po-input class="po-md-2" p-label="Número" [(ngModel)]="editando.numero"></po-input>
+    <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="editando.complemento"></po-input>
+    <po-input class="po-md-3" p-label="Bairro" [(ngModel)]="editando.bairro"></po-input>
+    <po-input class="po-md-3" p-label="Município" [(ngModel)]="editando.municipio"></po-input>
+    <po-input class="po-md-2" p-label="UF" [(ngModel)]="editando.uf"></po-input>
+  </div>
+</po-modal>
 
+<!-- ── Modal Detalhe ── -->
+<po-modal #modalDetalhe p-title="Detalhe do cliente" p-size="lg" [p-primary-action]="acaoVoltarDetalhe">
   <ng-container *ngIf="clienteSelecionado">
     <div class="po-row">
-      <po-info class="po-md-6" p-label="Nome"  [p-value]="clienteSelecionado.nome"></po-info>
+      <po-info class="po-md-6" p-label="Nome"   [p-value]="clienteSelecionado.nome"></po-info>
       <po-info class="po-md-6" p-label="E-mail" [p-value]="clienteSelecionado.email"></po-info>
     </div>
     <div class="po-row">
       <po-info class="po-md-4" p-label="CNPJ"    [p-value]="clienteSelecionado.cnpj ?? '—'"></po-info>
       <po-info class="po-md-4" p-label="Telefone" [p-value]="clienteSelecionado.telefone ?? '—'"></po-info>
-      <po-info class="po-md-4" p-label="Status"
-        [p-value]="clienteSelecionado.ativo ? 'Ativo' : 'Suspenso'"></po-info>
+      <po-info class="po-md-4" p-label="Status"   [p-value]="clienteSelecionado.ativo ? 'Ativo' : 'Suspenso'"></po-info>
     </div>
-
     <po-divider p-label="Assinaturas"></po-divider>
-
     <po-table
       [p-columns]="[
-        { property: 'plano.nome',           label: 'Plano'   },
-        { property: 'status',               label: 'Status',   type: 'label',
+        { property: 'plano.nome',           label: 'Plano' },
+        { property: 'status',               label: 'Status', type: 'label',
           labels: [
             { value: 'ativa',     label: 'Ativa',     color: 'color-10' },
             { value: 'suspensa',  label: 'Suspensa',  color: 'color-07' },
@@ -73,19 +124,37 @@
         { property: 'dataInicio',        label: 'Início',     type: 'date', format: 'dd/MM/yyyy' },
         { property: 'proximoVencimento', label: 'Vencimento', type: 'date', format: 'dd/MM/yyyy' }
       ]"
-      [p-items]="clienteSelecionado.assinaturas ?? []"
-      p-striped="true">
+      [p-items]="clienteSelecionado.assinaturas ?? []" p-striped="true">
     </po-table>
-
     <po-divider p-label="Token de API"></po-divider>
     <div *ngIf="planoAtivo(clienteSelecionado)?.token as tk; else semToken">
-      <po-info p-label="Token" [p-value]="tk.token"></po-info>
+      <po-info p-label="Token"     [p-value]="tk.token"></po-info>
       <po-info p-label="Plano API" [p-value]="tk.plano"></po-info>
-      <po-info p-label="Ativo" [p-value]="tk.ativo ? 'Sim' : 'Não'"></po-info>
+      <po-info p-label="Ativo"     [p-value]="tk.ativo ? 'Sim' : 'Não'"></po-info>
     </div>
     <ng-template #semToken>
       <p style="color:#9ca3af; font-size:0.875rem;">Sem assinatura ativa / sem token.</p>
     </ng-template>
   </ng-container>
+</po-modal>
 
+<!-- ── Modal Excluir ── -->
+<po-modal #modalExcluir p-title="Excluir conta do cliente" p-size="lg"
+  [p-primary-action]="acaoConfirmarExcluir" [p-secondary-action]="acaoCancelarExcluir">
+  <div style="background:#f8d7da; border:1px solid #f5c6cb; border-radius:8px; padding:14px 16px; font-size:0.875rem; color:#721c24; line-height:1.5; margin-bottom: 16px;">
+    🗑️ Você está prestes a excluir permanentemente a conta de <strong>{{ clienteParaExcluir?.nome }}</strong>.<br>
+    Os dados serão anonimizados e esta ação não pode ser desfeita.
+  </div>
+  
+  <ng-container *ngIf="clienteParaExcluir">
+    <div class="po-row">
+      <po-info class="po-md-6" p-label="Nome"   [p-value]="clienteParaExcluir.nome"></po-info>
+      <po-info class="po-md-6" p-label="E-mail" [p-value]="clienteParaExcluir.email"></po-info>
+    </div>
+    <div class="po-row">
+      <po-info class="po-md-4" p-label="CNPJ"    [p-value]="clienteParaExcluir.cnpj ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Telefone" [p-value]="clienteParaExcluir.telefone ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Status"   [p-value]="clienteParaExcluir.ativo ? 'Ativo' : 'Suspenso'"></po-info>
+    </div>
+  </ng-container>
 </po-modal>

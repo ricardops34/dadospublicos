@@ -7,7 +7,7 @@ import { AnalyticsLpController } from './analytics-lp.controller';
 import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VisitaLp, EventoLp]), PortalModule],
+  imports: [TypeOrmModule.forFeature([VisitaLp, EventoLp], 'buscadados'), PortalModule],
   controllers: [AnalyticsLpController],
   providers: [AnalyticsLpService],
   exports: [AnalyticsLpService],

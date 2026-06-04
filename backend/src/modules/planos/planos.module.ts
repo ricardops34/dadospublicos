@@ -8,7 +8,7 @@ import { PlanoRecurso } from '../../entities/plano-recurso.entity';
 import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Plano, RecursoPlano, PlanoRecurso]), PortalModule],
+  imports: [TypeOrmModule.forFeature([Plano, RecursoPlano, PlanoRecurso], 'buscadados'), PortalModule],
   controllers: [PlanosController],
   providers: [PlanosService],
   exports: [PlanosService],

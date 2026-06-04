@@ -7,7 +7,7 @@ import { AuthModule } from '../auth/auth.module';
 import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Consumo, Token]), AuthModule, PortalModule],
+  imports: [TypeOrmModule.forFeature([Consumo, Token], 'buscadados'), AuthModule, PortalModule],
   controllers: [ConsumoController],
 })
 export class ConsumoModule {}

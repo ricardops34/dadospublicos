@@ -1,17 +1,20 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, Not, IsNull, Repository, ILike } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import * as nodemailer from 'nodemailer';
+import { Cron } from '@nestjs/schedule';
 import { ClienteApi } from '../../entities/cliente.entity';
-import { CreateClienteDto, LoginClienteDto, UpdateClienteDto } from './dto/create-cliente.dto';
+import { Assinatura } from '../../entities/assinatura.entity';
+import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, UpdateClienteDto } from './dto/create-cliente.dto';
 import { ParametrosService } from '../parametros/parametros.service';
 
 @Injectable()
 export class ClientesService {
   constructor(
-    @InjectRepository(ClienteApi) private clientes: Repository<ClienteApi>,
+    @InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>,
+    @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
     private params: ParametrosService,
   ) {}
 
@@ -28,6 +31,9 @@ export class ClientesService {
       nome: dto.nome,
       email: dto.email,
       senhaHash,
+      tipoPessoa: dto.tipoPessoa || 'J',
+      cpf: dto.cpf ?? null,
+      dataNascimento: dto.dataNascimento ? new Date(dto.dataNascimento) : null,
       cnpj: dto.cnpj ?? null,
       razaoSocial: dto.razaoSocial ?? null,
       telefone: dto.telefone ?? null,
@@ -191,8 +197,31 @@ export class ClientesService {
 
   // --- Admin ---
 
-  findAll(pagina = 1, limite = 50) {
+  findAll(pagina = 1, limite = 50, busca?: string, filtros?: any) {
+    const baseWhere: any = {};
+    
+    // Filtros de status (PO-UI pode mandar como array ou string)
+    if (filtros?.ativoStatus) {
+      const status = Array.isArray(filtros.ativoStatus) ? filtros.ativoStatus[0] : filtros.ativoStatus;
+      if (status === 'ativo') baseWhere.ativo = true;
+      else if (status === 'suspenso') baseWhere.ativo = false;
+    }
+
+    if (filtros?.nome) baseWhere.nome = ILike(`%${filtros.nome}%`);
+    if (filtros?.email) baseWhere.email = ILike(`%${filtros.email}%`);
+    if (filtros?.cnpj) baseWhere.cnpj = ILike(`%${filtros.cnpj}%`);
+
+    let where: any = baseWhere;
+    if (busca) {
+      where = [
+        { ...baseWhere, nome: ILike(`%${busca}%`) },
+        { ...baseWhere, email: ILike(`%${busca}%`) },
+        { ...baseWhere, cnpj: ILike(`%${busca}%`) },
+      ];
+    }
+
     return this.clientes.findAndCount({
+      where,
       order: { criadoEm: 'DESC' },
       skip: (pagina - 1) * limite,
       take: limite,
@@ -213,6 +242,96 @@ export class ClientesService {
     const cliente = await this.findOne(id);
     cliente.ativo = ativo;
     return this.clientes.save(cliente);
+  }
+
+  // Anonimiza imediatamente (chamado pelo admin ou pelo cron)
+  async excluirConta(clienteId: string) {
+    const cliente = await this.clientes.findOne({ where: { id: clienteId } });
+    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
+    await this.anonimizarCliente(cliente);
+    return { mensagem: 'Conta excluída com sucesso.' };
+  }
+
+  // Solicita exclusão imediata ou agendada para o fim do plano
+  async agendarExclusao(clienteId: string, dto: AgendarExclusaoDto) {
+    const cliente = await this.clientes.findOne({
+      where: { id: clienteId },
+      relations: ['assinaturas'],
+    });
+    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
+    if (cliente.agendarExclusaoEm) {
+      return { mensagem: 'Exclusão já agendada.', agendarExclusaoEm: cliente.agendarExclusaoEm };
+    }
+
+    const diasRetencao = parseInt(await this.params.getValor('DIAS_RETENCAO_CONTA', '30'), 10);
+
+    let dataExclusao: Date;
+
+    if (dto.agendarPara === 'fim-plano') {
+      const assinaturaAtiva = cliente.assinaturas?.find(
+        (a) => a.status === 'ativa' && a.proximoVencimento,
+      );
+      if (!assinaturaAtiva?.proximoVencimento) {
+        throw new BadRequestException('Nenhum plano ativo com data de vencimento encontrado.');
+      }
+      const fimPlano = new Date(assinaturaAtiva.proximoVencimento);
+      dataExclusao = new Date(fimPlano.getTime() + diasRetencao * 86_400_000);
+    } else {
+      dataExclusao = new Date(Date.now() + diasRetencao * 86_400_000);
+      cliente.ativo = false; // inativa imediatamente no caso "agora"
+    }
+
+    cliente.agendarExclusaoEm = dataExclusao;
+    await this.clientes.save(cliente);
+
+    return {
+      mensagem: dto.agendarPara === 'agora'
+        ? `Conta desativada. Dados serão removidos em ${diasRetencao} dias.`
+        : `Exclusão agendada. Seus dados serão removidos após o fim do plano.`,
+      agendarExclusaoEm: dataExclusao,
+    };
+  }
+
+  // Roda todo dia às 03:00 — anonimiza contas com prazo vencido
+  @Cron('0 3 * * *')
+  async processarExclusoesAgendadas() {
+    const contas = await this.clientes.find({
+      where: {
+        ativo: false,
+        agendarExclusaoEm: LessThanOrEqual(new Date()),
+      },
+    });
+    if (!contas.length) return;
+
+    for (const c of contas) {
+      await this.anonimizarCliente(c);
+    }
+    console.log(`[Cron] ${contas.length} conta(s) anonimizada(s).`);
+  }
+
+  private async anonimizarCliente(cliente: ClienteApi) {
+    const ts = Date.now();
+    cliente.ativo = false;
+    cliente.nome = `Excluído-${ts}`;
+    cliente.email = `excluido-${ts}@removido.invalid`;
+    cliente.senhaHash = '';
+    cliente.tipoPessoa = 'J';
+    cliente.cpf = null;
+    cliente.dataNascimento = null;
+    cliente.cnpj = null;
+    cliente.razaoSocial = null;
+    cliente.telefone = null;
+    cliente.cep = null;
+    cliente.logradouro = null;
+    cliente.numero = null;
+    cliente.complemento = null;
+    cliente.bairro = null;
+    cliente.municipio = null;
+    cliente.uf = null;
+    cliente.tokenVerificacao = null;
+    cliente.resetToken = null;
+    cliente.agendarExclusaoEm = null;
+    await this.clientes.save(cliente);
   }
 
   async confirmarEmail(id: string) {

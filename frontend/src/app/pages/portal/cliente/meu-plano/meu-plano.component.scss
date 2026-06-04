@@ -97,3 +97,46 @@
     box-shadow: 0 4px 20px rgba(26, 86, 219, 0.12);
   }
 }
+
+// ── Modal de Upgrade ──────────────────────────────────────────────────
+.upgrade-header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 20px; padding: 16px;
+  background: #f8fafc; border-radius: 12px;
+
+  &__plano {
+    flex: 1; display: flex; flex-direction: column; gap: 4px; text-align: center;
+    padding: 12px;  border-radius: 10px;
+    strong { font-size: 1rem; font-weight: 800; }
+    span   { font-size: 0.8rem; }
+    &--de   { background: #f1f5f9; border: 1px solid #e2e8f0; }
+    &--para { background: #f5f3ff; border: 2px solid #7c3aed; strong { color: #7c3aed; } }
+  }
+
+  &__label { font-size: 0.68rem; text-transform: uppercase; letter-spacing:.05em; color: #94a3b8; }
+  &__arrow { color: #7c3aed; font-size: 1.4rem; flex-shrink: 0; }
+}
+
+.upgrade-detalhes { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; }
+
+.upgrade-linha {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; border-radius: 8px; font-size: 0.875rem;
+
+  &--info    { background: #f8fafc; color: #64748b; }
+  &--credito { background: #f0fdf4; color: #15803d; strong { color: #15803d; } }
+  &--cobranca{ background: #fff7ed; color: #c2410c; strong { color: #c2410c; } }
+  &--total   {
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    border: 1px solid #c4b5fd;
+    font-weight: 700;
+    strong { font-size: 1.1rem; color: #7c3aed; }
+  }
+  &--venc    { background: #f8fafc; color: #64748b; }
+}
+
+.upgrade-aviso {
+  font-size: 0.82rem; color: #92400e;
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 8px; padding: 10px 14px; margin: 0;
+}

@@ -24,8 +24,10 @@ import { AccessLogModule } from './modules/access-log/access-log.module';
 import { AccessLogMiddleware } from './modules/access-log/access-log.middleware';
 import { SuporteModule } from './modules/suporte/suporte.module';
 import { ParametrosModule } from './modules/parametros/parametros.module';
+import { RedisCacheModule } from './modules/redis-cache/redis-cache.module';
 import { ParametrosService } from './modules/parametros/parametros.service';
 import { InterPixModule } from './modules/inter-pix/inter-pix.module';
+import { Painel360Module } from './modules/painel-360/painel-360.module';
 
 @Module({
   imports: [
@@ -44,16 +46,44 @@ import { InterPixModule } from './modules/inter-pix/inter-pix.module';
         synchronize: true,
       }),
     }),
+    TypeOrmModule.forRootAsync({
+      name: 'buscadados',
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService) => ({
+        type: 'postgres',
+        host: cfg.get('DB_HOST', 'localhost'),
+        port: cfg.get<number>('DB_PORT', 5432),
+        username: cfg.get('DB_USER', 'rfb_user'),
+        password: cfg.get('DB_PASSWORD', ''),
+        database: cfg.get('DB_SISTEMA_NAME', 'buscadados'),
+        autoLoadEntities: true,
+        synchronize: true,
+      }),
+    }),
+    TypeOrmModule.forRootAsync({
+      name: 'viacep',
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService) => ({
+        type: 'postgres',
+        host: cfg.get('DB_HOST', 'localhost'),
+        port: cfg.get<number>('DB_PORT', 5432),
+        username: cfg.get('DB_USER', 'rfb_user'),
+        password: cfg.get('DB_PASSWORD', ''),
+        database: cfg.get('DB_VIACEP_NAME', 'dados_viacep'),
+        autoLoadEntities: true,
+        synchronize: true,
+      }),
+    }),
 
     ScheduleModule.forRoot(),
 
     // Rate limit padrão para plano gratuito — ApiRateLimitGuard customizado validará os tokens
     ThrottlerModule.forRootAsync({
-      imports: [ParametrosModule],
-      inject: [ParametrosService],
-      useFactory: async (params: ParametrosService) => {
-        const host = await params.getValor('REDIS_HOST', 'localhost');
-        const port = await params.getValor('REDIS_PORT', '6379');
+      imports: [ParametrosModule, ConfigModule],
+      inject: [ParametrosService, ConfigService],
+      useFactory: async (params: ParametrosService, config: ConfigService) => {
+        const host = config.get('REDIS_HOST') || await params.getValor('REDIS_HOST', 'localhost');
+        const port = config.get('REDIS_PORT') || await params.getValor('REDIS_PORT', '6379');
         return {
           throttlers: [{ ttl: 60000, limit: 3 }],
           storage: new ThrottlerStorageRedisService(`redis://${host}:${port}`),
@@ -62,6 +92,7 @@ import { InterPixModule } from './modules/inter-pix/inter-pix.module';
     }),
 
     // Infra
+    RedisCacheModule,
     AdminModule,
     AuthModule,
     PortalModule,
@@ -86,6 +117,7 @@ import { InterPixModule } from './modules/inter-pix/inter-pix.module';
     ClientesModule,
     AssinaturasModule,
     FaturasModule,
+    Painel360Module,
   ],
 })
 export class AppModule implements NestModule {

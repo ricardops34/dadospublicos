@@ -1,0 +1,91 @@
+<po-page-default p-title="Painel 360 - Admin">
+  <div class="painel-360-page">
+    <div class="painel-360-page__hero">
+      <div>
+        <span class="painel-360-page__eyebrow">Lotes geograficos</span>
+        <h2>Envio, acompanhamento e distribuicao dos resultados em um unico painel.</h2>
+        <p>Use upload via PO-UI para criar lotes, acompanhe o historico e visualize o GeoJSON retornado pelo backend.</p>
+      </div>
+
+      <div class="painel-360-page__upload">
+        <po-upload
+          name="painel360AdminUpload"
+          p-label="Criar lote"
+          [p-url]="uploadUrl"
+          p-form-field="arquivo"
+          [p-headers]="uploadHeaders"
+          [p-auto-upload]="true"
+          [p-drag-drop]="true"
+          [p-restrictions]="uploadRestricoes"
+          p-help="Aceita CSV e planilhas de ate 25 MB."
+          (p-success)="onUploadSuccess($event)"
+          (p-error)="onUploadError()">
+        </po-upload>
+      </div>
+    </div>
+
+    <div class="painel-360-page__cards">
+      <div class="painel-360-card">
+        <span class="an an-stack painel-360-card__icon"></span>
+        <div>
+          <strong>{{ lotes.length }}</strong>
+          <small>Lotes disponiveis</small>
+        </div>
+      </div>
+      <div class="painel-360-card">
+        <span class="an an-map-pin-line painel-360-card__icon painel-360-card__icon--green"></span>
+        <div>
+          <strong>{{ resumoSelecionado.geocodificados ?? 0 }}</strong>
+          <small>Pontos no mapa</small>
+        </div>
+      </div>
+      <div class="painel-360-card">
+        <span class="an an-files painel-360-card__icon painel-360-card__icon--magenta"></span>
+        <div>
+          <strong>{{ totalResultados }}</strong>
+          <small>Resultados carregados</small>
+        </div>
+      </div>
+    </div>
+
+    <po-divider p-label="Historico de lotes"></po-divider>
+
+    <po-table
+      [p-columns]="colunasLotes"
+      [p-items]="lotes"
+      [p-actions]="acoesLotes"
+      [p-loading]="carregandoLotes"
+      p-striped="true">
+    </po-table>
+
+    <div *ngIf="loteSelecionado" class="painel-360-page__detalhes">
+      <div class="po-row">
+        <po-info class="po-md-3" p-label="Arquivo" [p-value]="loteSelecionado.arquivoExibicao"></po-info>
+        <po-info class="po-md-3" p-label="Status" [p-value]="loteSelecionado.status"></po-info>
+        <po-info class="po-md-3" p-label="Registros" [p-value]="(loteSelecionado.totalExibicao || 0).toString()"></po-info>
+        <po-info class="po-md-3" p-label="Concluido em" [p-value]="loteSelecionado.concluidoEm || '-'"></po-info>
+      </div>
+
+      <div class="painel-360-page__toolbar">
+        <h3>Mapa e resultados</h3>
+        <po-button
+          p-label="Download"
+          p-kind="secondary"
+          p-icon="an an-download-simple"
+          (p-click)="baixarLote(loteSelecionado)">
+        </po-button>
+      </div>
+
+      <app-painel-360-mapa [geoJson]="geoJson" [loading]="carregandoDetalhes"></app-painel-360-mapa>
+
+      <po-divider p-label="Resultados do lote"></po-divider>
+
+      <po-table
+        [p-columns]="colunasResultados"
+        [p-items]="resultados"
+        [p-loading]="carregandoDetalhes"
+        p-striped="true">
+      </po-table>
+    </div>
+  </div>
+</po-page-default>

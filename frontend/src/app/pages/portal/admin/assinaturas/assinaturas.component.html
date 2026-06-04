@@ -23,19 +23,58 @@
   <div class="po-row" style="margin-top:16px; justify-content:flex-end;">
     <div style="display:flex; align-items:center; gap:12px;">
       <span style="color:#64748b; font-size:0.875rem;">Página {{ pagina }}</span>
-      <po-button
-        p-label="Anterior"
-        p-kind="tertiary"
-        [p-disabled]="pagina <= 1"
-        (p-click)="onPaginaChange(pagina - 1)">
+      <po-button p-label="Anterior" p-kind="tertiary"
+        [p-disabled]="pagina <= 1" (p-click)="onPaginaChange(pagina - 1)">
       </po-button>
-      <po-button
-        p-label="Próxima"
-        p-kind="tertiary"
-        [p-disabled]="pagina * limite >= total"
-        (p-click)="onPaginaChange(pagina + 1)">
+      <po-button p-label="Próxima" p-kind="tertiary"
+        [p-disabled]="pagina * limite >= total" (p-click)="onPaginaChange(pagina + 1)">
       </po-button>
     </div>
   </div>
 
 </po-page-default>
+
+<!-- ── Modal Editar Assinatura ── -->
+<po-modal #modalEditar p-title="Editar Assinatura" p-size="lg"
+  [p-primary-action]="acaoSalvar" [p-secondary-action]="acaoCancelar">
+
+  <div class="po-row">
+    <po-select class="po-md-12" p-label="Plano"
+      [p-options]="planosOpcoes"
+      [ngModel]="editando.planoId"
+      (ngModelChange)="editando.planoId = $event">
+    </po-select>
+    <po-input class="po-md-6" p-label="Data Início"
+      p-mask="99/99/9999" p-placeholder="DD/MM/AAAA"
+      [(ngModel)]="editando.dataInicio">
+    </po-input>
+    <po-input class="po-md-6" p-label="Próximo Vencimento"
+      p-mask="99/99/9999" p-placeholder="DD/MM/AAAA"
+      [(ngModel)]="editando.proximoVencimento">
+    </po-input>
+  </div>
+
+  <po-divider p-label="Consumo Mensal"></po-divider>
+
+  <po-table
+    [p-columns]="consumoCols"
+    [p-items]="consumos"
+    [p-actions]="consumoAcoes"
+    [p-loading]="carregandoConsumo"
+    p-striped="true">
+  </po-table>
+
+</po-modal>
+
+<!-- ── Modal Editar Consumo ── -->
+<po-modal #modalConsumo p-title="Editar Consumo" p-size="sm"
+  [p-primary-action]="acaoSalvarConsumo" [p-secondary-action]="acaoCancelarConsumo">
+  <div class="po-row">
+    <po-input class="po-md-12" p-label="Período" p-readonly="true"
+      [(ngModel)]="editandoConsumo.periodo">
+    </po-input>
+    <po-number class="po-md-12" p-label="Quantidade"
+      [(ngModel)]="editandoConsumo.quantidade" [p-min]="0">
+    </po-number>
+  </div>
+</po-modal>

@@ -7,7 +7,7 @@ import { AccessLogController } from './access-log.controller';
 import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AccessLog]), PortalModule],
+  imports: [TypeOrmModule.forFeature([AccessLog], 'buscadados'), PortalModule],
   providers: [AccessLogService, AccessLogMiddleware],
   controllers: [AccessLogController],
   exports: [AccessLogMiddleware, TypeOrmModule],

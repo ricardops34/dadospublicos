@@ -11,8 +11,8 @@ export const PLANO_KEY = 'plano_minimo';
 export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @InjectRepository(Token) private tokens: Repository<Token>,
-    @InjectRepository(Consumo) private consumos: Repository<Consumo>,
+    @InjectRepository(Token, 'buscadados') private tokens: Repository<Token>,
+    @InjectRepository(Consumo, 'buscadados') private consumos: Repository<Consumo>,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {

@@ -8,7 +8,7 @@ const ENDPOINTS_IGNORADOS = ['/health', '/docs', '/docs-admin', '/favicon.ico'];
 
 @Injectable()
 export class AccessLogMiddleware implements NestMiddleware {
-  constructor(@InjectRepository(AccessLog) private logs: Repository<AccessLog>) {}
+  constructor(@InjectRepository(AccessLog, 'buscadados') private logs: Repository<AccessLog>) {}
 
   use(req: Request, res: Response, next: NextFunction) {
     const inicio = Date.now();

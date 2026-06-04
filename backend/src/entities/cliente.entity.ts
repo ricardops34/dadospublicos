@@ -9,6 +9,15 @@ export class ClienteApi {
   @Column({ type: 'varchar', length: 150 })
   nome: string;
 
+  @Column({ name: 'tipo_pessoa', type: 'varchar', length: 1, default: 'J' })
+  tipoPessoa: 'F' | 'J';
+
+  @Column({ type: 'varchar', length: 14, nullable: true })
+  cpf: string | null;
+
+  @Column({ name: 'data_nascimento', type: 'date', nullable: true })
+  dataNascimento: Date | null;
+
   @Column({ type: 'varchar', length: 200, unique: true })
   email: string;
 
@@ -71,6 +80,9 @@ export class ClienteApi {
 
   @Column({ name: 'ultimo_login', type: 'timestamp', nullable: true })
   ultimoLogin: Date | null;
+
+  @Column({ name: 'agendar_exclusao_em', type: 'timestamp', nullable: true })
+  agendarExclusaoEm: Date | null;
 
   @CreateDateColumn({ name: 'criado_em' })
   criadoEm: Date;

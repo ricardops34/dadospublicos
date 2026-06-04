@@ -10,7 +10,7 @@ import { LoginPortalDto } from './dto/login-portal.dto';
 @Injectable()
 export class PortalService {
   constructor(
-    @InjectRepository(ClienteApi) private clientes: Repository<ClienteApi>,
+    @InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>,
     private jwtService: JwtService,
     private config: ConfigService,
   ) {}

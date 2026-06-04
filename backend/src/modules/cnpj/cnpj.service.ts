@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { EmpresaRfb } from '../../entities/empresa-rfb.entity';
 import { Estabelecimento } from '../../entities/estabelecimento.entity';
 import { Socio } from '../../entities/socio.entity';
@@ -33,11 +34,16 @@ export class CnpjService {
     @InjectRepository(Cnae) private cnaes: Repository<Cnae>,
     @InjectRepository(Municipio) private municipios: Repository<Municipio>,
     @InjectRepository(NaturezaJuridica) private naturezas: Repository<NaturezaJuridica>,
+    private cache: RedisCacheService,
   ) {}
 
   async buscar(cnpj: string) {
     const cnpjLimpo = cnpj.replace(/\D/g, '');
     if (cnpjLimpo.length !== 14) throw new NotFoundException('CNPJ inválido.');
+
+    const cacheKey = `cnpj:${cnpjLimpo}`;
+    const cached = await this.cache.get<any>(cacheKey);
+    if (cached) return cached;
 
     const basico = cnpjLimpo.substring(0, 8);
     const ordem = cnpjLimpo.substring(8, 12);
@@ -62,7 +68,7 @@ export class CnpjService {
       ? estab.cnaeFiscalSecundaria.split(',').map(c => c.trim()).filter(Boolean)
       : [];
 
-    return {
+    const result = {
       cnpj_raiz: basico,
       razao_social: empresa?.razaoSocial ?? null,
       capital_social: empresa?.capitalSocial ?? null,
@@ -115,5 +121,8 @@ export class CnpjService {
         atualizado_em: simples.atualizadoEm,
       } : null,
     };
+
+    await this.cache.set(cacheKey, result, 86400);
+    return result;
   }
 }

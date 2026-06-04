@@ -97,6 +97,59 @@
       <po-info class="po-md-4" p-label="Status"         [p-value]="perfil.ativo ? 'Ativo' : 'Suspenso'"></po-info>
     </div>
 
+    <!-- Badge: exclusão já agendada -->
+    <po-tag *ngIf="agendarExclusaoEm"
+      [p-value]="'Exclusão agendada para ' + dataExclusaoFormatada"
+      p-color="color-07" p-icon="an an-clock" style="margin-bottom:8px; display:block;">
+    </po-tag>
+
+    <!-- Zona de perigo (só aparece se não agendada) -->
+    <ng-container *ngIf="!agendarExclusaoEm">
+      <po-divider p-label="Zona de perigo"></po-divider>
+      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:20px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+        <div>
+          <strong style="color:#dc2626; font-size:0.95rem;">Excluir minha conta</strong>
+          <p style="margin:4px 0 0; color:#6b7280; font-size:0.85rem;">
+            Seus dados serão anonimizados permanentemente. Esta ação não pode ser desfeita.
+            <ng-container *ngIf="temPlanoAtivo">
+              <br>Você possui um plano ativo até <strong>{{ formatarData(dataFimPlano) }}</strong>.
+            </ng-container>
+          </p>
+        </div>
+        <po-button p-label="Excluir conta" p-kind="danger" p-icon="an an-trash"
+          (p-click)="solicitarExclusao()">
+        </po-button>
+      </div>
+    </ng-container>
+
   </ng-container>
 
 </po-page-default>
+
+<!-- Modal de exclusão de conta -->
+<po-modal #modalExclusao p-title="Excluir minha conta" p-size="md"
+  [p-primary-action]="acaoConfirmarExclusao"
+  [p-secondary-action]="acaoCancelarExclusao">
+
+  <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:12px; font-size:0.875rem; color:#856404;">
+    ⚠️ Atenção: esta ação é irreversível. Seus dados pessoais serão anonimizados permanentemente e você perderá acesso ao sistema.
+  </div>
+
+  <div *ngIf="temPlanoAtivo" style="background:#cce5ff; border:1px solid #b8daff; border-radius:8px; padding:12px 16px; margin-bottom:12px; font-size:0.875rem; color:#004085;">
+    ℹ️ Você possui um plano ativo até <strong>{{ formatarData(dataFimPlano) }}</strong>. Escolha como deseja proceder:
+  </div>
+
+  <po-radio-group
+    p-label="Opção de exclusão"
+    [(ngModel)]="opcaoExclusao"
+    [p-options]="opcoesExclusao">
+  </po-radio-group>
+
+  <p *ngIf="opcaoExclusao === 'agora'" style="color:#6b7280; font-size:0.82rem; margin-top:8px;">
+    Sua conta será desativada imediatamente e os dados removidos após o período de retenção.
+  </p>
+  <p *ngIf="opcaoExclusao === 'fim-plano'" style="color:#6b7280; font-size:0.82rem; margin-top:8px;">
+    Você continuará com acesso até o fim do plano. Após isso, os dados serão removidos automaticamente.
+  </p>
+
+</po-modal>

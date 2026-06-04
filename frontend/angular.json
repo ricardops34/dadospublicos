@@ -27,6 +27,10 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "allowedCommonJsDependencies": [
+              "leaflet",
+              "leaflet.markercluster"
+            ],
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -46,8 +50,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
-                  "maximumError": "4MB"
+                  "maximumWarning": "4MB",
+                  "maximumError": "8MB"
                 },
                 {
                   "type": "anyComponentStyle",

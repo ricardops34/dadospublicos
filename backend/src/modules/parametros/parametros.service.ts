@@ -6,7 +6,7 @@ import { Parametro } from '../../entities/parametro.entity';
 @Injectable()
 export class ParametrosService implements OnModuleInit {
   constructor(
-    @InjectRepository(Parametro)
+    @InjectRepository(Parametro, 'buscadados')
     private readonly repo: Repository<Parametro>,
   ) {}
 
@@ -18,7 +18,14 @@ export class ParametrosService implements OnModuleInit {
       { chave: 'INTER_KEY_PATH', valor: './certs/inter.key', descricao: 'Caminho da Chave PIX (.key)' },
       { chave: 'PIX_CHAVE', valor: '', descricao: 'Chave PIX da empresa para recebimento' },
       { chave: 'REDIS_HOST', valor: 'localhost', descricao: 'Host do servidor Redis (Rate Limiter)' },
-      { chave: 'REDIS_PORT', valor: '6379', descricao: 'Porta do servidor Redis (Rate Limiter)' }
+      { chave: 'REDIS_PORT', valor: '6379', descricao: 'Porta do servidor Redis (Rate Limiter)' },
+      { chave: 'SMTP_HOST',   valor: 'smtp.umbler.com',       descricao: 'Servidor SMTP' },
+      { chave: 'SMTP_PORT',   valor: '587',                    descricao: 'Porta SMTP' },
+      { chave: 'SMTP_USER',   valor: 'ricardo@bjsoft.com.br',  descricao: 'Usuário SMTP (remetente)' },
+      { chave: 'SMTP_PASS',   valor: 'Rica@1245',             descricao: 'Senha SMTP' },
+      { chave: 'SMTP_SECURE', valor: 'false',                  descricao: 'TLS direto (false = STARTTLS na porta 587)' },
+      { chave: 'APP_URL',              valor: 'https://app.bjsoft.com.br', descricao: 'URL base da aplicação (usada nos e-mails)' },
+      { chave: 'DIAS_RETENCAO_CONTA', valor: '30',                        descricao: 'Dias de retenção após solicitação de exclusão de conta (LGPD)' },
     ];
 
     for (const p of defaultParams) {

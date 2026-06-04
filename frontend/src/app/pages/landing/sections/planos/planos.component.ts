@@ -81,6 +81,7 @@ export class PlanosComponent implements OnInit {
         { descricaoExibicao: 'Inscrições Suframa' },
         { descricaoExibicao: 'Validação Suframa' },
         { descricaoExibicao: 'Filtros de pesquisa' },
+        { descricaoExibicao: 'Painel 360 (Em breve)' },
       ],
     },
   ];

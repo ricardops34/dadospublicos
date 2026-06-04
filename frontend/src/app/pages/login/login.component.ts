@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 
 type Aba = 'login' | 'cadastro' | 'recuperar';
@@ -94,15 +96,40 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
             </div>
 
             <div class="auth__fields">
-              <po-input p-label="Nome completo" [(ngModel)]="nome"
-                p-placeholder="Seu nome" p-name="nome">
-              </po-input>
-              <po-email p-label="E-mail" [(ngModel)]="emailCad"
-                p-placeholder="seu@email.com" p-name="emailCad">
-              </po-email>
-              <po-password p-label="Senha" [(ngModel)]="senhaCad"
-                p-placeholder="Mínimo 8 caracteres" p-name="senhaCad">
-              </po-password>
+              <po-radio-group p-name="tipoPessoa" [(ngModel)]="tipoPessoa"
+                [p-options]="[{ label: 'Pessoa Jurídica', value: 'J' }, { label: 'Pessoa Física', value: 'F' }]">
+              </po-radio-group>
+              
+              <!-- Pessoa Jurídica -->
+              <ng-container *ngIf="tipoPessoa === 'J'">
+                <po-input p-label="CNPJ" [(ngModel)]="cnpjCad" p-mask="99.999.999/9999-99" (p-blur)="buscarCnpj()" p-name="cnpjCad"></po-input>
+                <po-input p-label="Razão Social" [(ngModel)]="razaoSocialCad" p-name="razaoSocialCad"></po-input>
+              </ng-container>
+
+              <!-- Pessoa Física -->
+              <ng-container *ngIf="tipoPessoa === 'F'">
+                <po-input p-label="CPF" [(ngModel)]="cpfCad" p-mask="999.999.999-99" p-name="cpfCad"></po-input>
+                <po-datepicker p-label="Data de Nascimento" [(ngModel)]="dataNascimentoCad" p-name="dataNascimentoCad"></po-datepicker>
+              </ng-container>
+
+              <po-input p-label="Nome Completo / Fantasia" [(ngModel)]="nome" p-placeholder="Seu nome" p-name="nome"></po-input>
+              <po-email p-label="E-mail principal" [(ngModel)]="emailCad" p-placeholder="seu@email.com" p-name="emailCad"></po-email>
+              <po-password p-label="Senha" [(ngModel)]="senhaCad" p-placeholder="Mínimo 8 caracteres" p-name="senhaCad"></po-password>
+              <po-input p-label="Telefone / Celular" [(ngModel)]="telefoneCad" p-mask="(99) 99999-9999" p-name="telefoneCad"></po-input>
+
+              <!-- Endereço -->
+              <h3 style="margin: 16px 0 8px; font-size: 1rem;">Endereço de Faturamento</h3>
+              <po-input p-label="CEP" [(ngModel)]="cepCad" p-mask="99999-999" (p-blur)="buscarCep()" p-name="cepCad"></po-input>
+              <div style="display: flex; gap: 8px;">
+                <po-input p-label="Logradouro" [(ngModel)]="logradouroCad" p-name="logradouroCad" style="flex: 2;"></po-input>
+                <po-input p-label="Número" [(ngModel)]="numeroCad" p-name="numeroCad" style="flex: 1;"></po-input>
+              </div>
+              <po-input p-label="Complemento" [(ngModel)]="complementoCad" p-name="complementoCad" [p-optional]="true"></po-input>
+              <div style="display: flex; gap: 8px;">
+                <po-input p-label="Bairro" [(ngModel)]="bairroCad" p-name="bairroCad" style="flex: 1;"></po-input>
+                <po-input p-label="Município" [(ngModel)]="municipioCad" p-name="municipioCad" style="flex: 1;"></po-input>
+                <po-input p-label="UF" [(ngModel)]="ufCad" p-name="ufCad" style="width: 70px;"></po-input>
+              </div>
             </div>
 
             <div *ngIf="erroCad" class="auth__alert auth__alert--erro">
@@ -309,13 +336,19 @@ export class LoginComponent implements OnInit {
 
   // Cadastro
   nome = ''; emailCad = ''; senhaCad = '';
+  tipoPessoa: 'F' | 'J' = 'J';
+  cpfCad = ''; dataNascimentoCad = '';
+  cnpjCad = ''; razaoSocialCad = '';
+  telefoneCad = ''; cepCad = ''; logradouroCad = ''; numeroCad = '';
+  complementoCad = ''; bairroCad = ''; municipioCad = ''; ufCad = '';
+
   erroCad = ''; sucesso = false; carregandoCad = false;
 
   // Recuperar senha
   emailRecuperar = ''; erroRecuperar = '';
   recuperarSucesso = false; carregandoRecuperar = false;
 
-  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute, private http: HttpClient) {}
 
   ngOnInit() {
     if (this.route.snapshot.queryParamMap.get('tab') === 'cadastro') this.aba = 'cadastro';
@@ -343,11 +376,29 @@ export class LoginComponent implements OnInit {
   }
 
   cadastrar() {
-    if (!this.nome || !this.emailCad || !this.senhaCad) { this.erroCad = 'Preencha Nome, E-mail e Senha.'; return; }
+    if (!this.nome || !this.emailCad || !this.senhaCad || !this.cepCad || !this.logradouroCad || !this.numeroCad || !this.bairroCad || !this.municipioCad || !this.ufCad || !this.telefoneCad) {
+      this.erroCad = 'Preencha todos os campos obrigatórios, incluindo endereço e telefone.';
+      return;
+    }
+    if (this.tipoPessoa === 'J' && !this.cnpjCad) { this.erroCad = 'CNPJ é obrigatório.'; return; }
+    if (this.tipoPessoa === 'F' && !this.cpfCad) { this.erroCad = 'CPF é obrigatório.'; return; }
     if (this.senhaCad.length < 8) { this.erroCad = 'Senha deve ter no mínimo 8 caracteres.'; return; }
+    
     this.carregandoCad = true; this.erroCad = '';
 
-    this.auth.signupApi({ nome: this.nome, email: this.emailCad, senha: this.senhaCad }).subscribe({
+    const payload = {
+      nome: this.nome, email: this.emailCad, senha: this.senhaCad,
+      tipoPessoa: this.tipoPessoa,
+      cpf: this.tipoPessoa === 'F' ? this.cpfCad : undefined,
+      dataNascimento: this.tipoPessoa === 'F' ? this.dataNascimentoCad : undefined,
+      cnpj: this.tipoPessoa === 'J' ? this.cnpjCad : undefined,
+      razaoSocial: this.tipoPessoa === 'J' ? this.razaoSocialCad : undefined,
+      telefone: this.telefoneCad, cep: this.cepCad, logradouro: this.logradouroCad,
+      numero: this.numeroCad, complemento: this.complementoCad,
+      bairro: this.bairroCad, municipio: this.municipioCad, uf: this.ufCad
+    };
+
+    this.auth.signupApi(payload).subscribe({
       next: () => {
         this.sucesso = true;
         // Auto-login após cadastro e redireciona para o painel
@@ -360,6 +411,50 @@ export class LoginComponent implements OnInit {
         this.erroCad = err?.error?.message ?? 'Erro ao criar conta. Tente novamente.';
         this.carregandoCad = false;
       },
+    });
+  }
+
+  buscarCep() {
+    if (!this.cepCad) return;
+    const cepStr = this.cepCad.replace(/\D/g, '');
+    if (cepStr.length !== 8) return;
+    
+    this.http.get<any>(`${environment.apiUrl}/geocode/cep/${cepStr}`).subscribe({
+      next: data => {
+        console.log('CEP data received:', data);
+        if (data) {
+          if (!this.logradouroCad) this.logradouroCad = data.logradouro;
+          if (!this.bairroCad) this.bairroCad = data.bairro;
+          if (!this.municipioCad) this.municipioCad = data.municipio;
+          if (!this.ufCad) this.ufCad = data.ufSigla;
+        }
+      },
+      error: err => {
+        console.error('Erro ao buscar CEP na API:', err);
+      }
+    });
+  }
+
+  buscarCnpj() {
+    if (!this.cnpjCad) return;
+    const cnpjStr = this.cnpjCad.replace(/\D/g, '');
+    if (cnpjStr.length !== 14) return;
+    this.http.get<any>(`${environment.apiUrl}/cnpj/${cnpjStr}`).subscribe({
+      next: (data) => {
+        if (data && data.estabelecimento) {
+          this.razaoSocialCad = data.razao_social;
+          this.cepCad = data.estabelecimento.cep;
+          this.logradouroCad = (data.estabelecimento.tipo_logradouro ? data.estabelecimento.tipo_logradouro + ' ' : '') + data.estabelecimento.logradouro;
+          this.numeroCad = data.estabelecimento.numero;
+          this.complementoCad = data.estabelecimento.complemento;
+          this.bairroCad = data.estabelecimento.bairro;
+          this.municipioCad = data.estabelecimento.cidade?.nome;
+          this.ufCad = data.estabelecimento.estado?.sigla;
+          if (data.estabelecimento.ddd_1 && data.estabelecimento.telefone_1) {
+            this.telefoneCad = data.estabelecimento.ddd_1 + data.estabelecimento.telefone_1;
+          }
+        }
+      }
     });
   }
 

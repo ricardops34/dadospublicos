@@ -35,6 +35,9 @@ export class Assinatura {
   @Column({ name: 'cancelado_em', type: 'timestamp', nullable: true })
   canceladoEm: Date | null;
 
+  @Column({ name: 'agendar_cancelamento_em', type: 'date', nullable: true })
+  agendarCancelamentoEm: string | null;
+
   @Column({ name: 'motivo_cancelamento', type: 'text', nullable: true })
   motivoCancelamento: string | null;
 

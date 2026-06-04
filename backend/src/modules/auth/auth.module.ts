@@ -5,7 +5,7 @@ import { Consumo } from '../../entities/consumo.entity';
 import { AuthGuard } from './auth.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Token, Consumo])],
+  imports: [TypeOrmModule.forFeature([Token, Consumo], 'buscadados')],
   providers: [AuthGuard],
   exports: [AuthGuard, TypeOrmModule],
 })

@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ClientesService } from './clientes.service';
-import { CreateClienteDto, LoginClienteDto, RecuperarSenhaDto, UpdateClienteDto } from './dto/create-cliente.dto';
+import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, RecuperarSenhaDto, UpdateClienteDto } from './dto/create-cliente.dto';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { Perfil } from '../portal/perfil.decorator';
 
@@ -54,6 +54,14 @@ export class ClientesController {
     return this.service.atualizar(req['usuario'].sub, dto);
   }
 
+  @Post('me/agendar-exclusao')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Solicita exclusão imediata ou agendada para fim do plano' })
+  agendarExclusao(@Req() req: any, @Body() dto: AgendarExclusaoDto) {
+    return this.service.agendarExclusao(req['usuario'].sub, dto);
+  }
+
   // --- Admin ---
 
   @Get()
@@ -61,8 +69,13 @@ export class ClientesController {
   @Perfil('admin')
   @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Lista todos os clientes' })
-  findAll(@Query('pagina') pagina = 1, @Query('limite') limite = 50) {
-    return this.service.findAll(+pagina, +limite);
+  findAll(
+    @Query('pagina') pagina = 1,
+    @Query('limite') limite = 50,
+    @Query('busca') busca?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.service.findAll(+pagina, +limite, busca, status);
   }
 
   @Get(':id')
@@ -72,6 +85,15 @@ export class ClientesController {
   @ApiOperation({ summary: '[Admin] Detalhe do cliente com assinaturas e faturas' })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: '[Admin] Atualiza dados do cliente' })
+  atualizarAdmin(@Param('id') id: string, @Body() dto: UpdateClienteDto) {
+    return this.service.atualizar(id, dto);
   }
 
   @Patch(':id/ativo')
@@ -99,5 +121,14 @@ export class ClientesController {
   @ApiOperation({ summary: '[Admin] Envia link de redefinição de senha ao cliente' })
   enviarResetSenha(@Param('id') id: string) {
     return this.service.enviarResetPorAdmin(id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: '[Admin] Exclui e anonimiza imediatamente a conta do cliente' })
+  excluirContaAdmin(@Param('id') id: string) {
+    return this.service.excluirConta(id);
   }
 }

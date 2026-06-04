@@ -5,6 +5,12 @@
 - Consultar **PRD.md** para escopo da versão atual
 - Consultar **docs/** para especificações técnicas dos módulos (auth, perfis, parametros)
 
+## 1.1. Skills e Agents
+- Usar **skills** sempre que houver skill aplicável à tarefa
+- Usar **agents/subagents** sempre que a tarefa permitir delegação paralela, investigação isolada ou divisão segura de escopo
+- Ao trabalhar neste repositório, considerar obrigatório verificar primeiro se existe skill aplicável antes de implementar, analisar ou responder
+- Ao dividir trabalho com agents, não sobrescrever mudanças alheias e manter escopos de edição separados
+
 ## 2. Documentação de bibliotecas — SEMPRE consultar local antes de usar
 A documentação PO-UI está disponível em **C:\Ricardo\dadospublicos\docs\po-ui**.
 

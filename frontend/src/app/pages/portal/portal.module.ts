@@ -8,7 +8,7 @@ import { PoTemplatesModule } from '@po-ui/ng-templates';
 import { PortalShellComponent } from './portal-shell.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { adminGuard } from '../../guards/auth.guard';
-import { WhatsappButtonModule } from '../../shared/whatsapp-button/whatsapp-button.module';
+import { clienteRecursoGuard } from '../../guards/cliente-recurso.guard';
 
 const routes: Routes = [
   {
@@ -29,6 +29,7 @@ const routes: Routes = [
       { path: 'analytics',       canActivate: [adminGuard], loadChildren: () => import('./admin/analytics/analytics.module').then((m) => m.PortalAnalyticsModule) },
       { path: 'parametros',      canActivate: [adminGuard], loadChildren: () => import('./parametros/parametros.module').then((m) => m.ParametrosModule) },
       { path: 'config-email',    canActivate: [adminGuard], loadChildren: () => import('./admin/config-email/config-email.module').then((m) => m.ConfigEmailModule) },
+      { path: 'painel-360-admin', canActivate: [adminGuard], loadChildren: () => import('./admin/painel-360-admin/painel-360-admin.module').then((m) => m.Painel360AdminModule) },
 
       // Área Cliente (lazy)
       {
@@ -51,6 +52,11 @@ const routes: Routes = [
         path: 'minhas-faturas',
         loadChildren: () => import('./cliente/minhas-faturas/minhas-faturas.module').then((m) => m.MinhasFaturasModule),
       },
+      {
+        path: 'painel-360',
+        canActivate: [clienteRecursoGuard],
+        loadChildren: () => import('./cliente/painel-360/painel-360.module').then((m) => m.Painel360ClienteModule),
+      },
 
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
@@ -59,7 +65,7 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [PortalShellComponent, DashboardComponent],
-  imports: [CommonModule, FormsModule, PoModule, PoTemplatesModule, RouterModule.forChild(routes), WhatsappButtonModule],
+  imports: [CommonModule, FormsModule, PoModule, PoTemplatesModule, RouterModule.forChild(routes)],
   providers: [],
 })
 export class PortalModule {}

@@ -1,0 +1,15 @@
+<div class="painel-360-mapa">
+  <div #mapaHost class="painel-360-mapa__host" [style.height]="altura"></div>
+
+  <div *ngIf="loading" class="painel-360-mapa__state painel-360-mapa__state--overlay">
+    <span class="an an-spinner-gap painel-360-mapa__state-icon"></span>
+    <strong>Carregando mapa</strong>
+    <small>Aguarde enquanto os pontos sao renderizados.</small>
+  </div>
+
+  <div *ngIf="!loading && !(geoJson?.features?.length)" class="painel-360-mapa__state">
+    <span class="an an-map-trifold painel-360-mapa__state-icon"></span>
+    <strong>Nenhum ponto georreferenciado</strong>
+    <small>Selecione um lote concluido para visualizar o GeoJSON.</small>
+  </div>
+</div>

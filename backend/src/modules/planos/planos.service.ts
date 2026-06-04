@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { Plano } from '../../entities/plano.entity';
 import { RecursoPlano } from '../../entities/recurso-plano.entity';
 import { PlanoRecurso } from '../../entities/plano-recurso.entity';
@@ -18,28 +19,41 @@ type SeedPlano = Omit<CreatePlanoDto, 'nome' | 'slug'> & {
 @Injectable()
 export class PlanosService {
   constructor(
-    @InjectRepository(Plano) private planos: Repository<Plano>,
-    @InjectRepository(RecursoPlano) private recursos: Repository<RecursoPlano>,
-    @InjectRepository(PlanoRecurso) private planosRecursos: Repository<PlanoRecurso>,
+    @InjectRepository(Plano, 'buscadados') private planos: Repository<Plano>,
+    @InjectRepository(RecursoPlano, 'buscadados') private recursos: Repository<RecursoPlano>,
+    @InjectRepository(PlanoRecurso, 'buscadados') private planosRecursos: Repository<PlanoRecurso>,
+    private cache: RedisCacheService,
   ) {}
 
   async findAll(apenasAtivos = true) {
+    const cacheKey = apenasAtivos ? 'planos:ativos' : 'planos:todos';
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const planos = await this.planos.find({
       where: apenasAtivos ? { ativo: true } : {},
       relations: ['recursos', 'recursos.recurso'],
       order: { ordem: 'ASC' },
     });
 
-    return planos.map((plano) => this.toPublicPayload(plano));
+    const result = planos.map((plano) => this.toPublicPayload(plano));
+    await this.cache.set(cacheKey, result, 3600); // 1h
+    return result;
   }
 
   async findOne(id: string) {
+    const cacheKey = `plano:${id}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const plano = await this.planos.findOne({
       where: { id },
       relations: ['recursos', 'recursos.recurso'],
     });
     if (!plano) throw new NotFoundException('Plano não encontrado.');
-    return this.toPublicPayload(plano);
+    const result = this.toPublicPayload(plano);
+    await this.cache.set(cacheKey, result, 3600); // 1h
+    return result;
   }
 
   async findBySlug(slug: string) {
@@ -51,14 +65,18 @@ export class PlanosService {
   async create(dto: CreatePlanoDto) {
     const existente = await this.planos.findOne({ where: { slug: dto.slug } });
     if (existente) throw new ConflictException(`Slug "${dto.slug}" já existe.`);
-    return this.planos.save(this.planos.create(dto));
+    const result = await this.planos.save(this.planos.create(dto));
+    await this.cache.del('planos:ativos', 'planos:todos');
+    return result;
   }
 
   async update(id: string, dto: UpdatePlanoDto) {
     const plano = await this.planos.findOne({ where: { id } });
     if (!plano) throw new NotFoundException('Plano não encontrado.');
     Object.assign(plano, dto);
-    return this.planos.save(plano);
+    const result = await this.planos.save(plano);
+    await this.cache.del(`plano:${id}`, 'planos:ativos', 'planos:todos');
+    return result;
   }
 
   // ─── Recursos (catálogo) ────────────────────────────────────────────────────
@@ -125,6 +143,7 @@ export class PlanosService {
     if (!plano) throw new NotFoundException('Plano não encontrado.');
     plano.ativo = false;
     await this.planos.save(plano);
+    await this.cache.del(`plano:${id}`, 'planos:ativos', 'planos:todos');
   }
 
   async seed() {
@@ -138,6 +157,7 @@ export class PlanosService {
       { slug: 'inscricao-suframa', nome: 'Inscrição Suframa' },
       { slug: 'validacao-suframa', nome: 'Validação Suframa' },
       { slug: 'filtros-pesquisa', nome: 'Filtros de Pesquisa' },
+      { slug: 'painel-360', nome: 'Painel 360' },
     ];
 
     const planosPadrao: SeedPlano[] = [
@@ -243,6 +263,7 @@ export class PlanosService {
           { slug: 'inscricao-suframa', descricaoExibicao: 'Inscrições Suframa' },
           { slug: 'validacao-suframa', descricaoExibicao: 'Validação Suframa' },
           { slug: 'filtros-pesquisa', descricaoExibicao: 'Filtros de Pesquisa' },
+          { slug: 'painel-360', descricaoExibicao: 'Painel 360 (Em breve)' },
         ],
       },
     ];
@@ -293,6 +314,7 @@ export class PlanosService {
       }
     }
 
+    await this.cache.del('planos:ativos', 'planos:todos');
     return this.findAll(false);
   }
 

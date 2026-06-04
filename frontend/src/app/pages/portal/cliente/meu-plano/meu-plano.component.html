@@ -11,13 +11,19 @@
           <h2>{{ assinatura.plano }}</h2>
           <po-tag [p-value]="statusLabel" [p-color]="statusColor"></po-tag>
         </div>
-        <po-button
-          *ngIf="assinatura.status === 'ativa'"
-          p-label="Cancelar assinatura"
-          p-kind="danger"
-          p-icon="an an-x-circle"
-          (p-click)="abrirCancelar()">
-        </po-button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <po-tag *ngIf="cancelamentoAgendado"
+            [p-value]="'Cancelamento em ' + formatarData(cancelamentoAgendado)"
+            p-color="color-07">
+          </po-tag>
+          <po-button
+            *ngIf="assinatura.status === 'ativa' && !cancelamentoAgendado"
+            p-label="Cancelar assinatura"
+            p-kind="danger"
+            p-icon="an an-x-circle"
+            (p-click)="abrirCancelar()">
+          </po-button>
+        </div>
       </div>
 
       <div class="po-row" style="margin-top:20px;">
@@ -82,10 +88,10 @@
         </ul>
 
         <po-button
-          [p-label]="assinatura?.plano === p.nome ? 'Plano atual' : 'Contratar'"
-          p-kind="primary"
+          [p-label]="planoBotaoLabel(p)"
+          [p-kind]="assinatura && +p.precoMensal > precoMensalAtual ? 'primary' : 'secondary'"
           p-icon="an an-rocket-launch"
-          [p-disabled]="assinatura?.plano === p.nome"
+          [p-disabled]="planoBotaoDesabilitado(p)"
           (p-click)="abrirContratar(p)">
         </po-button>
       </div>
@@ -95,14 +101,87 @@
 </po-page-default>
 
 <!-- Modal cancelar -->
-<po-modal #modalCancelar p-title="Cancelar assinatura" p-size="sm"
+<po-modal #modalCancelar p-title="Cancelar assinatura" p-size="md"
   [p-primary-action]="acaoCancelar" [p-secondary-action]="acaoFecharCancelar">
-  <p style="color:#dc2626; margin-bottom:16px;">
-    Ao cancelar, seu token de API será desativado imediatamente.
+
+  <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:0.875rem; color:#856404;">
+    ⚠️ Ao cancelar, seu token de API será desativado e você perderá acesso às consultas.
+  </div>
+
+  <po-radio-group
+    p-label="Quando deseja cancelar?"
+    [(ngModel)]="opcaoCancelamento"
+    [p-options]="opcoesCancelamento">
+  </po-radio-group>
+
+  <p *ngIf="opcaoCancelamento === 'agora'" style="color:#dc2626; font-size:0.82rem; margin-top:6px;">
+    O acesso será encerrado imediatamente após a confirmação.
   </p>
-  <po-textarea p-label="Motivo do cancelamento (opcional)" [p-rows]="3"
-    [(ngModel)]="motivoCancelamento">
+  <p *ngIf="opcaoCancelamento === 'fim-vigencia'" style="color:#0d6efd; font-size:0.82rem; margin-top:6px;">
+    Você mantém acesso total até o fim da vigência. O cancelamento ocorre automaticamente na data.
+  </p>
+
+  <po-textarea p-label="Motivo (opcional)" [p-rows]="2" [(ngModel)]="motivoCancelamento"
+    style="margin-top:12px;">
   </po-textarea>
+
+</po-modal>
+
+<!-- Modal upgrade -->
+<po-modal #modalUpgrade p-title="Confirmar upgrade de plano" p-size="md"
+  [p-primary-action]="acaoUpgrade" [p-secondary-action]="acaoFecharUpgrade">
+
+  <po-loading-overlay *ngIf="carregandoPreview"></po-loading-overlay>
+
+  <ng-container *ngIf="upgradePreviewData">
+
+    <!-- Cabeçalho comparativo -->
+    <div class="upgrade-header">
+      <div class="upgrade-header__plano upgrade-header__plano--de">
+        <span class="upgrade-header__label">Plano atual</span>
+        <strong>{{ upgradePreviewData.planoAtual.nome }}</strong>
+        <span>R$ {{ upgradePreviewData.planoAtual.precoMensal | number:'1.2-2' }}/mês</span>
+      </div>
+      <div class="upgrade-header__arrow">
+        <span class="an an-arrow-right"></span>
+      </div>
+      <div class="upgrade-header__plano upgrade-header__plano--para">
+        <span class="upgrade-header__label">Novo plano</span>
+        <strong>{{ upgradePreviewData.novoPlano.nome }}</strong>
+        <span>R$ {{ upgradePreviewData.novoPlano.precoMensal | number:'1.2-2' }}/mês</span>
+      </div>
+    </div>
+
+    <!-- Detalhamento financeiro -->
+    <div class="upgrade-detalhes">
+      <div class="upgrade-linha upgrade-linha--info">
+        <span>Dias restantes no ciclo</span>
+        <strong>{{ upgradePreviewData.diasRestantes }} de {{ upgradePreviewData.diasTotais }} dias</strong>
+      </div>
+      <div class="upgrade-linha upgrade-linha--credito">
+        <span>Crédito proporcional (plano atual)</span>
+        <strong>− R$ {{ upgradePreviewData.creditoPlanoAtual | number:'1.2-2' }}</strong>
+      </div>
+      <div class="upgrade-linha upgrade-linha--cobranca">
+        <span>Cobrança proporcional (novo plano)</span>
+        <strong>+ R$ {{ upgradePreviewData.cobrancaNovoPlano | number:'1.2-2' }}</strong>
+      </div>
+      <div class="upgrade-linha upgrade-linha--total">
+        <span>Valor líquido desta fatura</span>
+        <strong>R$ {{ upgradePreviewData.valorLiquido | number:'1.2-2' }}</strong>
+      </div>
+      <div class="upgrade-linha upgrade-linha--venc">
+        <span>Próximo vencimento (sem alteração)</span>
+        <strong>{{ upgradePreviewData.proximoVencimento | date:'dd/MM/yyyy' }}</strong>
+      </div>
+    </div>
+
+    <p class="upgrade-aviso">
+      ⚠️ Um novo token de API será gerado. O token atual será invalidado imediatamente.
+    </p>
+
+  </ng-container>
+
 </po-modal>
 
 <!-- Modal contratar -->

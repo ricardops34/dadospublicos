@@ -1,14 +1,12 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import * as nodemailer from 'nodemailer';
-import { JwtPortalGuard } from '../portal/jwt-portal.guard';
-import { Perfil } from '../portal/perfil.decorator';
+import { AdminGuard } from '../admin/admin.guard';
 import { ParametrosService } from './parametros.service';
 
 @ApiTags('Config E-mail (Admin)')
 @ApiSecurity('bearer')
-@UseGuards(JwtPortalGuard)
-@Perfil('admin')
+@UseGuards(AdminGuard)
 @Controller('admin/config-email')
 export class ConfigEmailController {
   constructor(private readonly params: ParametrosService) {}

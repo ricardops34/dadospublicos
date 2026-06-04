@@ -9,9 +9,9 @@ import { Consumo } from '../../entities/consumo.entity';
 @Injectable()
 export class FaturasService {
   constructor(
-    @InjectRepository(Fatura) private faturas: Repository<Fatura>,
-    @InjectRepository(Assinatura) private assinaturas: Repository<Assinatura>,
-    @InjectRepository(Consumo) private consumos: Repository<Consumo>,
+    @InjectRepository(Fatura, 'buscadados') private faturas: Repository<Fatura>,
+    @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
+    @InjectRepository(Consumo, 'buscadados') private consumos: Repository<Consumo>,
   ) {}
 
   // Gera faturas no 1º de cada mês para assinaturas ativas pagas

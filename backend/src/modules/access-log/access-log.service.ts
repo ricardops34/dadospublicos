@@ -5,7 +5,7 @@ import { AccessLog } from '../../entities/access-log.entity';
 
 @Injectable()
 export class AccessLogService {
-  constructor(@InjectRepository(AccessLog) private logs: Repository<AccessLog>) {}
+  constructor(@InjectRepository(AccessLog, 'buscadados') private logs: Repository<AccessLog>) {}
 
   // Extrato por cliente: join com tokens via token_id
   async extratoPorCliente(clienteId: string, pagina = 1, limite = 50) {

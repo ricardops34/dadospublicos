@@ -9,10 +9,25 @@ services:
       POSTGRES_DB: ${DB_NAME:-dados_rfb}
     volumes:
       - rfb_pgdata:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     ports:
       - '5433:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-rfb_user} -d ${DB_NAME:-dados_rfb}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rfb_redis
+    restart: unless-stopped
+    volumes:
+      - rfb_redis_data:/data
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,6 +39,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       PORT: 3001
       DB_HOST: postgres
@@ -31,8 +48,12 @@ services:
       DB_USER: ${DB_USER:-rfb_user}
       DB_PASSWORD: ${DB_PASSWORD:-rfb_pass}
       DB_NAME: ${DB_NAME:-dados_rfb}
+      DB_SISTEMA_NAME: ${DB_SISTEMA_NAME:-buscadados}
+      DB_VIACEP_NAME: ${DB_VIACEP_NAME:-dados_viacep}
       ADMIN_KEY: ${ADMIN_KEY}
       JWT_SECRET: ${JWT_SECRET:-rfb-portal-secret}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       # Diretórios ETL mapeados diretamente no host — persistem entre deploys e rebuilds
       ETL_DOWNLOAD_DIR: /app/etl-data/downloads
       ETL_EXTRACT_DIR: /app/etl-data/extraidos
@@ -84,4 +105,5 @@ services:
 volumes:
   rfb_pgdata:
   rfb_pgadmin:
+  rfb_redis_data:
   # rfb_etldata removido — arquivos ETL agora vivem no host em ./etl-data/

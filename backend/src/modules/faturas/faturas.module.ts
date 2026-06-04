@@ -8,7 +8,7 @@ import { Consumo } from '../../entities/consumo.entity';
 import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Fatura, Assinatura, Consumo]), PortalModule],
+  imports: [TypeOrmModule.forFeature([Fatura, Assinatura, Consumo], 'buscadados'), PortalModule],
   controllers: [FaturasController],
   providers: [FaturasService],
 })
