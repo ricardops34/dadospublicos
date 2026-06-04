@@ -4,7 +4,7 @@
   bottom: 28px;
   right: 28px;
   z-index: 1200;
-  width: 58px; height: 58px;
+  width: 60px; height: 60px;
   border-radius: 50%;
   background: #25d366;
   color: #fff;
@@ -14,76 +14,70 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 20px rgba(37, 211, 102, .5);
-  transition: transform .2s, box-shadow .2s;
+  animation: wpp-pulse 2s infinite;
 
-  &:hover {
-    transform: scale(1.08);
-    box-shadow: 0 6px 28px rgba(37, 211, 102, .65);
-  }
-
-  // Ping animado
-  &__ping {
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    background: rgba(37, 211, 102, .35);
-    animation: wpp-ping 2s ease-in-out infinite;
-  }
+  &:hover { transform: scale(1.08); }
 }
 
-@keyframes wpp-ping {
-  0%, 100% { transform: scale(1); opacity: .6; }
-  50%       { transform: scale(1.18); opacity: 0; }
+@keyframes wpp-pulse {
+  0%   { transform: scale(.96); box-shadow: 0 0 0 0   rgba(37,211,102,.7); }
+  70%  { transform: scale(1);   box-shadow: 0 0 0 10px rgba(37,211,102,0); }
+  100% { transform: scale(.96); box-shadow: 0 0 0 0   rgba(37,211,102,0); }
 }
 
-// ── Janela de chat ────────────────────────────────────────────────
+// ── Janela ────────────────────────────────────────────────────────
 .wpp-chat {
   position: fixed;
-  bottom: 96px;
+  bottom: 98px;
   right: 28px;
   z-index: 1200;
-  width: 340px;
-  background: #fff;
+  width: 350px;
+  max-width: calc(100vw - 40px);
+  max-height: 500px;
   border-radius: 16px;
-  box-shadow: 0 8px 40px rgba(0,0,0,.18);
   overflow: hidden;
-  animation: wppSlide .22s ease;
+  box-shadow: 0 8px 40px rgba(0,0,0,.18);
+  display: flex;
+  flex-direction: column;
+  animation: wppSlide .25s ease;
 
   @media (max-width: 480px) {
     width: calc(100vw - 32px);
     right: 16px;
+    bottom: 88px;
   }
 }
 
 @keyframes wppSlide {
-  from { opacity: 0; transform: translateY(12px) scale(.97); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 // ── Header ────────────────────────────────────────────────────────
 .wpp-chat__header {
   background: #075e54;
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .wpp-chat__avatar {
   position: relative;
-  width: 42px; height: 42px;
+  width: 40px; height: 40px;
   background: rgba(255,255,255,.15);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 
-  span.an { font-size: 1.8rem; color: rgba(255,255,255,.9); }
+  .an { font-size: 1.7rem; color: rgba(255,255,255,.9); }
 }
 
-.wpp-chat__online {
+.wpp-chat__dot {
   position: absolute;
   bottom: 1px; right: 1px;
-  width: 11px; height: 11px;
+  width: 10px; height: 10px;
   background: #25d366;
   border: 2px solid #075e54;
   border-radius: 50%;
@@ -91,125 +85,129 @@
 
 .wpp-chat__info {
   flex: 1;
-  strong { display: block; color: #fff; font-size: 0.95rem; font-weight: 700; }
-  small  { color: #b2dfdb; font-size: 0.78rem; }
+  strong { display: block; color: #fff; font-size: 0.9rem; font-weight: 700; }
+  small  {
+    color: rgba(255,255,255,.75); font-size: 0.75rem;
+    display: flex; align-items: center; gap: 4px;
+  }
+}
+
+.wpp-chat__dot--inline {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: #4caf50;
+  border-radius: 50%;
 }
 
 .wpp-chat__close {
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,.7);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 4px;
-  border-radius: 6px;
+  background: transparent; border: none;
+  color: rgba(255,255,255,.7); cursor: pointer;
+  font-size: 0.9rem; padding: 4px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-
   &:hover { color: #fff; background: rgba(255,255,255,.1); }
 }
 
 // ── Corpo ─────────────────────────────────────────────────────────
 .wpp-chat__body {
-  padding: 20px 16px 12px;
-  background: #ece5dd;
-  min-height: 110px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+  min-height: 200px;
+  max-height: 280px;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  background-color: #e5ddd5;
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+  background-blend-mode: overlay;
 }
 
-.wpp-chat__bubble {
-  background: #fff;
+// ── Mensagens ─────────────────────────────────────────────────────
+.wpp-msg {
+  max-width: 82%;
+  padding: 7px 11px;
   border-radius: 0 12px 12px 12px;
-  padding: 10px 14px;
-  font-size: 0.9rem;
-  color: #111827;
-  line-height: 1.5;
-  max-width: 90%;
-  box-shadow: 0 1px 3px rgba(0,0,0,.1);
-  position: relative;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  box-shadow: 0 1px 1px rgba(0,0,0,.13);
+  word-break: break-word;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -8px;
-    border: 8px solid transparent;
-    border-top-color: #fff;
-    border-right-color: #fff;
+  &--bot {
+    background: #fff;
+    align-self: flex-start;
+  }
+
+  &--user {
+    background: #dcf8c6;
+    border-radius: 12px 0 12px 12px;
+    align-self: flex-end;
   }
 }
 
-// ── Botão iniciar / enviar ─────────────────────────────────────────
-.wpp-chat__footer-btn {
-  padding: 12px 16px;
-  background: #f0f0f0;
-  border-top: 1px solid #e0e0e0;
-}
-
-.wpp-chat__start-btn {
-  width: 100%;
-  height: 40px;
-  border-radius: 20px;
-  background: #25d366;
-  border: none;
-  color: #fff;
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: background .15s;
-
-  &:hover { background: #1da851; }
-  &:disabled { opacity: .55; cursor: not-allowed; }
-}
-
-// ── Formulário ────────────────────────────────────────────────────
-.wpp-chat__form {
-  padding: 16px;
+// ── Digitando ─────────────────────────────────────────────────────
+.wpp-typing {
+  background: #fff;
+  border-radius: 0 12px 12px 12px;
+  padding: 8px 12px;
+  align-self: flex-start;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: #f8f9fa;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.13);
 }
 
-.wpp-chat__field {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 9px 12px;
+.wpp-typing__dot {
+  width: 6px; height: 6px;
+  background: #919191;
+  border-radius: 50%;
+  animation: wppBounce 1.3s linear infinite;
+
+  &:nth-child(2) { animation-delay: -1.1s; }
+  &:nth-child(3) { animation-delay: -.9s; }
+}
+
+@keyframes wppBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%            { transform: translateY(-4px); }
+}
+
+// ── Input ─────────────────────────────────────────────────────────
+.wpp-chat__input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f0f0f0;
+  border-top: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.wpp-chat__input {
+  flex: 1;
+  border: none;
+  border-radius: 20px;
+  background: #fff;
+  padding: 9px 14px;
   font-size: 0.875rem;
   font-family: inherit;
   outline: none;
-  background: #fff;
   color: #111827;
-  transition: border-color .15s;
 
-  &:focus { border-color: #25d366; }
   &::placeholder { color: #9ca3af; }
-
-  &--area { resize: none; min-height: 72px; }
+  &:disabled { opacity: .6; }
 }
 
-// ── Confirmação ───────────────────────────────────────────────────
-.wpp-chat__body--center {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  min-height: 140px;
-}
+.wpp-chat__send {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #075e54;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
 
-.wpp-chat__success {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-
-  span { font-size: 2.5rem; color: #25d366; }
-  strong { font-size: 1rem; color: #111827; }
-  p { font-size: 0.8rem; color: #6b7280; margin: 0; }
-}
-
-.wpp-chat__link-btn {
-  background: none; border: none;
-  color: #25d366; font-size: 0.8rem;
-  cursor: pointer; text-decoration: underline;
-  margin-top: 4px;
+  &:hover:not(:disabled) { background: #054d44; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
 }
