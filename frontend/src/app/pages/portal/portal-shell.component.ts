@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { PoMenuItem, PoToolbarAction, PoToolbarProfile } from '@po-ui/ng-components';
+import { PoMenuItem, PoHeaderBrand, PoHeaderUser, PoHeaderActionTool } from '@po-ui/ng-components';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -11,15 +11,24 @@ import { AuthService } from '../../services/auth.service';
 export class PortalShellComponent implements OnInit {
   menuItems: PoMenuItem[] = [];
 
-  toolbarProfile: PoToolbarProfile = { title: '', subtitle: '' };
+  headerBrand: PoHeaderBrand = {
+    title: 'BuscaDados',
+    logo: 'logo_bj.png'
+  };
 
-  toolbarActions: PoToolbarAction[] = [
-    {
-      label: 'Sair',
-      icon: 'an an-sign-out',
-      action: () => this.sair(),
-    },
-  ];
+  headerUser: PoHeaderUser = {
+    avatar: '',
+    customerBrand: '',
+    items: [
+      {
+        label: 'Sair',
+        icon: 'an an-sign-out',
+        action: () => this.sair(),
+      }
+    ]
+  };
+
+  headerActionsTools: PoHeaderActionTool[] = [];
 
   private readonly MENUS_ADMIN: PoMenuItem[] = [
     { label: 'Dashboard',          icon: 'an an-gauge',        link: '/portal/dashboard' },
@@ -48,10 +57,17 @@ export class PortalShellComponent implements OnInit {
   ngOnInit() {
     const perfil = this.auth.getPerfil();
     this.menuItems = perfil === 'admin' ? this.MENUS_ADMIN : this.MENUS_CLIENTE;
-    this.toolbarProfile = {
-      title: this.auth.getNome(),
-      subtitle: perfil === 'admin' ? 'Administrador' : 'Cliente',
-    };
+    
+    // Atualiza nome do usuario no avatar/profile
+    this.headerUser.customerBrand = perfil === 'admin' ? 'Administrador' : 'Cliente';
+
+    if (perfil === 'admin') {
+      this.headerActionsTools = [
+        { icon: 'an an-gear', action: () => console.log('Configurações') },
+        { icon: 'an an-squares-four', action: () => console.log('Apps') },
+        { icon: 'an an-chat-circle', action: () => console.log('Mensagens') }
+      ];
+    }
   }
 
   sair() {

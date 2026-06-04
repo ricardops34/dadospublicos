@@ -1,0 +1,389 @@
+# PO UI Offline Docs
+
+Gerado automaticamente em `2026-05-18T21:46:27.345Z`.
+
+Este diretório espelha os arquivos markdown publicados em `https://po-ui.io/llms-generated/` para consulta local quando a documentação oficial ou o MCP estiverem indisponíveis.
+
+## Fontes
+
+- [llms.txt](./sources/llms.txt)
+- [llms-full.txt](./sources/llms-full.txt)
+- [po-theme-package.json](./sources/po-theme-package.json)
+- [po-theme-readme.md](./sources/po-theme-readme.md)
+- [po-theme-totvs-repo](./sources/po-theme-totvs-repo)
+
+## Resumo
+
+- Total de arquivos espelhados: **337**
+- Total de seções encontradas no índice: **6**
+
+## Instalação
+
+
+## Componentes e Diretivas
+
+- [PoComboOptionTemplateDirective](./llms-generated/[p-combo-option-template].md): Esta diretiva permite personalizar o conteúdo dos itens exibidos na lista de opções do componente.
+- [PoJobSchedulerParametersTemplateDirective](./llms-generated/[p-job-scheduler-parameters-template].md): Esta diretiva permite personalizar o conteúdo da uma ou várias etapa(s) de parametrização do componente de PoPageJobScheduler.
+- [PoJobSchedulerSummaryTemplateDirective](./llms-generated/[p-job-scheduler-summary-template].md): Esta diretiva permite personalizar o conteúdo de resumo das informações de parâmetro na etapa de conclusão do componente de PoPageJobScheduler.
+- [PoListViewContentTemplateDirective](./llms-generated/[p-list-view-content-template].md): Esta diretiva permite que sejam apresentadas informações essenciais de cada item.
+- [PoListViewDetailTemplateDirective](./llms-generated/[p-list-view-detail-template].md): Esta diretiva permite que sejam apresentadas informações adicionais de cada item, construindo um
+- [PoMenuHeaderTemplateDirective](./llms-generated/[p-menu-header-template].md): Esta diretiva permite adicionar um conteúdo personalizado entre a logo e o campo de filtro do cabeçalho do
+- [PoMultiselectOptionTemplateDirective](./llms-generated/[p-multiselect-option-template].md): Esta diretiva permite personalizar o conteúdo dos itens exibidos na lista de opções do componente.
+- [PoSlideContentTemplateDirective](./llms-generated/[p-slide-content-template].md): Esta diretiva permite a customização de um slide.
+- [PoTableCellTemplateDirective](./llms-generated/[p-table-cell-template].md): Esta diretiva permite que seja possível alterar o conteúdo das células de uma coluna, para que os valores possam ser exibidos
+- [PoTableColumnTemplateDirective](./llms-generated/[p-table-column-template].md): Esta diretiva permite que seja possível alterar o conteúdo das células de uma coluna, para que os valores possam ser exibidos
+- [PoTableRowTemplateDirective](./llms-generated/[p-table-row-template].md): Esta diretiva permite que seja apresentada informações adicionais a respeito de uma determinada linha de
+- [PoTooltipDirective](./llms-generated/[p-tooltip].md): A diretiva po-tooltip deve ser utilizada para oferecer informações adicionais quando os usuários
+- [PoAccordionComponent](./llms-generated/po-accordion.md): Componente utilizado para agrupar visualmente uma lista de conteúdos, mostrando-os individualmente
+- [PoAccordionItemComponent](./llms-generated/po-accordion-item.md): Componente utilizado para renderizar os itens do `po-accordion`.
+- [PoAvatarComponent](./llms-generated/po-avatar.md): O componente `po-avatar` é um container para imagens em miniatura, possui um formato redondo e cinco opções de
+- [PoBadgeComponent](./llms-generated/po-badge.md): Utilizado para exibir a quantidade de notificações.
+- [PoBreadcrumbComponent](./llms-generated/po-breadcrumb.md): Este componente gera uma estrutura de navegação que apresenta ao usuário a localização
+- [PoButtonComponent](./llms-generated/po-button.md): O `po-button` permite que o usuário execute ações predefinidas pelo desenvolvedor.
+- [PoButtonBaseComponent](./llms-generated/po-button-base.md): O `po-button` permite que o usuário execute ações predefinidas pelo desenvolvedor.
+- [PoButtonGroupComponent](./llms-generated/po-button-group.md): O componente `po-button-group` é formado por um conjunto de botões distribuídos horizontalmente.
+- [PoButtonGroupBaseComponent](./llms-generated/po-button-group-base.md): O componente `po-button-group` é formado por um conjunto de botões distribuídos horizontalmente.
+- [PoCalendarComponent](./llms-generated/po-calendar.md): O `po-calendar` é um componente para seleção de datas que permite a navegação entre meses por meio das setas direcionais
+- [PoChartComponent](./llms-generated/po-chart.md): O `po-chart` é um componente para renderização de dados através de gráficos, com isso facilitando a compreensão e tornando a
+- [PoCheckboxComponent](./llms-generated/po-checkbox.md): O componente `po-checkbox` exibe uma caixa de opção com um texto ao lado, na qual é possível marcar e desmarcar através tanto
+- [PoCheckboxBaseComponent](./llms-generated/po-checkbox-base.md): O componente `po-checkbox` exibe uma caixa de opção com um texto ao lado, na qual é possível marcar e desmarcar através tanto
+- [PoCheckboxGroupComponent](./llms-generated/po-checkbox-group.md): O componente `po-checkbox-group` exibe uma lista de múltipla escolha onde o usuário pode marcar e desmarcar,
+- [PoCodeEditorComponent](./llms-generated/po-code-editor.md): O `po-code-editor` é um componente para edição de código fonte baseado no Monaco Editor da Microsoft.
+- [PoComboComponent](./llms-generated/po-combo.md): O `po-combo` exibe uma lista de opções com fácil seleção e filtragem.
+- [PoContainerComponent](./llms-generated/po-container.md): O `po-container` é um componente que visa facilitar o agrupamento de conteúdos.
+- [PoContextMenuComponent](./llms-generated/po-context-menu.md): O componente `po-context-menu` é uma barra lateral de contexto (sidebar) para navegação interna entre contextos.
+- [PoContextTabsComponent](./llms-generated/po-context-tabs.md): #### Tokens customizáveis
+- [PoDatepickerComponent](./llms-generated/po-datepicker.md): O `po-datepicker` é um componente específico para manipulação de datas permitindo a digitação e / ou seleção.
+- [PoDatepickerRangeComponent](./llms-generated/po-datepicker-range.md): O `po-datepicker-range` é um componente para seleção de um período entre duas datas, onde é possível informar apenas
+- [PoDecimalComponent](./llms-generated/po-decimal.md): Este é um componente baseado em input, com várias propriedades do input nativo e outras
+- [PoDisclaimerGroupComponent](./llms-generated/po-disclaimer-group.md): O componente `po-disclaimer-group` é recomendado para manipular palavras-chave de filtros aplicados em uma pesquisa.
+- [PoDividerComponent](./llms-generated/po-divider.md): Este componente apresenta uma linha demarcadora de blocos e pode conter um *label*.
+- [PoDropdownComponent](./llms-generated/po-dropdown.md): O componente `po-dropdown` pode ser utilizado como um agrupador de ações e / ou opções.
+- [PoDynamicFormComponent](./llms-generated/po-dynamic-form.md): Componente para criação de formulários dinâmicos a partir de uma lista de objetos.
+- [PoDynamicViewComponent](./llms-generated/po-dynamic-view.md): Componente para listar dados dinamicamente a partir de uma lista de objetos.
+- [PoEmailComponent](./llms-generated/po-email.md): Este é um componente baseado em input, com várias propriedades do input nativo e outras
+- [PoFilterChipComponent](./llms-generated/po-filter-chip.md): O `po-filter-chip` é um componente interativo que representa uma opção de filtro selecionável na forma de chip.
+- [PoGaugeComponent](./llms-generated/po-gauge.md): > ESSE COMPONENTE ESTÁ DEPRECIADO E SERÁ REMOVIDO NA v22.x.x.
+- [PoGridComponent](./llms-generated/po-grid.md): > Componente em desenvolvimento, podendo haver BREAKING CHANGES nas próximas versões.
+- [PoHeaderComponent](./llms-generated/po-header.md): O componente `po-header` é um cabeçalho fixo que permite apresentar itens com ações, divididos em `p-brand`, `p-menu-items`, `p-actions-tools` e `p-header-user`.
+- [PoHelperComponent](./llms-generated/po-helper.md): O componente `po-helper` exibe um ícone de ajuda ou informação ao lado de campos, botões ou outros elementos, permitindo ao usuário acessar conteúdos explicativos em um popover.
+- [PoHelperBaseComponent](./llms-generated/po-helper-base.md): O componente `po-helper` exibe um ícone de ajuda ou informação ao lado de campos, botões ou outros elementos, permitindo ao usuário acessar conteúdos explicativos em um popover.
+- [PoImageComponent](./llms-generated/po-image.md): As imagens têm a função de traduzir visualmente ideias específicas ou mensagens complexas, mostrar um produto ou contar uma história, estabelecendo empatia e se conectando com os usuários.
+- [PoInfoComponent](./llms-generated/po-info.md): Este componente tem como objetivo renderizar valores na tela no estilo label na parte superior e
+- [PoInputComponent](./llms-generated/po-input.md): Este é um componente baseado em input, com várias propriedades do input nativo e outras
+- [PoLinkComponent](./llms-generated/po-link.md): Os links são utilizados como rota.
+- [PoListViewComponent](./llms-generated/po-list-view.md): Componente de lista que recebe um array de objetos e renderiza de forma dinâmica os dados de
+- [PoLoadingOverlayComponent](./llms-generated/po-loading-overlay.md): Este componente mostra ao usuário uma imagem de _loading_ e bloqueia a página inteira ou o container escolhido,
+- [PoLoginComponent](./llms-generated/po-login.md): Este é um componente baseado em input, com várias propriedades do input nativo e outras
+- [PoLookupComponent](./llms-generated/po-lookup.md): Componente utilizado para abrir uma janela de busca com uma tabela que lista dados de um serviço.
+- [PoMenuComponent](./llms-generated/po-menu.md): Este é um componente de menu lateral que é utilizado para navegação nas páginas de uma aplicação.
+- [PoMenuPanelComponent](./llms-generated/po-menu-panel.md): Este é um componente de menu lateral composto apenas por ícones e com um nível, utilizado para navegação
+- [PoModalComponent](./llms-generated/po-modal.md): O componente `po-modal` é utilizado para incluir conteúdos rápidos e informativos.
+- [PoModalFooterComponent](./llms-generated/po-modal-footer.md): O componente `po-modal-footer` pode ser utilizado para incluir os botões de ações no rodapé da [`PoModal`](/documentation/po-modal), bem como para dar liberdade ao desenvolvedor de incluir outros itens necessários.
+- [PoModalPasswordRecoveryComponent](./llms-generated/po-modal-password-recovery.md): O componente `po-modal-password-recovery` é utilizado como template para solicitação de troca de senha.
+- [PoMultiselectComponent](./llms-generated/po-multiselect.md): O po-multiselect é um componente de múltipla seleção.
+- [PoNavbarComponent](./llms-generated/po-navbar.md): O componente `po-navbar` é um cabeçalho fixo que permite apresentar uma lista de links para facilitar a navegação pelas
+- [PoNumberComponent](./llms-generated/po-number.md): Este é um componente baseado em input, com várias propriedades do input nativo e outras
+- [PoPageBlockedUserComponent](./llms-generated/po-page-blocked-user.md): O componente `po-page-blocked-user` é utilizado como template para tela de bloqueio de usuário.
+- [PoPageChangePasswordComponent](./llms-generated/po-page-change-password.md): O componente `po-page-change-password` é utilizado como template para tela de cadastro ou alteração de senha.
+- [PoPageDefaultComponent](./llms-generated/po-page-default.md): O `po-page-default` é utilizado como container principal para telas sem um template definido.
+- [PoPageDetailComponent](./llms-generated/po-page-detail.md): O componente **po-page-detail** é utilizado como container principal para a tela de
+- [PoPageDynamicDetailComponent](./llms-generated/po-page-dynamic-detail.md): O `po-page-dynamic-detail` é uma página que serve para exibir registros em detalhes,
+- [PoPageDynamicEditComponent](./llms-generated/po-page-dynamic-edit.md): O `po-page-dynamic-edit` é uma página que pode servir para editar ou criar novos registros,
+- [PoPageDynamicSearchComponent](./llms-generated/po-page-dynamic-search.md): Componente com as ações de pesquisa já definidas, bastando que o desenvolvedor implemente apenas a chamada para as APIs
+- [PoPageDynamicTableComponent](./llms-generated/po-page-dynamic-table.md): O `po-page-dynamic-table` é uma página que exibe uma lista de registros em uma tabela baseado em uma lista de fields,
+- [PoPageEditComponent](./llms-generated/po-page-edit.md): O componente **po-page-edit** é utilizado como container principal para tela de edição ou adição de um
+- [PoPageJobSchedulerComponent](./llms-generated/po-page-job-scheduler.md): O `po-page-job-scheduler` é uma página para criação e atualização de agendamentos da execução de processos (Job Scheduler),
+- [PoPageListComponent](./llms-generated/po-page-list.md): O componente `po-page-list` é utilizado como o container principal para as telas de listagem de dados,
+- [PoPageLoginComponent](./llms-generated/po-page-login.md): O componente `po-page-login` é utilizado como template para tela de login.
+- [PoPageSlideComponent](./llms-generated/po-page-slide.md): O componente `po-page-slide` é utilizado para incluir conteúdos secundários
+- [PoPageSlideFooterComponent](./llms-generated/po-page-slide-footer.md): O componente `po-page-slide-footer` pode ser utilizado para incluir os botões de ações no rodapé da [`PoPageSlide`](/documentation/po-page-slide), bem como para dar liberdade ao desenvolvedor de incluir outros itens necessários.
+- [PoPasswordComponent](./llms-generated/po-password.md): Este é um componente baseado em input, com várias propriedades do input nativo e outras
+- [PoPopoverComponent](./llms-generated/po-popover.md): O componente `po-popover` é um container pequeno recomendado para incluir vários tipos de conteúdo como:
+- [PoPopoverBaseComponent](./llms-generated/po-popover-base.md): O componente `po-popover` é um container pequeno recomendado para incluir vários tipos de conteúdo como:
+- [PoPopupComponent](./llms-generated/po-popup.md): O componente `po-popup` é um container pequeno recomendado para ações de navegação:
+- [PoProgressComponent](./llms-generated/po-progress.md): Componente de barra de progresso que possibilita exibir visualmente o progresso/carregamento de uma tarefa.
+- [PoRadioGroupComponent](./llms-generated/po-radio-group.md): O componente `po-radio-group` deve ser utilizado para disponibilizar múltiplas opções ao usuário, permitindo a ele que
+- [PoRichTextComponent](./llms-generated/po-rich-text.md): O componente `po-rich-text` é um editor de textos enriquecidos.
+- [PoSearchComponent](./llms-generated/po-search.md): O componente search, também conhecido como barra de pesquisa, é utilizado para ajudar os usuários a localizar um determinado conteúdo.
+- [PoSelectComponent](./llms-generated/po-select.md): O componente po-select exibe uma lista de valores e permite que o usuário selecione um desses valores.
+- [PoSkeletonComponent](./llms-generated/po-skeleton.md): O componente `po-skeleton` é utilizado para exibir placeholders durante o carregamento de conteúdo,
+- [PoSlideComponent](./llms-generated/po-slide.md): Componente de slide para visualização e controle de elementos de forma cíclica.
+- [PoStepComponent](./llms-generated/po-step.md): O componente `po-step` é utilizado para envolver e renderizar o conteúdo de um passo (*step*) do `po-stepper`, por exemplo:
+- [PoStepperComponent](./llms-generated/po-stepper.md): O `po-stepper` permite que um processo seja dividido em passos para que o usuário o realize
+- [PoSwitchComponent](./llms-generated/po-switch.md): O componente `po-switch` é um [checkbox](/documentation/po-checkbox-group) mais intuitivo, pois faz analogia a um interruptor.
+- [PoTabComponent](./llms-generated/po-tab.md): O componente `po-tab` renderiza uma aba na qual envolve um conteúdo HTML.
+- [PoTableComponent](./llms-generated/po-table.md): Este componente de tabela é utilizado para exibição de dados com diferentes tipos como por exemplo textos, data, horas e números com
+- [PoTabsComponent](./llms-generated/po-tabs.md): #### Tokens customizáveis
+- [PoTagComponent](./llms-generated/po-tag.md): Este componente permite exibir um valor em forma de um marcador colorido, sendo possível definir uma legenda e realizar customizações
+- [PoTextareaComponent](./llms-generated/po-textarea.md): Este é um componente de entrada de dados que possibilita o preechimento com múltiplas linhas.
+- [PoTimepickerComponent](./llms-generated/po-timepicker.md): O `po-timepicker` é um componente para seleção de horário que permite a digitação e/ou seleção via painel flutuante.
+- [PoToasterComponent](./llms-generated/po-toaster.md): O Toaster serve para exibir uma mensagem temporária em linha na interface, podendo ou não ser removida pelos usuários a depender do uso especificado.
+- [PoToolbarComponent](./llms-generated/po-toolbar.md): O componente `po-toolbar` é um cabeçalho para o título da aplicação e informações de usuário e notificações quando houver necessidade.
+- [PoTreeViewComponent](./llms-generated/po-tree-view.md): O componente fornece um modelo de visualização em árvore, possibilitando a visualização das informações de maneira
+- [PoUploadComponent](./llms-generated/po-upload.md): O componente `po-upload` permite que o usuário envie arquivo(s) ao servidor e acompanhe o progresso.
+- [PoUrlComponent](./llms-generated/po-url.md): Este é um componente baseado em input, com várias propriedades do input nativo e outras
+- [PoWidgetComponent](./llms-generated/po-widget.md): O componente `po-widget` é recomendado para exibição de *dashboards*, podendo ser utilizado
+
+## Serviços
+
+- [PoCodeEditorRegister](./llms-generated/po-code-editor-register.md): Wrapper para registro de sintaxes customizadas para o po-code-editor.
+- [PoDialogService](./llms-generated/po-dialog-service.md): O po-dialog é um serviço para exibição de caixas de diálogo, é possível customiza-los passando alguns parâmetros de acordo com a
+- [PoHttpInterceptorService](./llms-generated/po-http-interceptor-service.md): O *interceptor* tem a finalidade de exibir notificações com mensagens na tela, baseado nas respostas das requisições HTTP.
+- [PoHttpRequestInterceptorService](./llms-generated/po-http-request-interceptor-service.md): O serviço PO Http Request Interceptor realiza a contabilização de requisições pendentes na aplicação.
+- [PoI18nService](./llms-generated/po-i18n-service.md): O serviço `PoI18nService` possibilita utilizar múltiplos idiomas e contextos na aplicação.
+- [PoMediaQueryService](./llms-generated/po-media-query-service.md): O PoMediaQueryService é um serviço que atualiza dinamicamente regras de media query dentro de folhas de estilo do DOM.
+- [PoNetworkService](./llms-generated/po-network-service.md): O `PoNetworkService` é utilizado para verificar o status e o tipo da conexão de rede do dispositivo.
+- [PoNotificationService](./llms-generated/po-notification-service.md): Serviço responsável por emitir as notificações em uma página.
+- [PoStorageService](./llms-generated/po-storage-service.md): O PO Storage é uma biblioteca que fornece um serviço para armazenamento de dados no dispositivo local, sendo semelhante
+- [PoSyncService](./llms-generated/po-sync-service.md): O `PoSyncService` é utilizado para configurar toda a base de dados que receberá as informações que serão
+- [PoThemeService](./llms-generated/po-theme-service.md): O serviço `PoThemeService` permite customizar as cores do tema padrão do `PO-UI` e definir o nível de acessibilidade
+
+## Interfaces e Modelos
+
+- [ErrorAsyncProperties](./llms-generated/error-async-properties.md): Interface para realizar uma validação assíncrona no componente.
+- [PoAccordionLiterals](./llms-generated/po-accordion-literals.md): Interface para definição das literais usadas no `po-accordion`.
+- [PoBreadcrumb](./llms-generated/po-breadcrumb.md): Interface que define o `po-breadcrumb`.
+- [PoBreadcrumbItem](./llms-generated/po-breadcrumb-item.md): Interface que define cada item do componente **po-breadcrumb**.
+- [PoButtonGroupItem](./llms-generated/po-button-group-item.md): Interface para os itens do `po-button-group`.
+- [PoCalendarRangePreset](./llms-generated/po-calendar-range-preset.md): Interface para definir um preset de intervalo de datas no calendário.
+- [PoChartAxisOptions](./llms-generated/po-chart-axis-options.md): Interface* que define os eixos do grid.
+- [PoChartDataLabel](./llms-generated/po-chart-data-label.md): Interface que define as propriedades de exibição dos rótulos das séries no `po-chart`.
+- [PoChartHeaderOptions](./llms-generated/po-chart-header-options.md): Interface* para configuração das ações disponíveis no cabeçalho.
+- [PoChartIndicatorOptions](./llms-generated/po-chart-indicator-options.md): Interface para configurações dos indicadores do gráfico `radar`.
+- [PoChartLiterals](./llms-generated/po-chart-literals.md): Interface para definição dos literais usadas no `po-chart`.
+- [PoChartOptions](./llms-generated/po-chart-options.md): Interface* para configurações dos elementos do gráfico.
+- [PoChartRadarOptions](./llms-generated/po-chart-radar-options.md): Interface* para configurações do gráfico `radar`.
+- [PoChartSerie](./llms-generated/po-chart-serie.md): Interface das series dinâmicas do `po-chart` que possibilita desenhar gráficos dos tipos `area`, `bar`, `column`, `line`, `donut`, `pie` e `radar`
+- [PoCheckboxGroupOption](./llms-generated/po-checkbox-group-option.md): Interface para as ações do componente po-checkbox-group.
+- [PoCodeEditorRegisterable](./llms-generated/po-code-editor-registerable.md): Interface para configuração de novas sintaxes ao code editor.
+- [PoCodeEditorRegisterableOptions](./llms-generated/po-code-editor-registerable-options.md): Interface para configuração de Opções de novas sintaxes ao code editor.
+- [PoCodeEditorRegisterableSuggestion](./llms-generated/po-code-editor-registerable-suggestion.md): Interface para configuração da lista de sugestão do autocomplete do code editor.
+- [PoCodeEditorRegisterableSuggestionType](./llms-generated/po-code-editor-registerable-suggestion-type.md): Interface do objeto usado pelo monaco para lista de sugestão do autocomplete do code editor.
+- [PoCodeEditorRegisterableTokens](./llms-generated/po-code-editor-registerable-tokens.md): Interface para configuração de tokens de novas sintaxes ao code editor.
+- [PoCodeEditorSuggestionList](./llms-generated/po-code-editor-suggestion-list.md): Interface do objeto usado pelo monaco para lista de sugestão do autocomplete do code editor.
+- [PoComboFilter](./llms-generated/po-combo-filter.md): Interface para os serviços que serão utilizados no po-combo.
+- [PoComboLiterals](./llms-generated/po-combo-literals.md): Interface para definição das literais usadas no `po-combo`.
+- [PoComboOption](./llms-generated/po-combo-option.md): Interface que define as opções que serão exibidas na lista do `po-combo`.
+- [PoComboOptionGroup](./llms-generated/po-combo-option-group.md): Interface dos agrupamentos da coleção que será exibida no dropdown do `po-combo`.
+- [PoContextMenuItem](./llms-generated/po-context-menu-item.md): Interface para os itens do componente po-context-menu.
+- [PoDataTransform](./llms-generated/po-data-transform.md): Classe responsável por adaptar dados de APIs que não seguem
+- [PoDateSeparator](./llms-generated/po-date-separator.md): Interface para o separador de data das linguagens disponíveis no sistema.
+- [PoDatepickerRange](./llms-generated/po-datepicker-range.md): Interface para definição do objeto com a data inicial e final usadas no `po-datepicker-range`.
+- [PoDatepickerRangeLiterals](./llms-generated/po-datepicker-range-literals.md): Interface para definição das literais usadas no `po-datepicker-range`.
+- [PoDialogAlertLiterals](./llms-generated/po-dialog-alert-literals.md): Interface para definição das literais usadas no serviço `po-dialog` para o tipo alerta.
+- [PoDialogAlertOptions](./llms-generated/po-dialog-alert-options.md): Interface para o título e a mensagem do serviço po-dialog.
+- [PoDialogConfirmLiterals](./llms-generated/po-dialog-confirm-literals.md): Interface para definição das literais usadas no serviço `po-dialog` para o tipo confirmação.
+- [PoDialogConfirmOptions](./llms-generated/po-dialog-confirm-options.md): Interface para o título e a mensagem do serviço po-dialog.
+- [PoDisclaimer](./llms-generated/po-disclaimer.md): Interface que representa o objeto `po-disclaimer`.
+- [PoDisclaimerGroup](./llms-generated/po-disclaimer-group.md): Interface que representa o objeto `po-disclaimer-group`.
+- [PoDisclaimerGroupRemoveAction](./llms-generated/po-disclaimer-group-remove-action.md): Estrutura do objeto representando o estado dos *disclaimers* após a remoção.
+- [PoDropdownAction](./llms-generated/po-dropdown-action.md): Interface para as ações do componente `po-dropdown`.
+- [PoDynamicFormField](./llms-generated/po-dynamic-form-field.md): Interface para definição das propriedades dos campos de entrada que serão criados dinamicamente.
+- [PoDynamicFormFieldChanged](./llms-generated/po-dynamic-form-field-changed.md): Estrutura dos valores que serão disparados quando houver uma mudança em um campo ou no formulário.
+- [PoDynamicFormFieldValidation](./llms-generated/po-dynamic-form-field-validation.md): Estrutura de retorno da validação de um campo.
+- [PoDynamicFormLoad](./llms-generated/po-dynamic-form-load.md): Estrutura de retorno no carregamento do formulário.
+- [PoDynamicFormValidation](./llms-generated/po-dynamic-form-validation.md): Estrutura de retorno da validação do formulário.
+- [PoDynamicViewField](./llms-generated/po-dynamic-view-field.md): Interface para definição das propriedades dos campos de visualização que serão criados dinamicamente.
+- [PoDynamicViewRequest](./llms-generated/po-dynamic-view-request.md): Define o tipo de busca customizada para um campo em específico.
+- [PoEntity](./llms-generated/po-entity.md): Uma instância `PoEntity` representa um *schema* e ela contém métodos que possibilitam manipular seus registros,
+- [PoEventSourcingErrorResponse](./llms-generated/po-event-sourcing-error-response.md): Classe que define a resposta de erro para um item da fila de eventos que não foi enviado ao servidor por
+- [PoEventSourcingItem](./llms-generated/po-event-sourcing-item.md): Classe que irá mapear as informações dos `EventSourcing` gerados pela aplicação.
+- [PoFilterChipSelectedChange](./llms-generated/po-filter-chip-selected-change.md): Interface que define o objeto emitido pelo evento `p-selected-change`.
+- [PoGaugeOptions](./llms-generated/po-gauge-options.md): Interface* para configurações dos elementos do gráfico.
+- [PoGaugeRanges](./llms-generated/po-gauge-ranges.md): Interface que define os alcances das cores do gauge.
+- [PoGridRowActions](./llms-generated/po-grid-row-actions.md): Ações executadas durante a manipulação das linhas do grid.
+- [PoHeaderActionPopoverAction](./llms-generated/po-header-action-popover-action.md): Interface* que define um template para uma ação.
+- [PoHeaderActionTool](./llms-generated/po-header-action-tool.md): Interface* que define a seção de Actions do header.
+- [PoHeaderActionToolItem](./llms-generated/po-header-action-tool-item.md): Interface* que define uma lista de ações.
+- [PoHeaderActions](./llms-generated/po-header-actions.md): Interface* que define uma lista de ações no sub-menu.
+- [PoHeaderBrand](./llms-generated/po-header-brand.md): Interface* que define a seção de brand.
+- [PoHeaderLiterals](./llms-generated/po-header-literals.md): Interface para definição das literais usadas no `po-header`.
+- [PoHeaderUser](./llms-generated/po-header-user.md): Interface* que define a seção de Customer do header.
+- [PoHelperOptions](./llms-generated/po-helper-options.md): Interface* que define as opções de configuração do componente po-helper.
+- [PoHttpRequestData](./llms-generated/po-http-request-data.md): Interface para definição de uma requisição HTTP.
+- [PoI18nConfig](./llms-generated/po-i18n-config.md): Interface para a configuração do módulo `PoI18nModule`.
+- [PoI18nConfigContext](./llms-generated/po-i18n-config-context.md): Interface para a configuração dos contextos do módulo `PoI18nModule`.
+- [PoI18nConfigDefault](./llms-generated/po-i18n-config-default.md): Interface para a configuração padrão do módulo PoI18nModule.
+- [PoI18nLiterals](./llms-generated/po-i18n-literals.md): Interface para o método `getLiterals()` do serviço PoI18nService.
+- [PoJobScheduler](./llms-generated/po-job-scheduler.md): Estrutura do *payload* enviado nas requisições para salvar e/ou atualizar as tarefas do *Job Scheduler*.
+- [PoLanguage](./llms-generated/po-language.md): Interface para descrição das linguagens disponíveis no sistema.
+- [PoListBoxLiterals](./llms-generated/po-list-box-literals.md): Interface para definição de literais utilizadas no `po-listbox`
+- [PoListViewAction](./llms-generated/po-list-view-action.md): Interface que define as ações do componente `po-list-view`.
+- [PoListViewLiterals](./llms-generated/po-list-view-literals.md): Interface para definição das literais usadas no `po-list-view`.
+- [PoLookupAdvancedFilter](./llms-generated/po-lookup-advanced-filter.md): Interface para definição das propriedades dos campos de entrada que serão criados dinamicamente.
+- [PoLookupColumn](./llms-generated/po-lookup-column.md): Interface para configuração das colunas do po-lookup.
+- [PoLookupFilter](./llms-generated/po-lookup-filter.md): Define o tipo de busca utilizado no po-lookup.
+- [PoLookupFilteredItemsParams](./llms-generated/po-lookup-filtered-items-params.md): Interface do objeto enviado como parâmetro na função `getFilteredItems`.
+- [PoLookupLiterals](./llms-generated/po-lookup-literals.md): Interface para definição das literais usadas no `po-lookup`.
+- [PoLookupResponseApi](./llms-generated/po-lookup-response-api.md): Interface que representa a estrutura de resposta de uma coleção de itens.
+- [PoMediaQueryTokens](./llms-generated/po-media-query-tokens.md): Interface que define os tokens CSS utilizados em regras de media queries.
+- [PoMenuFilter](./llms-generated/po-menu-filter.md): Interface do serviço utilizado no componente `po-menu`.
+- [PoMenuItem](./llms-generated/po-menu-item.md): Interface para os itens de menu do componente po-menu.
+- [PoMenuItemBadge](./llms-generated/po-menu-item-badge.md): Interface do *badge* utilizado no `po-menu`.
+- [PoMenuItemFiltered](./llms-generated/po-menu-item-filtered.md): Interface do objeto que deve conter na coleção de itens filtrados no componente `po-menu`.
+- [PoMenuPanelItem](./llms-generated/po-menu-panel-item.md): Interface para os itens de menu do componente `po-menu-panel`.
+- [PoModalAction](./llms-generated/po-modal-action.md): Interface que define os botões de ação do componente `po-modal`.
+- [PoModalPasswordRecovery](./llms-generated/po-modal-password-recovery.md): Interface com a definição do objeto gerado pelo formulário do componente `po-modal-password-recovery`.
+- [PoMultiselectFilter](./llms-generated/po-multiselect-filter.md): Interface para os serviços que serão utilizados no po-multiselect.
+- [PoMultiselectLiterals](./llms-generated/po-multiselect-literals.md): Interface para definição das literais usadas no `po-multiselect`.
+- [PoMultiselectOption](./llms-generated/po-multiselect-option.md): Interface dos itens da coleção que será exibida no dropdown do po-multiselect.
+- [PoNavbarIconAction](./llms-generated/po-navbar-icon-action.md): Interface para lista de ações dos ícones do componente.
+- [PoNavbarItem](./llms-generated/po-navbar-item.md): Interface para lista de items do componente.
+- [PoNavbarLiterals](./llms-generated/po-navbar-literals.md): Interface para definição das literais usadas no `po-navbar`.
+- [PoNetworkStatus](./llms-generated/po-network-status.md): Classe responsável por identificar a conexão de rede disponível no dispositivo.
+- [PoNotification](./llms-generated/po-notification.md): Interface para uso do serviço PoNotification.
+- [PoNumberSeparator](./llms-generated/po-number-separator.md): Interface para os separadores numéricos das linguagens disponíveis no sistema.
+- [PoPage](./llms-generated/po-page.md): Interface para o atributo `filter` do componente `po-page`.
+- [PoPageAction](./llms-generated/po-page-action.md): Interface para as ações dos componentes `po-page-default` e `po-page-list`.
+- [PoPageBlockedUserReasonParams](./llms-generated/po-page-blocked-user-reason-params.md): Interface que define os valores de customização da mensagem de bloqueio do componente `po-page-blocked-user`.
+- [PoPageChangePassword](./llms-generated/po-page-change-password.md): Interface com a definição do objeto gerado pelo formulário do componente `po-page-change-password`.
+- [PoPageChangePasswordRecovery](./llms-generated/po-page-change-password-recovery.md): Interface para especificação do tipo de recuperação de senha no `po-modal-password-recovery`.
+- [PoPageChangePasswordRequirement](./llms-generated/po-page-change-password-requirement.md): Interface com a definição dos objetos aceitos pela propriedade `p-password-requirements`.
+- [PoPageDefault](./llms-generated/po-page-default.md): Interface para o atributo `filter` do componente `po-page`.
+- [PoPageDefaultLiterals](./llms-generated/po-page-default-literals.md): Interface para definição das literais usadas no `po-page-default`.
+- [PoPageDetailLiterals](./llms-generated/po-page-detail-literals.md): Interface para definição das literais usadas no `po-page-detail`.
+- [PoPageDynamicDetailActions](./llms-generated/po-page-dynamic-detail-actions.md): Interface para as ações do componente po-page-dynamic-detail.
+- [PoPageDynamicDetailBeforeBack](./llms-generated/po-page-dynamic-detail-before-back.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicDetailBeforeEdit](./llms-generated/po-page-dynamic-detail-before-edit.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicDetailBeforeRemove](./llms-generated/po-page-dynamic-detail-before-remove.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicDetailField](./llms-generated/po-page-dynamic-detail-field.md): Interface dos fields usados para compor o template `po-page-dynamic-detail`.
+- [PoPageDynamicDetailMetaData](./llms-generated/po-page-dynamic-detail-meta-data.md): Interface para as propriedades de uma página dinâmica.
+- [PoPageDynamicDetailOptions](./llms-generated/po-page-dynamic-detail-options.md): Interface para as propriedades de uma página dinâmica.
+- [PoPageDynamicEditActions](./llms-generated/po-page-dynamic-edit-actions.md): Interface para as ações do componente po-page-dynamic-edit.
+- [PoPageDynamicEditBeforeCancel](./llms-generated/po-page-dynamic-edit-before-cancel.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicEditBeforeSave](./llms-generated/po-page-dynamic-edit-before-save.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicEditBeforeSaveNew](./llms-generated/po-page-dynamic-edit-before-save-new.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicEditField](./llms-generated/po-page-dynamic-edit-field.md): Interface dos fields usados para compor o template `po-page-dynamic-edit`.
+- [PoPageDynamicEditLiterals](./llms-generated/po-page-dynamic-edit-literals.md): Interface para definição das literais usadas no `po-page-dynamic-edit`.
+- [PoPageDynamicEditMetadata](./llms-generated/po-page-dynamic-edit-metadata.md): Interface para as propriedades de uma página dinâmica.
+- [PoPageDynamicEditOptions](./llms-generated/po-page-dynamic-edit-options.md): Interface para as propriedades de uma página dinâmica.
+- [PoPageDynamicSearchFilters](./llms-generated/po-page-dynamic-search-filters.md): Interface para a customização de uma página dinâmica que permite atribuir valores iniciais aos filtros de busca avançada.
+- [PoPageDynamicSearchLiterals](./llms-generated/po-page-dynamic-search-literals.md): Interface para definição das literais usadas no `po-page-dynamic-search` e no `po-page-dynamic-table`.
+- [PoPageDynamicSearchOptions](./llms-generated/po-page-dynamic-search-options.md): Interface para a customização de uma página dinâmica.
+- [PoPageDynamicTableActions](./llms-generated/po-page-dynamic-table-actions.md): Interface para as ações do componente po-page-dynamic-table.
+- [PoPageDynamicTableBeforeDetail](./llms-generated/po-page-dynamic-table-before-detail.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicTableBeforeDuplicate](./llms-generated/po-page-dynamic-table-before-duplicate.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicTableBeforeEdit](./llms-generated/po-page-dynamic-table-before-edit.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicTableBeforeNew](./llms-generated/po-page-dynamic-table-before-new.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicTableBeforeRemove](./llms-generated/po-page-dynamic-table-before-remove.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicTableBeforeRemoveAll](./llms-generated/po-page-dynamic-table-before-remove-all.md): Definição da estrutura de retorno da url ou método executado através da
+- [PoPageDynamicTableCustomAction](./llms-generated/po-page-dynamic-table-custom-action.md): Interface com as propriedades para adicionar uma ação customizada na página.
+- [PoPageDynamicTableCustomTableAction](./llms-generated/po-page-dynamic-table-custom-table-action.md): Interface com as propriedades para adicionar uma ação customizada na tabela da página.
+- [PoPageDynamicTableField](./llms-generated/po-page-dynamic-table-field.md): Interface para definição das propriedades dos campos de entrada que serão criados dinamicamente.
+- [PoPageDynamicTableFilters](./llms-generated/po-page-dynamic-table-filters.md): Interface para a customização de uma página dinâmica que permite atribuir valores iniciais aos filtros de busca avançada.
+- [PoPageDynamicTableMetaData](./llms-generated/po-page-dynamic-table-meta-data.md): Interface para as propriedades de uma página dinâmica.
+- [PoPageDynamicTableOptions](./llms-generated/po-page-dynamic-table-options.md): Interface para as propriedades de uma página dinâmica.
+- [PoPageEditLiterals](./llms-generated/po-page-edit-literals.md): Interface para definição das literais usadas no `po-page-edit`.
+- [PoPageFilter](./llms-generated/po-page-filter.md): Interface para o atributo `filter` do componente `po-page-list`.
+- [PoPageListLiterals](./llms-generated/po-page-list-literals.md): Interface para definição das literais usadas no `po-page-list`.
+- [PoPageLogin](./llms-generated/po-page-login.md): Interface com a definição do objeto gerado pelo formulário do componente `po-page-login`.
+- [PoPageLoginCustomField](./llms-generated/po-page-login-custom-field.md): Interface com a definição do Custom Field, podendo ser utilizado para informar um campo customizado no componente `po-page-login`.
+- [PoPageLoginLiterals](./llms-generated/po-page-login-literals.md): Interface para definição das literais usadas no `po-page-login`.
+- [PoPageLoginRecovery](./llms-generated/po-page-login-recovery.md): Interface para especificação do tipo de recuperação de senha no `po-modal-password-recovery`.
+- [PoPopupAction](./llms-generated/po-popup-action.md): Interface para lista de ações do componente.
+- [PoProgressAction](./llms-generated/po-progress-action.md): Interface para as ações dos componentes po-progress e po-upload.
+- [PoQueryBuilder](./llms-generated/po-query-builder.md): Classe utilitária para construir consultas sobre os registros de um *schema*.
+- [PoRadioGroupOption](./llms-generated/po-radio-group-option.md): Interface para as ações do componente po-radio-group.
+- [PoResponseApi](./llms-generated/po-response-api.md): Interface que representa a estrutura de resposta de uma coleção de itens.
+- [PoResponseApi](./llms-generated/po-response-api.md): Interface que representa a estrutura de uma resposta de sucesso HTTP.
+- [PoSearchFilterSelect](./llms-generated/po-search-filter-select.md): Interface que define as opções que serão exibidas no dropdown do `po-search`, ao usar a propriedade `p-filter-select`.
+- [PoSearchLiterals](./llms-generated/po-search-literals.md): Interface para definição das literais usadas no `po-search`.
+- [PoSearchLocateSummary](./llms-generated/po-search-locate-summary.md): Interface que define o resumo de localização do filtro `p-filter-locate`.
+- [PoSearchOption](./llms-generated/po-search-option.md): Interface que define as opções que serão exibidas na lista ao procurar do `po-search`.
+- [PoSelectOption](./llms-generated/po-select-option.md): Interface da coleções de itens que deve ser informado no componente po-select
+- [PoSelectOptionGroup](./llms-generated/po-select-option-group.md): Interface da coleções de itens em grupo, utilizando uma label para o grupo e as opções do tipo `PoSelectOption`.
+- [PoSlideItem](./llms-generated/po-slide-item.md): Interface que define cada objeto do `PoSlideItem`.
+- [PoStepperItem](./llms-generated/po-stepper-item.md): Interface para definição dos *steps* do componente `po-stepper` quando utilizada a propriedade `p-steps`.
+- [PoStorageConfig](./llms-generated/po-storage-config.md): Interface para as configurações da base de dados local do `PoStorageService`.
+- [PoSyncConfig](./llms-generated/po-sync-config.md): Interface para a definição das configurações do sincronismo.
+- [PoSyncFieldOptions](./llms-generated/po-sync-field-options.md): Interface que irá mapear as configurações dos campos do `PoSyncSchema`.
+- [PoSyncResponse](./llms-generated/po-sync-response.md): Define a resposta dos eventos enviados ao servidor.
+- [PoSyncSchema](./llms-generated/po-sync-schema.md): Interface que irá mapear as informações dos recursos, principalmente sua origem e as informações que serão retornadas.
+- [PoTab](./llms-generated/po-tab.md): Interface que define o `po-tab`.
+- [PoTableAction](./llms-generated/po-table-action.md): Interface para lista de ações do componente.
+- [PoTableBoolean](./llms-generated/po-table-boolean.md): Interface que define as colunas booleanas do `po-table`.
+- [PoTableColumn](./llms-generated/po-table-column.md): Interface para configuração das colunas do `po-table`.
+- [PoTableColumnIcon](./llms-generated/po-table-column-icon.md): Interface que define a coluna com ícone(s) do `po-table`.
+- [PoTableColumnLabel](./llms-generated/po-table-column-label.md): Interface para configuração das colunas de labels do `po-table`.
+- [PoTableColumnSort](./llms-generated/po-table-column-sort.md): Interface para ordenação das colunas do componente table.
+- [PoTableDetail](./llms-generated/po-table-detail.md): Interface para configuração do _detail_ do componente `po-table`.
+- [PoTableDetailColumn](./llms-generated/po-table-detail-column.md): Interface para configuração das colunas do `po-table-detail`.
+- [PoTableFilter](./llms-generated/po-table-filter.md): Define o tipo de busca utilizado no po-table.
+- [PoTableFilteredItemsParams](./llms-generated/po-table-filtered-items-params.md): Interface do objeto enviado como parâmetro da função `getItems`.
+- [PoTableLiterals](./llms-generated/po-table-literals.md): Interface para definição das literais usadas no `po-table`.
+- [PoTableResponseApi](./llms-generated/po-table-response-api.md): Interface que representa a estrutura de resposta de uma coleção de itens.
+- [PoTableSubtitleColumn](./llms-generated/po-table-subtitle-column.md): Interface para configuração das colunas de legenda do Po-Table.
+- [PoTagLiterals](./llms-generated/po-tag-literals.md): Interface para definição das literais usadas no `po-tag`.
+- [PoTheme](./llms-generated/po-theme.md): Interface para o método `setTheme()`.
+- [PoThemeColor](./llms-generated/po-theme-color.md): Interface para representar as cores do tema.
+- [PoThemeColorAction](./llms-generated/po-theme-color-action.md): Interface para as cores de ação do tema.
+- [PoThemeColorNeutral](./llms-generated/po-theme-color-neutral.md): Interface para as cores neutras do tema.
+- [PoThemeToken](./llms-generated/po-theme-token.md): Interface para os tokens do Tema.
+- [PoThemeTokens](./llms-generated/po-theme-tokens.md): Interface para o tema da aplicação.
+- [PoToolbarAction](./llms-generated/po-toolbar-action.md): Interface para lista de ações do componente.
+- [PoToolbarProfile](./llms-generated/po-toolbar-profile.md): Interface que define o perfil do `PoToolbarComponent`.
+- [PoTreeViewItem](./llms-generated/po-tree-view-item.md): Interface para definição dos itens do componente `po-tree-view`.
+- [PoUploadFileRestrictions](./llms-generated/po-upload-file-restrictions.md): Interface que define as restrições dos arquivos a serem selecionados com base em regras predefinidas
+- [PoUploadLiterals](./llms-generated/po-upload-literals.md): Interface para definição das literais usadas no `po-upload`.
+- [PoWidgetAvatar](./llms-generated/po-widget-avatar.md): Interface para definição do avatar no `po-widget`.
+
+## Enums
+
+- [ForceBooleanComponentEnum](./llms-generated/force-boolean-component-enum.md): Enum para definição do tipo de componente a ser renderizado.
+- [ForceOptionComponentEnum](./llms-generated/force-option-component-enum.md): Enum para definição do tipo de componente a ser renderizado.
+- [PoButtonGroupToggle](./llms-generated/po-button-group-toggle.md): Tipos de seleção (`p-toggle`) disponíveis para o componente.
+- [PoButtonKind](./llms-generated/po-button-kind.md): Estilos disponíveis do button.
+- [PoButtonSize](./llms-generated/po-button-size.md): Tamanhos da propriedade `p-size`.
+- [PoButtonType](./llms-generated/po-button-type.md): Enumeração que define os tipos possíveis para o `PoButtonComponent`.
+- [PoCalendarMode](./llms-generated/po-calendar-mode.md): Define os modos de exibição do `po-calendar`.
+- [PoChartLabelFormat](./llms-generated/po-chart-label-format.md): Enum* `PoChartLabelFormat` para especificação dos tipos de formatação do eixo de valor no gráfico.
+- [PoChartType](./llms-generated/po-chart-type.md): Enum* `PoChartType` para especificação dos tipos de gráficos.
+- [PoCheckboxSize](./llms-generated/po-checkbox-size.md): Tamanhos da propriedade `p-size`.
+- [PoComboFilterMode](./llms-generated/po-combo-filter-mode.md): Define o tipo de busca usado no po-combo.
+- [PoDatepickerIsoFormat](./llms-generated/po-datepicker-iso-format.md): Enum* que define o padrão de formatação das datas.
+- [PoDividerSize](./llms-generated/po-divider-size.md): Enum para definição da espessura da linha.
+- [PoDynamicFieldType](./llms-generated/po-dynamic-field-type.md): Enum para definição do tipo de campo que será criado dinamicamente.
+- [PoHttpRequestType](./llms-generated/po-http-request-type.md): Define o método de requisição HTTP.
+- [PoInfoOrientation](./llms-generated/po-info-orientation.md): Define os tipos de orientações disponíveis para o `po-info`.
+- [PoModalPasswordRecoveryType](./llms-generated/po-modal-password-recovery-type.md): Enum* para especificação do tipo de recuperação de senha.
+- [PoMultiselectFilterMode](./llms-generated/po-multiselect-filter-mode.md): Define o tipo de busca usado no po-multiselect.
+- [PoNetworkType](./llms-generated/po-network-type.md): Tipos de rede existentes no dispositivo.
+- [PoPageActionsLayout](./llms-generated/po-page-actions-layout.md): Define os layouts de exibição das ações no cabeçalho do `po-page-default`.
+- [PoPageBlockedUserReason](./llms-generated/po-page-blocked-user-reason.md): Enum* para os tipos de motivo de bloqueio de usuário.
+- [PoPageComponentsSize](./llms-generated/po-page-components-size.md): Tamanhos da propriedade `p-components-size` para componentes de formulário no template.
+- [PoPageHeaderType](./llms-generated/po-page-header-type.md): Define os tipos de cabeçalho disponíveis no `po-page-default`.
+- [PoPageLoginAuthenticationType](./llms-generated/po-page-login-authentication-type.md): Enum* para definição do tipo de autenticação.
+- [PoProgressShape](./llms-generated/po-progress-shape.md): Enum `PoProgressShape` para definir o formato visual do componente de progresso.
+- [PoProgressSize](./llms-generated/po-progress-size.md): Enum para configurar a expessura (`p-size`) da barra de progresso do componente.
+- [PoProgressStatus](./llms-generated/po-progress-status.md): Enum `PoProgressStatus` para os status de barra de progresso.
+- [PoRadioSize](./llms-generated/po-radio-size.md): Tamanhos da propriedade `p-size`.
+- [PoRichTextToolbarActions](./llms-generated/po-rich-text-toolbar-actions.md): Enumeração que define as ações disponíveis na barra de ferramentas do `PoRichTextComponent`.
+- [PoSearchFilterMode](./llms-generated/po-search-filter-mode.md): Define o tipo de busca usado no `po-search`.
+- [PoSkeletonAnimation](./llms-generated/po-skeleton-animation.md): Define os tipos de animação do componente `po-skeleton`.
+- [PoSkeletonSize](./llms-generated/po-skeleton-size.md): Define os tamanhos disponíveis para o componente `po-skeleton`.
+- [PoSkeletonType](./llms-generated/po-skeleton-type.md): Define os tipos visuais disponíveis para o componente `po-skeleton`.
+- [PoSkeletonVariant](./llms-generated/po-skeleton-variant.md): Define as variantes visuais do componente `po-skeleton`.
+- [PoStepperOrientation](./llms-generated/po-stepper-orientation.md): Enums* para definição da orientação do `po-stepper`.
+- [PoStepperStatus](./llms-generated/po-stepper-status.md): Enums* para os status do `po-stepper` quando utilizada a propriedade `p-steps`.
+- [PoSwitchLabelPosition](./llms-generated/po-switch-label-position.md): Enum para posicionar o label do valor do po-switch.
+- [PoTableColumnSortType](./llms-generated/po-table-column-sort-type.md): Tipos de ordenação das colunas da tabela.
+- [PoTableColumnSpacing](./llms-generated/po-table-column-spacing.md): Tipos de espaçamento interno (padding) das células (**p-spacing**) do po-table.
+- [PoTableRowTemplateArrowDirection](./llms-generated/po-table-row-template-arrow-direction.md): Define a posição da arrow que expande o * row template* na tabela, será exibida na esquerda ou direita.
+- [PoTagOrientation](./llms-generated/po-tag-orientation.md): Define os tipos de orientações disponíveis para o `po-tag`.
+- [PoTagType](./llms-generated/po-tag-type.md): Define os tipos disponíveis para o `po-tag`.
+- [PoThemeA11yEnum](./llms-generated/po-theme-a11y-enum.md): Enum para configurar o nível de acessibilidade dos componentes através do serviço de tema.
+- [PoThemeTypeEnum](./llms-generated/po-theme-type-enum.md): Enum utilizado para configurar o tipo de tema suportado, é possível alternar entre os tipos definidos.
+- [PoTimepickerModelFormat](./llms-generated/po-timepicker-model-format.md): Enum* que define o padrão de formatação do model de saída do timepicker.
+- [PoTimerFormat](./llms-generated/po-timer-format.md): Enum para definição do formato de exibição do timer.
+- [PoToasterType](./llms-generated/po-toaster-type.md): Define os tipos possíveis para o `PoToasterComponent`.
+
+## Guias
+
+- [Instalação e configuração](./guides/getting-started.md): Como instalar e configurar o PO UI em um projeto Angular
+- [Personalização de tema com tokens CSS](./guides/theme-customization.md): Como customizar cores, espaçamentos e estilos via tokens CSS
+- [Acessibilidade](./guides/accessibility.md): Diretrizes de acessibilidade WCAG aplicadas nos componentes
+
+## Guias Extras
+
+- [Tema Protheus / TOTVS (`@totvs/po-theme`)](./guides/po-theme.md): Instalacao, configuracao e referencias locais do tema padrao TOTVS para PO UI.

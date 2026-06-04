@@ -1,0 +1,154 @@
+[comment]: # (@label Primeiros passos)
+[comment]: # (@link guides/getting-started)
+
+### Pré-requisitos
+
+Para começar a utilizar o **PO UI** é pré-requisito ter o `Node.js` instalado (versão 20.11.x ou acima) e o seu gerenciador de pacote favorito na versão mais atual. Caso você ainda não tenha instalado o pacote `@angular/cli`, instale-o via `npm` ou `yarn`.
+
+Instalando com npm:
+```
+npm i -g @angular/cli@21
+```
+
+Caso prefira instalar com o yarn:
+```
+yarn global add @angular/cli@21
+```
+
+### Passo 1 - Crie o seu primeiro projeto
+
+> Caso você já tenha um projeto criado e deseje apenas incluir o **Po**, pule esta etapa e vá para o **Passo 1.1**.
+
+O [Angular CLI](https://cli.angular.io/) se encarrega de construir toda estrutura inicial do projeto. Para isso, execute o seguinte comando:
+
+```
+ng new my-po-project --skip-install
+```
+
+> O parâmetro `--skip-install` permite criar o projeto, contudo, não instalará as dependências automaticamente.
+
+
+#### Passo 1.1 - Instalando as dependências
+
+Antes de executar a instalação ou inserir o **Po** no seu projeto existente, é necessário verificar as dependências do seu projeto, algumas delas precisam estar de acordo com a versão do **Po** e Angular (elas podem ser encontradas no arquivo `package.json` localizado na raiz da aplicação).
+
+Veja abaixo a lista de dependências e as versões compatíveis, elas devem ser conferidas e se necessário, ajustadas no seu projeto.
+
+```json
+  "dependencies": {
+    "@angular/animations": "~21.2.4",
+    "@angular/common": "~21.2.4",
+    "@angular/compiler": "~21.2.4",
+    "@angular/core": "~21.2.4",
+    "@angular/forms": "~21.2.4",
+    "@angular/platform-browser": "~21.2.4",
+    "@angular/platform-browser-dynamic": "~21.2.4",
+    "@angular/router": "~21.2.4",
+    "rxjs": "~7.8.1",
+    "tslib": "^2.6.2",
+    "zone.js": "~0.15.0"
+    ...
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "~21.2.4",
+    "@angular-devkit/schematics": "~21.2.4",
+    "@angular/cli": "~21.2.4",
+    "@angular/compiler-cli": "~21.2.4",
+    ...
+    "typescript": "~5.9.3"
+  }
+```
+
+Após verificar se estas dependências do seu projeto estão com as versões compatíveis declaradas acima, acesse a pasta raiz do seu projeto e execute o comando abaixo:
+
+Instalando com npm:
+```
+npm install
+```
+
+Caso prefira instalar com o yarn:
+```
+yarn install
+```
+
+### Observação para Angular 19+/21+
+
+Em versões mais recentes do Angular, o projeto pode utilizar o novo build system baseado em **@angular/build**. Caso ocorra o erro:
+
+```
+Could not find the @angular/build:dev-server builder's package
+```
+
+Verifique se o pacote está declarado em **devDependencies**:
+
+```
+npm install -D @angular/build
+```
+
+ou
+
+```
+pnpm install -D @angular/build
+```
+
+Além disso, valide no arquivo angular.json se o builder está configurado para **@angular/build:***:
+
+```
+"projects": {
+  "app-name": {
+    "architect": {
+      "build": {
+        "builder": "@angular/build:application"
+      } ,
+      "serve": {
+        "builder": "@angular/build:dev-server"
+      }
+    }
+  }
+}
+```
+
+Se o **builder** for **@angular/build:***, o pacote **@angular/build** deve estar instalado. Caso esteja utilizando **@angular-devkit/build-angular**, o comportamento será o modelo tradicional.
+Para maiores informações veja na documentação oficial do [Angular](https://angular.dev/tools/cli/build-system-migration).
+
+### Passo 2 - Adiconando o pacote @po-ui/ng-components
+
+Utilizando o comando `ng add` do [Angular CLI](https://cli.angular.io/), vamos adicionar o **Po** em seu projeto e o mesmo se encarregará de configurar o tema, instalar o pacote e importar o módulo do **Po**. Além de importar também o modulo **HttpClientModule**.
+
+Execute o comando abaixo na pasta raiz do seu projeto:
+
+```
+ng add @po-ui/ng-components
+```
+
+> Ao executar o comando acima, será perguntado se deseja incluir uma estrutura inicial em seu projeto com menu lateral, página e toolbar, utilizando componentes do **Po**, **caso desejar, apenas informe: `Y`**.
+
+### Passo 3 - Rode o seu projeto
+
+Agora basta executar mais um comando para subir a aplicação e ver o seu projeto rodando no *browser* ;).
+
+```
+ng serve
+```
+
+Abra o *browser* e acesse a url http://localhost:4200. Pronto! Se você escolheu incluir uma estrutura inicial em seu projeto, ele deve estar parecido com essa imagem:
+
+<p class="po-text-center">
+  <img src="./assets/graphics/app-running.png" width="660px">
+</p>
+
+----
+
+### E agora?
+
+Agora é só abrir seu **editor / IDE** favorito e começar a trabalhar no seu projeto.
+
+Caso você queira utilizar nossos componentes de templates, como o **[po-page-login](/documentation/po-page-login)**, **[po-modal-password-recovery](/documentation/po-modal-password-recovery)**, **[po-page-blocked-user](/documentation/po-page-blocked-user)**, **[po-page-dynamic-table](/documentation/po-page-dynamic-table)** entre outros, basta adicionar o pacote `@po-ui/ng-templates` executando o comando abaixo:
+
+```
+ng add @po-ui/ng-templates
+```
+> Ao executar este comando, será instalado o pacote `@po-ui/ng-templates` e configurado o `PoTemplatesModules` no `app.module` somente se sua aplicação for configurada com módulos.
+
+A partir dai o seu projeto está preparado para receber outros componentes do **[Po](/documentation)**! \o/
+

@@ -1,9 +1,17 @@
-<po-toolbar
-  p-title="BuscaDados"
-  [p-profile]="toolbarProfile"
-  [p-profile-actions]="toolbarActions">
-</po-toolbar>
+<po-header
+  [p-brand]="headerBrand"
+  [p-actions-tools]="headerActionsTools"
+  [p-header-user]="headerUser">
+</po-header>
 
-<po-menu [p-menus]="menuItems" p-logo="/assets/logo.png"></po-menu>
+<po-wrapper>
+  <po-menu 
+    [p-menus]="menuItems" 
+    p-logo="logo_bj.png"
+    p-collapsed
+    [p-automatic-toggle]="true"
+    p-filter>
+  </po-menu>
 
-<router-outlet></router-outlet>
+  <router-outlet></router-outlet>
+</po-wrapper>

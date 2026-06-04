@@ -1,0 +1,63 @@
+# PoButtonGroupBaseComponent
+
+**Seletor:** `po-button-group-base`
+**Tipo:** Componente / Diretiva
+**Pacote:** `@po-ui/ng-components`
+**Referência:** https://po-ui.io/documentation/po-button-group-base
+
+O componente `po-button-group` é formado por um conjunto de botões distribuídos horizontalmente.
+Cada botão do grupo é tratado de forma individual, recebendo assim um rótulo, uma ação bem como se deverá estar habilitado ou não.
+
+Este componente além de servir como um agrupador de botões para ação, também permite que sejam utilizados
+para seleções multiplas e únicas.
+
+O grupo de botões deve ser utilizado para organizar as ações de maneira uniforme e transmitir a ideia de que os botões fazem
+parte de um mesmo contexto.
+
+#### Boas práticas
+
+- Evite usar o `po-button-group` com apenas 1 ação, para isso utilize o `po-button`.
+- Procure utilizar no máximo 3 ações para cada `po-button-group`.
+
+> As recomendações do `po-button` também valem para o `po-button-group`.
+
+#### Tokens customizáveis
+
+É possível alterar o estilo do componente usando os seguintes tokens (CSS):
+
+> Para maiores informações, acesse o guia [Personalizando o Tema Padrão com Tokens CSS](https://po-ui.io/guides/theme-customization).
+
+| Propriedade | Descrição | Valor Padrão |
+|----------------------------------------|-------------------------------------------------------|-------------------------------------------------|
+| **Default Values** | | |
+| `--font-family` | Família tipográfica usada | `var(--font-family-theme)` |
+| `--font-size` | Tamanho da fonte | `var(--font-size-default)` |
+| `--font-weight` | Peso da fonte | `var(--font-weight-bold)` |
+| `--line-height` | Tamanho da label | `var(--line-height-none)` |
+| `--border-radius` | Contém o valor do raio dos cantos do elemento | `var(--border-radius-md)` |
+| `--border-width` | Contém o valor da largura dos cantos do elemento | `var(--border-width-md)` |
+| `--padding` | Preenchimento | `0 1em` |
+| `--text-color` | Cor do texto | `var(--color-neutral-light-00)` |
+| `--color` | Cor principal do botão | `var(--color-action-default)` |
+| `--background-color` | Cor de background | `var(--color-transparent)` |
+| `--shadow` | Contém o valor da sombra do elemento | `var(--shadow-none)` |
+| **Hover** | | |
+| `--color-hover` | Cor principal no estado hover | `var(--color-action-hover)` |
+| `--background-hover` | Cor de background no estado hover | `var(--color-brand-01-lighter)` |
+| `--border-color-hover` | Cor da borda no estado hover | `var(--color-brand-01-darkest)` |
+| **Focused** | | |
+| `--outline-color-focused` | Cor do outline do estado de focus | `var(--color-action-focus)` |
+| **Pressed** | | |
+| `--color-pressed` | Cor principal no estado de pressionado | `var(--color-action-pressed)` |
+| `--background-pressed` | Cor de background no estado de pressionado | `var(--color-brand-01-light)` |
+| **Disabled** | | |
+| `--color-disabled` | Cor principal no estado disabled | `var(--color-action-disabled)` |
+| `--background-color-disabled` | Cor de background no estado disabled | `var(--color-transparent)` |
+
+## Inputs
+
+| Propriedade | Alias | Tipo | Opcional | Padrão | Descrição |
+|---|---|---|---|---|---|
+| `buttons` | `p-buttons` | `Array<PoButtonGroupItem>` | não | - | Lista de botões. |
+| `size` | `'p-size'` | `string` | sim | `medium` | Define o tamanho do componente: |
+| `toggle` | `'p-toggle'` | `string` | sim | `none` | Define o modo de seleção dos botões no componente conforme valores especificados no enum `PoButtonGroupToggle`: |

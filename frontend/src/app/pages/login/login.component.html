@@ -1,39 +1,10 @@
-<div class="login-page">
-  <div class="login-card">
-    <div class="login-card__logo">
-      <span class="an an-database-duotone"></span>
-      <strong>BuscaDados</strong>
-    </div>
-
-    <h1>Acessar portal</h1>
-
-    <po-input
-      p-label="E-mail"
-      p-type="email"
-      p-placeholder="seu@email.com"
-      [(ngModel)]="email">
-    </po-input>
-
-    <po-input
-      p-label="Senha"
-      p-type="password"
-      p-placeholder="••••••••"
-      [(ngModel)]="senha">
-    </po-input>
-
-    <po-button
-      p-label="Entrar"
-      p-kind="primary"
-      p-icon="an an-sign-in"
-      [p-loading]="carregando"
-      (p-click)="entrar()">
-    </po-button>
-
-    <p *ngIf="erro" class="login-card__erro">{{ erro }}</p>
-
-    <div class="login-card__links">
-      <a routerLink="/cliente/cadastro">Criar conta grátis</a>
-      <a routerLink="/">← Voltar ao início</a>
-    </div>
-  </div>
-</div>
+<po-page-login
+  p-background="bg_login.png"
+  p-logo="logo_bj.png"
+  p-contact-email="ricardo@bjsoft.com.br"
+  p-support="ricardo@bjsoft.com.br"
+  [p-loading]="carregando"
+  [p-custom-field]="erro"
+  p-secondary-logo="logo_bj.png"
+  (p-login-submit)="entrar($event)">
+</po-page-login>
