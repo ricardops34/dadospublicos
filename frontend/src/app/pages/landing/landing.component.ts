@@ -13,10 +13,15 @@ import { LpAnalyticsService } from '../../services/lp-analytics.service';
       <app-exemplos></app-exemplos>
     </main>
     <app-footer></app-footer>
+
+    <app-cookie-banner
+      (onAceitar)="analytics.cookiesAceitos()"
+      (onRecusar)="analytics.cookiesRecusados()">
+    </app-cookie-banner>
+
+    <app-whatsapp-button></app-whatsapp-button>
   `,
-  styles: [`
-    .landing-main { padding-top: 64px; }
-  `],
+  styles: [`.landing-main { padding-top: 64px; }`],
 })
 export class LandingComponent implements OnInit {
   constructor(public analytics: LpAnalyticsService) {}

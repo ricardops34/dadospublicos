@@ -37,7 +37,7 @@
         <small>Extraídos</small>
       </div>
     </div>
-    <div class="etl-card" *ngIf="status.historico?.length">
+    <div class="etl-card" *ngIf="status.historico.length">
       <span class="an an-check-circle etl-card__icon"
         [class.etl-card__icon--green]="status.historico[0]?.status === 'concluido'"
         [class.etl-card__icon--red]="status.historico[0]?.status === 'erro'">

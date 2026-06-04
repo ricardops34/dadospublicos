@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, EventEmitter, Inject, OnInit, Output, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 type CookiePrefs = {
@@ -17,6 +17,9 @@ type CookiePrefs = {
 export class CookieBannerComponent implements OnInit {
   private readonly storageKey = 'bjsoft_cookie_preferences';
   visivel = false;
+
+  @Output() onAceitar = new EventEmitter<void>();
+  @Output() onRecusar = new EventEmitter<void>();
   personalizando = false;
   preferencias: CookiePrefs = {
     necessario: true,
@@ -45,23 +48,15 @@ export class CookieBannerComponent implements OnInit {
   }
 
   aceitarTudo() {
-    this.preferencias = {
-      necessario: true,
-      analise: true,
-      marketing: true,
-      funcional: true,
-    };
+    this.preferencias = { necessario: true, analise: true, marketing: true, funcional: true };
     this.salvar();
+    this.onAceitar.emit();
   }
 
   rejeitarOpcionais() {
-    this.preferencias = {
-      necessario: true,
-      analise: false,
-      marketing: false,
-      funcional: false,
-    };
+    this.preferencias = { necessario: true, analise: false, marketing: false, funcional: false };
     this.salvar();
+    this.onRecusar.emit();
   }
 
   abrirPersonalizacao() {

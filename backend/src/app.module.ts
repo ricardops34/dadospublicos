@@ -21,6 +21,7 @@ import { PortalModule } from './modules/portal/portal.module';
 import { AnalyticsLpModule } from './modules/analytics-lp/analytics-lp.module';
 import { AccessLogModule } from './modules/access-log/access-log.module';
 import { AccessLogMiddleware } from './modules/access-log/access-log.middleware';
+import { SuporteModule } from './modules/suporte/suporte.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { AccessLogMiddleware } from './modules/access-log/access-log.middleware'
 
     // Analytics
     AnalyticsLpModule,
+    SuporteModule,
 
     // Plataforma comercial
     PlanosModule,

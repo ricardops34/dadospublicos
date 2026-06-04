@@ -1,0 +1,215 @@
+// ── Botão flutuante ───────────────────────────────────────────────
+.wpp-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1200;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, .5);
+  transition: transform .2s, box-shadow .2s;
+
+  &:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 28px rgba(37, 211, 102, .65);
+  }
+
+  // Ping animado
+  &__ping {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: rgba(37, 211, 102, .35);
+    animation: wpp-ping 2s ease-in-out infinite;
+  }
+}
+
+@keyframes wpp-ping {
+  0%, 100% { transform: scale(1); opacity: .6; }
+  50%       { transform: scale(1.18); opacity: 0; }
+}
+
+// ── Janela de chat ────────────────────────────────────────────────
+.wpp-chat {
+  position: fixed;
+  bottom: 96px;
+  right: 28px;
+  z-index: 1200;
+  width: 340px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.18);
+  overflow: hidden;
+  animation: wppSlide .22s ease;
+
+  @media (max-width: 480px) {
+    width: calc(100vw - 32px);
+    right: 16px;
+  }
+}
+
+@keyframes wppSlide {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+// ── Header ────────────────────────────────────────────────────────
+.wpp-chat__header {
+  background: #075e54;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wpp-chat__avatar {
+  position: relative;
+  width: 42px; height: 42px;
+  background: rgba(255,255,255,.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+
+  span.an { font-size: 1.8rem; color: rgba(255,255,255,.9); }
+}
+
+.wpp-chat__online {
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 11px; height: 11px;
+  background: #25d366;
+  border: 2px solid #075e54;
+  border-radius: 50%;
+}
+
+.wpp-chat__info {
+  flex: 1;
+  strong { display: block; color: #fff; font-size: 0.95rem; font-weight: 700; }
+  small  { color: #b2dfdb; font-size: 0.78rem; }
+}
+
+.wpp-chat__close {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+
+  &:hover { color: #fff; background: rgba(255,255,255,.1); }
+}
+
+// ── Corpo ─────────────────────────────────────────────────────────
+.wpp-chat__body {
+  padding: 20px 16px 12px;
+  background: #ece5dd;
+  min-height: 110px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.wpp-chat__bubble {
+  background: #fff;
+  border-radius: 0 12px 12px 12px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: #111827;
+  line-height: 1.5;
+  max-width: 90%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -8px;
+    border: 8px solid transparent;
+    border-top-color: #fff;
+    border-right-color: #fff;
+  }
+}
+
+// ── Botão iniciar / enviar ─────────────────────────────────────────
+.wpp-chat__footer-btn {
+  padding: 12px 16px;
+  background: #f0f0f0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.wpp-chat__start-btn {
+  width: 100%;
+  height: 40px;
+  border-radius: 20px;
+  background: #25d366;
+  border: none;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .15s;
+
+  &:hover { background: #1da851; }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+// ── Formulário ────────────────────────────────────────────────────
+.wpp-chat__form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8f9fa;
+}
+
+.wpp-chat__field {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+  color: #111827;
+  transition: border-color .15s;
+
+  &:focus { border-color: #25d366; }
+  &::placeholder { color: #9ca3af; }
+
+  &--area { resize: none; min-height: 72px; }
+}
+
+// ── Confirmação ───────────────────────────────────────────────────
+.wpp-chat__body--center {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 140px;
+}
+
+.wpp-chat__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  span { font-size: 2.5rem; color: #25d366; }
+  strong { font-size: 1rem; color: #111827; }
+  p { font-size: 0.8rem; color: #6b7280; margin: 0; }
+}
+
+.wpp-chat__link-btn {
+  background: none; border: none;
+  color: #25d366; font-size: 0.8rem;
+  cursor: pointer; text-decoration: underline;
+  margin-top: 4px;
+}
