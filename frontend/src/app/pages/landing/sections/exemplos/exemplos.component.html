@@ -36,18 +36,18 @@
     </div>
 
     <div class="rfb-exemplos__cta">
-      <a [href]="docsUrl" target="_blank" rel="noopener">
+      <a [href]="docsUrl" rel="noopener">
         <po-button
-          p-label="Ver documentação completa"
+          p-label="Ver documentação"
           p-kind="secondary"
           p-icon="an an-book-open">
-        </po-button>
+        </po-button> 
       </a>
       <po-button
-        p-label="Começar grátis agora"
+        p-label="Começar grátis"
         p-kind="primary"
         p-icon="an an-rocket-launch"
-        p-url="/cliente/cadastro">
+        (p-click)="irParaCadastro()">
       </po-button>
     </div>
   </div>

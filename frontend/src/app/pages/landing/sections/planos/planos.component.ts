@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
 
 type CicloCobranca = 'mensal' | 'semestral' | 'anual';
@@ -89,7 +90,9 @@ export class PlanosComponent implements OnInit {
     { id: 'anual',     label: 'Anualmente',     icone: 'an an-crown' },
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
+
+  irParaCadastro() { this.router.navigateByUrl('/cliente/cadastro'); }
 
   ngOnInit() {
     this.planos = this.planosFallback;

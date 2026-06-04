@@ -23,9 +23,9 @@
           p-kind="primary"
           p-size="large"
           p-icon="an an-rocket-launch"
-          p-url="/cliente/cadastro">
+          (p-click)="irParaCadastro()">
         </po-button>
-        <a [href]="docsUrl" target="_blank" rel="noopener">
+        <a [href]="docsUrl" rel="noopener">
           <po-button
             p-label="Ver documentação"
             p-kind="secondary"

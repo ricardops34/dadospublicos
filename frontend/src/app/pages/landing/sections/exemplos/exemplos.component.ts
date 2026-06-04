@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 interface Exemplo {
   linguagem: string;
@@ -15,6 +16,10 @@ interface Exemplo {
 export class ExemplosComponent {
   abaAtiva = 0;
   docsUrl = '/docs';
+
+  constructor(private router: Router) {}
+
+  irParaCadastro() { this.router.navigateByUrl('/cliente/cadastro'); }
 
   exemplos: Exemplo[] = [
     {

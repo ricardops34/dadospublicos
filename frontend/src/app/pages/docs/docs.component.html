@@ -12,15 +12,20 @@
         Última atualização: {{ ultimaAtualizacao }}
       </p>
       <div class="docs-hero__actions">
-        <a [href]="swaggerUrl" target="_blank" rel="noopener" class="docs-hero__link-primary">
-          <po-button
-            p-label="Ver documentação técnica"
-            p-kind="secondary"
-            p-size="large"
-            p-icon="an an-book-open">
-          </po-button>  
-        </a>
-        <a routerLink="/cliente/cadastro" class="docs-hero__link-secondary">Criar conta</a>
+        <po-button
+          p-label="Abrir Swagger técnico"
+          p-kind="primary"
+          p-size="large"
+          p-icon="an an-book-open"
+          (p-click)="abrirSwagger()">
+        </po-button>
+        <po-button
+          p-label="Criar conta"
+          p-kind="secondary"
+          p-size="large"
+          p-icon="an an-user-plus"
+          (p-click)="irParaCadastro()">
+        </po-button>
       </div>
     </div>
   </section> 

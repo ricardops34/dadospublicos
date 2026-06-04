@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
 interface DocsSection {
@@ -17,6 +18,11 @@ interface DocsSection {
 export class DocsComponent {
   swaggerUrl = `${environment.apiUrl}/docs`;
   ultimaAtualizacao = '03 de junho de 2026';
+
+  constructor(private router: Router) {}
+
+  abrirSwagger() { window.open(this.swaggerUrl, '_blank', 'noopener'); }
+  irParaCadastro() { this.router.navigateByUrl('/cliente/cadastro'); }
 
   destaques = [
     'Base local do frontend: /docs.',

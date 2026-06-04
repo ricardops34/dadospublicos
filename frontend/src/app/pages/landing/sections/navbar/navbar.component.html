@@ -18,8 +18,8 @@
         <span class="an" [class.an-sun]="theme.isEscuro" [class.an-moon]="!theme.isEscuro"></span>
       </button>
 
-      <po-button p-label="Entrar" p-kind="tertiary" p-icon="an an-sign-in" p-url="/login"></po-button>
-      <po-button p-label="Começar grátis agora" p-kind="primary" p-icon="an an-rocket-launch" p-url="/cliente/cadastro"></po-button>
+      <po-button p-label="Entrar" p-kind="secondary" p-icon="an an-sign-in" (p-click)="irParaLogin()"></po-button>
+      <po-button p-label="Começar grátis" p-kind="primary" p-icon="an an-rocket-launch" (p-click)="irParaCadastro()"></po-button>
     </div>
   </div>
 </nav>

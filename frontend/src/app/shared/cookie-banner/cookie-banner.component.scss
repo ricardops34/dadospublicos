@@ -1,8 +1,9 @@
-// ── Card flutuante — canto inferior direito, sem overlay ──────────
+// ── Card flutuante — centro inferior, sem overlay ─────────────────
 .cookie-banner {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1300;
   width: min(620px, calc(100vw - 32px));
   background: #181c22;
@@ -180,7 +181,10 @@
 // ── Mobile ────────────────────────────────────────────────────────
 @media (max-width: 640px) {
   .cookie-banner {
-    bottom: 0; right: 0; left: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
     width: 100%;
     border-radius: 14px 14px 0 0;
   }

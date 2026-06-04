@@ -20,6 +20,9 @@ export class NavbarComponent implements OnInit {
     this.theme.inicializar();
   }
 
+  irParaLogin() { this.router.navigateByUrl('/login'); }
+  irParaCadastro() { this.router.navigateByUrl('/cliente/cadastro'); }
+
   irParaAncora(ancora: string) {
     const naLanding = this.router.url === '/' || this.router.url.startsWith('/#');
     if (naLanding) { this.rolarParaElemento(ancora); return; }
