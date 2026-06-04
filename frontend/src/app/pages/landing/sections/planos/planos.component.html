@@ -11,42 +11,51 @@
         class="rfb-planos__cycle"
         [class.rfb-planos__cycle--active]="cicloSelecionado === ciclo.id"
         (click)="selecionarCiclo(ciclo.id)">
+        <span [ngClass]="ciclo.icone"></span>
         {{ ciclo.label }}
       </button>
     </div>
 
     <div class="rfb-planos__grid">
-      <div
-        class="rfb-planos__card"
-        [class.rfb-planos__card--destaque]="p.destaque"
-        *ngFor="let p of planos">
+      <!-- Wrapper com altura fixa no topo para o selo — mesmo nos sem selo -->
+      <div class="rfb-planos__wrapper" *ngFor="let p of planos">
 
-        <div class="rfb-planos__destaque-badge" *ngIf="p.seloDestaque">{{ p.seloDestaque }}</div>
-
-        <div class="rfb-planos__header">
-          <h3 class="rfb-planos__nome">{{ p.nome }}</h3>
-          <p class="rfb-planos__desc">{{ p.descricao }}</p>
-          <div class="rfb-planos__preco">
-            <span class="rfb-planos__valor">{{ formatarPreco(precoDoPlano(p)) }}</span>
-            <span class="rfb-planos__periodo">{{ periodoDoPlano() }}</span>
-          </div>
-          <p class="rfb-planos__billing">{{ rotuloCobranca(p) }}</p>
+        <!-- Selo "Mais popular" — acima do card, centralizado -->
+        <div class="rfb-planos__selo" [class.rfb-planos__selo--visivel]="!!p.seloDestaque">
+          <span *ngIf="p.seloDestaque" class="an an-crown"></span>
+          {{ p.seloDestaque }}
         </div>
 
-        <ul class="rfb-planos__features">
-          <li *ngFor="let recurso of p.recursos">
-            <span class="an an-check-circle rfb-planos__fi"></span>
-            {{ recurso.descricaoExibicao }}
-          </li>
-        </ul>
+        <div
+          class="rfb-planos__card"
+          [class.rfb-planos__card--destaque]="p.destaque">
 
-        <po-button
-          p-label="Assinar"
-          [p-kind]="p.destaque ? 'primary' : 'secondary'"
-          p-size="large"
-          class="rfb-planos__cta"
-          p-url="/cliente/cadastro">
-        </po-button>
+          <div class="rfb-planos__header">
+            <h3 class="rfb-planos__nome">{{ p.nome }}</h3>
+            <p class="rfb-planos__desc">{{ p.descricao }}</p>
+            <div class="rfb-planos__preco">
+              <span class="rfb-planos__valor">{{ formatarPreco(precoDoPlano(p)) }}</span>
+              <span class="rfb-planos__periodo">{{ periodoDoPlano() }}</span>
+            </div>
+            <p class="rfb-planos__billing">{{ rotuloCobranca(p) }}</p>
+          </div>
+
+          <ul class="rfb-planos__features">
+            <li *ngFor="let recurso of p.recursos">
+              <span class="an an-check-circle rfb-planos__fi"></span>
+              {{ recurso.descricaoExibicao }}
+            </li>
+          </ul>
+
+          <po-button
+            p-label="Assinar agora"
+            [p-kind]="p.destaque ? 'primary' : 'secondary'"
+            [p-icon]="p.destaque ? 'an an-rocket-launch' : 'an an-arrow-right'"
+            p-size="large"
+            class="rfb-planos__cta"
+            p-url="/cliente/cadastro">
+          </po-button>
+        </div>
       </div>
     </div>
   </div>

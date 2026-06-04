@@ -5,7 +5,7 @@
       class="po-md-4"
       p-label="Selecione o plano"
       [p-options]="planosOptions"
-      [(ngModel)]="planoSelecionadoId"
+      [ngModel]="planoSelecionadoId"
       (ngModelChange)="onPlanoChange($event)">
     </po-select>
 
@@ -45,7 +45,7 @@
   <po-select
     p-label="Recurso *"
     [p-options]="recursosOptions"
-    [(ngModel)]="formAdd.recursoId"
+    [ngModel]="formAdd.recursoId"
     (ngModelChange)="onRecursoChange($event)">
   </po-select>
 

@@ -83,10 +83,10 @@ export class PlanosComponent implements OnInit {
       ],
     },
   ];
-  ciclos: Array<{ id: CicloCobranca; label: string }> = [
-    { id: 'mensal', label: 'Mensalmente' },
-    { id: 'semestral', label: 'A cada 6 meses' },
-    { id: 'anual', label: 'Anualmente' },
+  ciclos: Array<{ id: CicloCobranca; label: string; icone: string }> = [
+    { id: 'mensal',    label: 'Mensalmente',    icone: 'an an-calendar' },
+    { id: 'semestral', label: 'A cada 6 meses', icone: 'an an-calendar-check' },
+    { id: 'anual',     label: 'Anualmente',     icone: 'an an-crown' },
   ];
 
   constructor(private http: HttpClient) {}

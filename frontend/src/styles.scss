@@ -5,7 +5,9 @@
 body {
   margin: 0;
   font-family: var(--font-family-theme, 'Inter', sans-serif);
-  background: #f5f5f5;
+  background: var(--rfb-bg, #fff);
+  color: var(--rfb-dark);
+  transition: background .25s, color .25s;
 }
 
 html {
@@ -13,11 +15,77 @@ html {
   scroll-padding-top: 76px;
 }
 
-// ── Variáveis de tema ──────────────────────────────────────────
-:root {
-  --rfb-primary:   #1a56db;   // azul principal
-  --rfb-secondary: #0e9f6e;   // verde dados/sucesso
-  --rfb-dark:      #111827;
-  --rfb-gray:      #6b7280;
-  --rfb-light:     #f9fafb;
+// ── Tema claro (padrão) ──────────────────────────────────────────
+:root,
+[data-theme="claro"] {
+  --rfb-primary:    #7c3aed;
+  --rfb-primary-h:  #6d28d9;
+  --rfb-secondary:  #0e9f6e;
+  --rfb-dark:       #111827;
+  --rfb-gray:       #6b7280;
+  --rfb-light:      #f9fafb;
+  --rfb-bg:         #ffffff;
+  --rfb-bg-alt:     #f9fafb;
+  --rfb-bg-card:    #ffffff;
+  --rfb-border:     #e5e7eb;
+  --rfb-navbar-bg:  #ffffff;
+  --rfb-code-bg:    #0f172a;
+  --rfb-shadow:     0 1px 4px rgba(0,0,0,.06);
+  --rfb-shadow-md:  0 4px 24px rgba(0,0,0,.08);
+}
+
+// ── Tema escuro ─────────────────────────────────────────────────
+[data-theme="escuro"] {
+  --rfb-primary:    #a78bfa;
+  --rfb-primary-h:  #8b5cf6;
+  --rfb-secondary:  #34d399;
+  --rfb-dark:       #f1f5f9;
+  --rfb-gray:       #94a3b8;
+  --rfb-light:      #1e293b;
+  --rfb-bg:         #0f172a;
+  --rfb-bg-alt:     #1e293b;
+  --rfb-bg-card:    #1e293b;
+  --rfb-border:     #334155;
+  --rfb-navbar-bg:  #0f172a;
+  --rfb-code-bg:    #020617;
+  --rfb-shadow:     0 1px 4px rgba(0,0,0,.3);
+  --rfb-shadow-md:  0 4px 24px rgba(0,0,0,.4);
+}
+
+// ── Botões Landing Page — padrão visual roxo ──────────────────────
+// Cobre TODOS os componentes da LP
+app-landing, app-hero, app-navbar, app-planos,
+app-exemplos, app-como-funciona, app-footer {
+
+  // ─ Botão ESCURO: fundo roxo sólido ────────────────────────────
+  po-button[p-kind="primary"] .po-button {
+    background:    var(--rfb-primary)   !important;
+    border-color:  var(--rfb-primary)   !important;
+    border-radius: 8px                  !important;
+    color:         #ffffff              !important;
+    font-weight:   600                  !important;
+    box-shadow:    0 2px 10px rgba(124, 58, 237, .35) !important;
+
+    &:hover, &:focus {
+      background:   var(--rfb-primary-h) !important;
+      border-color: var(--rfb-primary-h) !important;
+      box-shadow:   0 4px 16px rgba(109, 40, 217, .45) !important;
+    }
+  }
+
+  // ─ Botão CLARO: borda roxa, fundo branco ───────────────────────
+  po-button[p-kind="secondary"] .po-button,
+  po-button[p-kind="tertiary"]  .po-button {
+    background:    var(--rfb-bg)        !important;
+    border:        1.5px solid var(--rfb-primary) !important;
+    border-radius: 8px                  !important;
+    color:         var(--rfb-primary)   !important;
+    font-weight:   600                  !important;
+    box-shadow:    none                 !important;
+
+    &:hover, &:focus {
+      background:   color-mix(in srgb, var(--rfb-primary) 7%, var(--rfb-bg)) !important;
+      border-color: var(--rfb-primary-h) !important;
+    }
+  }
 }

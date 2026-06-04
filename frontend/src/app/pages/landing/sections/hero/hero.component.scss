@@ -1,6 +1,7 @@
 .rfb-hero {
-  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rfb-primary) 8%, var(--rfb-bg)) 0%, var(--rfb-bg) 100%);
   padding: 80px 24px;
+  transition: background .25s;
 
   &__container {
     max-width: 1200px;
@@ -17,7 +18,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #dbeafe;
+    background: color-mix(in srgb, var(--rfb-primary) 12%, transparent);
     color: var(--rfb-primary);
     padding: 6px 14px;
     border-radius: 999px;
@@ -60,16 +61,15 @@
   }
 
   // ── Preview JSON ──────────────────────────────
-
   &__preview {
-    background: #1e293b;
+    background: var(--rfb-code-bg, #1e293b);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0,0,0,.2);
   }
 
   &__preview-bar {
-    background: #334155;
+    background: rgba(255,255,255,.06);
     padding: 10px 16px;
     display: flex;
     align-items: center;
@@ -102,10 +102,5 @@
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-word;
-
-    &::selection {
-      background: rgba(59, 130, 246, 0.35);
-      color: #f8fafc;
-    }
   }
 }
