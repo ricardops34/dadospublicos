@@ -76,12 +76,19 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AccessLogMiddleware)
-      .forRoutes({ path: 'cnpj*', method: RequestMethod.ALL },
-                 { path: 'cnpj-raiz*', method: RequestMethod.ALL },
-                 { path: 'pesquisa*', method: RequestMethod.ALL },
-                 { path: 'geocode*', method: RequestMethod.ALL },
-                 { path: 'suframa*', method: RequestMethod.ALL },
-                 { path: 'consumo*', method: RequestMethod.ALL },
-                 { path: 'mapa*', method: RequestMethod.ALL });
+      .forRoutes({ path: 'cnpj/*path', method: RequestMethod.ALL },
+                 { path: 'cnpj', method: RequestMethod.ALL },
+                 { path: 'cnpj-raiz/*path', method: RequestMethod.ALL },
+                 { path: 'cnpj-raiz', method: RequestMethod.ALL },
+                 { path: 'pesquisa/*path', method: RequestMethod.ALL },
+                 { path: 'pesquisa', method: RequestMethod.ALL },
+                 { path: 'geocode/*path', method: RequestMethod.ALL },
+                 { path: 'geocode', method: RequestMethod.ALL },
+                 { path: 'suframa/*path', method: RequestMethod.ALL },
+                 { path: 'suframa', method: RequestMethod.ALL },
+                 { path: 'consumo/*path', method: RequestMethod.ALL },
+                 { path: 'consumo', method: RequestMethod.ALL },
+                 { path: 'mapa/*path', method: RequestMethod.ALL },
+                 { path: 'mapa', method: RequestMethod.ALL });
   }
 }
