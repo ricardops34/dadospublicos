@@ -6,11 +6,10 @@ import { Assinatura } from '../../entities/assinatura.entity';
 import { Token } from '../../entities/token.entity';
 import { ClienteApi } from '../../entities/cliente.entity';
 import { Plano } from '../../entities/plano.entity';
-import { AdminModule } from '../admin/admin.module';
-import { ClientesModule } from '../clientes/clientes.module';
+import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Assinatura, Token, ClienteApi, Plano]), AdminModule, ClientesModule],
+  imports: [TypeOrmModule.forFeature([Assinatura, Token, ClienteApi, Plano]), PortalModule],
   controllers: [AssinaturasController],
   providers: [AssinaturasService],
 })

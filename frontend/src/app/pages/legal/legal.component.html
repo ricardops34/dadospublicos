@@ -1,0 +1,45 @@
+<app-navbar></app-navbar>
+
+<main class="legal-main">
+  <section class="legal-hero">
+    <div class="legal-hero__container">
+      <span class="legal-hero__eyebrow">BJ Soft</span>
+      <h1>{{ titulo }}</h1>
+      <p class="legal-hero__subtitle">{{ subtitulo }}</p>
+      <p class="legal-hero__highlight">{{ destaque }}</p>
+      <div class="legal-hero__meta">
+        <span>Última atualização: {{ ultimaAtualizacao }}</span>
+        <a [href]="'mailto:' + emailContato">{{ emailContato }}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="legal-content">
+    <div class="legal-content__container">
+      <article class="legal-document">
+        <section class="legal-section" *ngFor="let secao of secoes">
+          <h2>{{ secao.titulo }}</h2>
+          <p *ngFor="let paragrafo of secao.paragrafos">{{ paragrafo }}</p>
+        </section>
+      </article>
+
+      <aside class="legal-sidebar">
+        <section class="legal-sources">
+          <h3>Resumo da política</h3>
+          <ul>
+            <li *ngFor="let destaque of destaquesLaterais">{{ destaque }}</li>
+          </ul>
+        </section>
+
+        <section class="legal-sources">
+          <h3>Base legal consultada</h3>
+          <a *ngFor="let base of basesLegais" [href]="base.href" target="_blank" rel="noopener">
+            {{ base.label }}
+          </a>
+        </section>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<app-footer></app-footer>

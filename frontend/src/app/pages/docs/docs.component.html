@@ -1,0 +1,60 @@
+<app-navbar></app-navbar>
+
+<main class="docs-main">
+  <section class="docs-hero">
+    <div class="docs-hero__container">
+      <span class="docs-hero__eyebrow">Documentação</span>
+      <h1>Guia de integração da API</h1>
+      <p class="docs-hero__subtitle">
+        Referência funcional para autenticação, endpoints, consumo, erros e fluxo de uso da plataforma BuscaDados.
+      </p>
+      <p class="docs-hero__highlight">
+        Última atualização: {{ ultimaAtualizacao }}
+      </p>
+      <div class="docs-hero__actions">
+        <a [href]="swaggerUrl" target="_blank" rel="noopener" class="docs-hero__link-primary">
+          <po-button
+            p-label="Ver documentação técnica"
+            p-kind="secondary"
+            p-size="large"
+            p-icon="an an-book-open">
+          </po-button>  
+        </a>
+        <a routerLink="/cliente/cadastro" class="docs-hero__link-secondary">Criar conta</a>
+      </div>
+    </div>
+  </section> 
+
+  <section class="docs-content">
+    <div class="docs-content__container">
+      <article class="docs-document">
+        <section class="docs-section" *ngFor="let secao of secoes">
+          <h2>{{ secao.titulo }}</h2>
+          <p *ngFor="let paragrafo of secao.paragrafos">{{ paragrafo }}</p>
+          <ul *ngIf="secao.bullets?.length">
+            <li *ngFor="let item of secao.bullets">{{ item }}</li>
+          </ul>
+          <pre *ngIf="secao.codigo">{{ secao.codigo }}</pre>
+        </section>
+      </article>
+
+      <aside class="docs-sidebar">
+        <section class="docs-card">
+          <h3>Resumo rápido</h3>
+          <ul>
+            <li *ngFor="let item of destaques">{{ item }}</li>
+          </ul>
+        </section>
+
+        <section class="docs-card">
+          <h3>Links úteis</h3>
+          <a [href]="swaggerUrl" target="_blank" rel="noopener">Swagger da API</a>
+          <a routerLink="/termos-de-uso">Termos de uso</a>
+          <a routerLink="/privacidade">Política de privacidade</a>
+        </section>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<app-footer></app-footer>

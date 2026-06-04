@@ -1,0 +1,136 @@
+<po-page-default p-title="ETL — Dados Públicos RFB">
+
+  <!-- Barra de progresso (visível apenas quando rodando) -->
+  <po-container *ngIf="status.rodando" class="etl-progresso">
+    <div class="etl-progresso__header">
+      <span class="an an-spinner-gap etl-progresso__icon"></span>
+      <strong>Processando...</strong>
+      <span class="etl-progresso__label">{{ faseLabel }}</span>
+    </div>
+    <po-progress
+      p-text="Progresso"
+      [p-value]="percentual"
+      p-info="{{ percentual }}%">
+    </po-progress>
+  </po-container>
+
+  <!-- Cards de resumo -->
+  <div class="etl-cards">
+    <div class="etl-card">
+      <span class="an an-hard-drives etl-card__icon"></span>
+      <div>
+        <strong>{{ arquivos.length }}</strong>
+        <small>Arquivos esperados</small>
+      </div>
+    </div>
+    <div class="etl-card">
+      <span class="an an-download-simple etl-card__icon etl-card__icon--blue"></span>
+      <div>
+        <strong>{{ arquivosBaixados() }}</strong>
+        <small>Baixados</small>
+      </div>
+    </div>
+    <div class="etl-card">
+      <span class="an an-file-zip etl-card__icon etl-card__icon--green"></span>
+      <div>
+        <strong>{{ arquivosExtraidos() }}</strong>
+        <small>Extraídos</small>
+      </div>
+    </div>
+    <div class="etl-card" *ngIf="status.historico?.length">
+      <span class="an an-check-circle etl-card__icon"
+        [class.etl-card__icon--green]="status.historico[0]?.status === 'concluido'"
+        [class.etl-card__icon--red]="status.historico[0]?.status === 'erro'">
+      </span>
+      <div>
+        <strong>{{ status.historico[0]?.status | titlecase }}</strong>
+        <small>Última execução</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações -->
+  <po-divider p-label="Executar"></po-divider>
+
+  <div class="etl-acoes">
+    <div class="etl-acao">
+      <span class="an an-cloud-arrow-down etl-acao__icon"></span>
+      <div>
+        <strong>1. Baixar arquivos</strong>
+        <p>Faz download dos ZIPs da RFB ({{ arquivos.length }} arquivos, ~4,7 GB). Pula os que já existem.</p>
+      </div>
+      <po-button
+        p-label="Baixar"
+        p-kind="secondary"
+        p-icon="an an-download-simple"
+        [p-disabled]="status.rodando"
+        (p-click)="executar('download')">
+      </po-button>
+    </div>
+
+    <div class="etl-acao">
+      <span class="an an-file-zip etl-acao__icon etl-acao__icon--orange"></span>
+      <div>
+        <strong>2. Extrair ZIPs</strong>
+        <p>Descompacta os arquivos baixados para CSV. Necessário antes da carga.</p>
+      </div>
+      <po-button
+        p-label="Extrair"
+        p-kind="secondary"
+        p-icon="an an-file-zip"
+        [p-disabled]="status.rodando"
+        (p-click)="executar('extracao')">
+      </po-button>
+    </div>
+
+    <div class="etl-acao">
+      <span class="an an-database etl-acao__icon etl-acao__icon--green"></span>
+      <div>
+        <strong>3. Aplicar na base</strong>
+        <p>Carrega os CSVs no PostgreSQL (truncate + insert em lotes). Processo demorado (~1-2h).</p>
+      </div>
+      <po-button
+        p-label="Aplicar"
+        p-kind="secondary"
+        p-icon="an an-database"
+        [p-disabled]="status.rodando"
+        (p-click)="executar('carga')">
+      </po-button>
+    </div>
+
+    <div class="etl-acao etl-acao--destaque">
+      <span class="an an-play-circle etl-acao__icon etl-acao__icon--primary"></span>
+      <div>
+        <strong>ETL Completo</strong>
+        <p>Executa as 3 fases em sequência: download → extração → carga.</p>
+      </div>
+      <po-button
+        p-label="Executar tudo"
+        p-kind="primary"
+        p-icon="an an-play-circle"
+        [p-disabled]="status.rodando"
+        (p-click)="executar('completo')">
+      </po-button>
+    </div>
+  </div>
+
+  <!-- Arquivos no servidor -->
+  <po-divider p-label="Arquivos no servidor"></po-divider>
+
+  <po-table
+    [p-columns]="colunasArquivos"
+    [p-items]="arquivos"
+    p-striped="true"
+    [p-loading]="carregando">
+  </po-table>
+
+  <!-- Histórico de execuções -->
+  <po-divider p-label="Histórico de execuções"></po-divider>
+
+  <po-table
+    [p-columns]="colunasHistorico"
+    [p-items]="status.historico"
+    p-striped="true">
+  </po-table>
+
+</po-page-default>

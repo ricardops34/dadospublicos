@@ -21,6 +21,6 @@ etl/extraidos/
 *.txt.gz
 
 # IDE
-.vscode/
+.vscode
 .idea/
 *.suo

@@ -1,0 +1,53 @@
+.token-vazio {
+  text-align: center; padding: 64px;
+  h3 { margin: 16px 0 8px; }
+  p  { color: #6b7280; margin-bottom: 24px; }
+}
+
+.token-aviso {
+  display: flex; align-items: center; gap: 12px;
+  background: #fffbeb; border: 1px solid #f59e0b;
+  border-radius: 12px; padding: 16px 20px;
+  margin-bottom: 24px; color: #92400e;
+  span { font-size: 1.3rem; color: #f59e0b; }
+}
+
+.token-box {
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  background: #f9fafb;
+
+  &__label { font-size: 0.8rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+
+  &__valor {
+    display: flex; align-items: center; gap: 8px;
+    code {
+      flex: 1;
+      font-family: monospace;
+      font-size: 0.9rem;
+      word-break: break-all;
+      color: #1a56db;
+    }
+  }
+
+  &__acoes { display: flex; gap: 4px; flex-shrink: 0; }
+}
+
+.token-uso {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 20px 24px;
+  p { color: #94a3b8; font-size: 0.875rem; margin: 0 0 8px; }
+
+  &__code {
+    display: block;
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: #7dd3fc;
+    background: #0f172a;
+    padding: 10px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+}

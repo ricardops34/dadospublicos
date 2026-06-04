@@ -1,0 +1,73 @@
+<po-page-default p-title="Recurso × Planos">
+
+  <div class="po-row" style="margin-bottom:24px; align-items:flex-end; gap:12px;">
+    <po-select
+      class="po-md-4"
+      p-label="Selecione o plano"
+      [p-options]="planosOptions"
+      [(ngModel)]="planoSelecionadoId"
+      (ngModelChange)="onPlanoChange($event)">
+    </po-select>
+
+    <po-button
+      *ngIf="planoSelecionadoId"
+      p-label="Adicionar recurso"
+      p-kind="primary"
+      p-icon="an an-plus"
+      (p-click)="abrirAdd()">
+    </po-button>
+  </div>
+
+  <div *ngIf="!planoSelecionadoId" style="text-align:center; padding:48px; color:#9ca3af;">
+    <span class="an an-arrow-up" style="font-size:2rem; display:block; margin-bottom:8px;"></span>
+    Selecione um plano para ver e gerenciar seus recursos.
+  </div>
+
+  <ng-container *ngIf="planoSelecionadoId">
+    <po-divider [p-label]="'Recursos do plano: ' + planoSelecionadoNome"></po-divider>
+
+    <po-table
+      [p-columns]="colunas"
+      [p-items]="associacoes"
+      [p-actions]="acoes"
+      [p-loading]="carregando"
+      p-striped="true"
+      p-sort="true">
+    </po-table>
+  </ng-container>
+
+</po-page-default>
+
+<!-- Modal Adicionar -->
+<po-modal #modalAdd p-title="Adicionar recurso ao plano" p-size="sm"
+  [p-primary-action]="acaoAdd" [p-secondary-action]="acaoCancelarAdd">
+
+  <po-select
+    p-label="Recurso *"
+    [p-options]="recursosOptions"
+    [(ngModel)]="formAdd.recursoId"
+    (ngModelChange)="onRecursoChange($event)">
+  </po-select>
+
+  <po-input
+    p-label="Texto de exibição na LP *"
+    p-placeholder="Ex: 160.000 requisições/mês"
+    [(ngModel)]="formAdd.descricaoExibicao">
+  </po-input>
+
+  <po-number p-label="Ordem" [(ngModel)]="formAdd.ordem"></po-number>
+
+</po-modal>
+
+<!-- Modal Editar -->
+<po-modal #modalEdit p-title="Editar associação" p-size="sm"
+  [p-primary-action]="acaoSalvarEdit" [p-secondary-action]="acaoCancelarEdit">
+
+  <po-input
+    p-label="Texto de exibição na LP *"
+    [(ngModel)]="formEdit.descricaoExibicao">
+  </po-input>
+
+  <po-number p-label="Ordem" [(ngModel)]="formEdit.ordem"></po-number>
+
+</po-modal>

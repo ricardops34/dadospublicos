@@ -14,6 +14,7 @@ interface Exemplo {
 })
 export class ExemplosComponent {
   abaAtiva = 0;
+  docsUrl = '/docs';
 
   exemplos: Exemplo[] = [
     {

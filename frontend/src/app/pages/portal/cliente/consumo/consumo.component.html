@@ -1,0 +1,78 @@
+<po-page-default p-title="Consumo da API">
+
+  <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+
+  <ng-container *ngIf="!carregando">
+
+    <!-- Cards mês atual -->
+    <div class="consumo-cards" *ngIf="mesAtual">
+      <div class="consumo-card">
+        <span class="an an-chart-bar consumo-card__icon"></span>
+        <div>
+          <strong>{{ mesAtual.quantidade | number }}</strong>
+          <small>Requisições este mês</small>
+        </div>
+      </div>
+      <div class="consumo-card" *ngIf="assinatura?.limite_mensal">
+        <span class="an an-gauge consumo-card__icon consumo-card__icon--blue"></span>
+        <div>
+          <strong>{{ assinatura.limite_mensal | number }}</strong>
+          <small>Limite mensal</small>
+        </div>
+      </div>
+      <div class="consumo-card" *ngIf="assinatura?.limite_mensal">
+        <span class="an an-percent consumo-card__icon"
+          [class.consumo-card__icon--green]="percentualUso < 70"
+          [class.consumo-card__icon--orange]="percentualUso >= 70 && percentualUso < 90"
+          [class.consumo-card__icon--red]="percentualUso >= 90">
+        </span>
+        <div>
+          <strong>{{ percentualUso }}%</strong>
+          <small>Do limite usado</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de progresso -->
+    <ng-container *ngIf="mesAtual && assinatura?.limite_mensal">
+      <po-progress
+        [p-value]="percentualUso"
+        [p-info]="percentualUso + '% utilizado'"
+        style="margin-bottom:24px;">
+      </po-progress>
+    </ng-container>
+
+    <!-- Gráfico histórico -->
+    <po-divider p-label="Histórico de consumo"></po-divider>
+
+    <po-chart
+      *ngIf="chartSeries.length"
+      p-title="Requisições por mês"
+      [p-type]="chartTypeLine"
+      [p-series]="chartSeries"
+      [p-categories]="chartCategories"
+      [p-height]="280">
+    </po-chart>
+
+    <!-- Tabela histórico -->
+    <po-divider p-label="Detalhe por mês"></po-divider>
+
+    <po-table
+      [p-columns]="[
+        { property: 'competencia', label: 'Mês/Ano', width: '20%' },
+        { property: 'quantidade',  label: 'Requisições', type: 'number', width: '25%' },
+        { property: 'atualizadoEm', label: 'Atualizado em', type: 'dateTime', width: '30%' }
+      ]"
+      [p-items]="historico"
+      p-striped="true">
+    </po-table>
+
+    <!-- Sem histórico -->
+    <div *ngIf="!historico.length && !carregando" style="text-align:center; padding:48px; color:#9ca3af;">
+      <span class="an an-chart-bar" style="font-size:3rem; display:block; margin-bottom:12px;"></span>
+      Nenhum consumo registrado ainda.
+    </div>
+
+  </ng-container>
+
+</po-page-default>

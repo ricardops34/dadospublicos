@@ -1,0 +1,30 @@
+.consumo-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.consumo-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  strong { display: block; font-size: 1.5rem; font-weight: 800; color: #111827; }
+  small  { font-size: 0.8rem; color: #6b7280; }
+
+  &__icon {
+    font-size: 2rem;
+    color: #9ca3af;
+    &--blue   { color: #1a56db; }
+    &--green  { color: #16a34a; }
+    &--orange { color: #d97706; }
+    &--red    { color: #dc2626; }
+  }
+}

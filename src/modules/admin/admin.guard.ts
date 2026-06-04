@@ -7,7 +7,10 @@ export class AdminGuard implements CanActivate {
 
   canActivate(ctx: ExecutionContext): boolean {
     const req = ctx.switchToHttp().getRequest();
-    const adminKey = req.headers['x_admin_key'] ?? req.query['admin_key'];
+    const adminKey =
+      req.headers['x-admin-key'] ??
+      req.headers['x_admin_key'] ??
+      req.query['admin_key'];
     const expected = this.cfg.get<string>('ADMIN_KEY');
 
     if (!expected) throw new UnauthorizedException('ADMIN_KEY não configurada no servidor.');

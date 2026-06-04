@@ -1,167 +1,61 @@
 .rfb-footer {
   background: var(--rfb-dark);
   color: #e2e8f0;
-  padding: 60px 24px 32px;
+  padding: 24px;
 
   &__container {
     max-width: 1200px;
     margin: 0 auto;
   }
 
-  // ── Topo ────────────────────────────────────────────
-  &__topo {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 64px;
-    margin-bottom: 48px;
-
-    @media (max-width: 900px) {
-      grid-template-columns: 1fr;
-      gap: 40px;
-    }
-  }
-
-  // Bloco da marca
-  &__marca {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  &__logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: #fff;
-
-    span { font-size: 1.4rem; color: var(--rfb-secondary); }
-  }
-
-  &__tagline {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #94a3b8;
-    line-height: 1.6;
-  }
-
-  &__social {
-    display: flex;
-    gap: 10px;
-    margin-top: 4px;
-  }
-
-  &__social-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, .07);
-    color: #94a3b8;
-    font-size: 1.2rem;
-    transition: background .2s, color .2s;
-    text-decoration: none;
-
-    &:hover {
-      background: rgba(255, 255, 255, .15);
-      color: #fff;
-    }
-  }
-
-  // ── Colunas de links ─────────────────────────────────
-  &__colunas {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
-
-    @media (max-width: 600px) {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  &__col-titulo {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #64748b;
-    margin: 0 0 16px;
-  }
-
-  &__col-lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  &__link {
-    color: #94a3b8;
-    text-decoration: none;
-    font-size: 0.875rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: color .2s;
-
-    &:hover { color: #fff; }
-  }
-
-  &__ext {
-    font-size: 0.75rem;
-    opacity: 0.6;
-  }
-
-  // ── Divisor ───────────────────────────────────────────
-  &__divider {
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, .06);
-    margin: 0 0 24px;
-  }
-
-  // ── Base ──────────────────────────────────────────────
   &__base {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
     gap: 16px;
+    flex-wrap: wrap;
+
+    @media (max-width: 700px) {
+      justify-content: center;
+      text-align: center;
+    }
   }
 
   &__copy {
     margin: 0;
-    font-size: 0.8rem;
-    color: #475569;
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
 
-    a {
-      color: #64748b;
-      text-decoration: none;
-      &:hover { color: #94a3b8; }
+  &__brand-link {
+    color: #e2e8f0;
+    text-decoration: none;
+    font-weight: 700;
+
+    &:hover {
+      color: #ffffff;
+      text-decoration: underline;
     }
   }
 
-  &__badges {
+  &__legal {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 18px;
     flex-wrap: wrap;
+
+    @media (max-width: 700px) {
+      justify-content: center;
+    }
   }
 
-  &__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 99px;
-    background: rgba(255, 255, 255, .05);
-    color: #64748b;
-    font-size: 0.75rem;
-    font-weight: 600;
+  &__link {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.85rem;
 
-    span { font-size: 0.85rem; }
+    &:hover {
+      color: #ffffff;
+    }
   }
 }

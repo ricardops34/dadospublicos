@@ -1,0 +1,74 @@
+<po-page-default p-title="Minha Conta">
+
+  <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+
+  <ng-container *ngIf="!carregando && perfil">
+
+    <!-- Cabeçalho com avatar e ações -->
+    <div class="mc-header">
+      <div class="mc-avatar">
+        <span class="an an-user-circle"></span>
+      </div>
+      <div>
+        <h2>{{ perfil.nome }}</h2>
+        <span class="mc-email">{{ perfil.email }}</span>
+        <po-tag
+          [p-value]="emailVerificadoLabel"
+          [p-color]="perfil.emailVerificado ? 'color-10' : 'color-07'"
+          style="margin-left:8px;">
+        </po-tag>
+      </div>
+      <div style="margin-left:auto;">
+        <po-button
+          *ngIf="!editando"
+          p-label="Editar dados"
+          p-kind="secondary"
+          p-icon="an an-pencil"
+          (p-click)="iniciarEdicao()">
+        </po-button>
+      </div>
+    </div>
+
+    <po-divider p-label="Dados cadastrais"></po-divider>
+
+    <!-- Modo visualização -->
+    <ng-container *ngIf="!editando">
+      <div class="po-row">
+        <po-info class="po-md-6" p-label="Nome"        [p-value]="perfil.nome"></po-info>
+        <po-info class="po-md-6" p-label="E-mail"      [p-value]="perfil.email"></po-info>
+      </div>
+      <div class="po-row">
+        <po-info class="po-md-4" p-label="Telefone"    [p-value]="perfil.telefone || '—'"></po-info>
+        <po-info class="po-md-4" p-label="CNPJ"        [p-value]="perfil.cnpj || '—'"></po-info>
+        <po-info class="po-md-4" p-label="Razão social" [p-value]="perfil.razaoSocial || '—'"></po-info>
+      </div>
+    </ng-container>
+
+    <!-- Modo edição -->
+    <ng-container *ngIf="editando">
+      <div class="po-row">
+        <po-input class="po-md-6" p-label="Nome *"        [(ngModel)]="form.nome"></po-input>
+        <po-input class="po-md-6" p-label="Telefone"      [(ngModel)]="form.telefone" p-mask="(99) 9 9999-9999"></po-input>
+      </div>
+      <div class="po-row">
+        <po-input class="po-md-4" p-label="CNPJ"          [(ngModel)]="form.cnpj" p-mask="99.999.999/9999-99"></po-input>
+        <po-input class="po-md-8" p-label="Razão social"  [(ngModel)]="form.razaoSocial"></po-input>
+      </div>
+      <div class="po-row" style="justify-content:flex-end; gap:8px; margin-top:8px;">
+        <po-button p-label="Cancelar" p-kind="tertiary" (p-click)="cancelarEdicao()"></po-button>
+        <po-button p-label="Salvar" p-kind="primary" p-icon="an an-floppy-disk"
+          [p-loading]="salvando" (p-click)="salvar()">
+        </po-button>
+      </div>
+    </ng-container>
+
+    <po-divider p-label="Informações da conta"></po-divider>
+    <div class="po-row">
+      <po-info class="po-md-4" p-label="Membro desde"   [p-value]="(perfil.criadoEm | date:'dd/MM/yyyy') ?? ''"></po-info>
+      <po-info class="po-md-4" p-label="Último acesso"  [p-value]="(perfil.ultimoLogin | date:'dd/MM/yyyy HH:mm') ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Status"         [p-value]="perfil.ativo ? 'Ativo' : 'Suspenso'"></po-info>
+    </div>
+
+  </ng-container>
+
+</po-page-default>

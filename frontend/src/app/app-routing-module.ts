@@ -1,39 +1,51 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { adminGuard } from './guards/admin.guard';
-import { clienteGuard } from './guards/cliente.guard';
+import { authGuard } from './guards/auth.guard';
+import { DocsComponent } from './pages/docs/docs.component';
+import { DocsModule } from './pages/docs/docs.module';
+import { LegalComponent } from './pages/legal/legal.component';
+import { LegalModule } from './pages/legal/legal.module';
 
 const routes: Routes = [
-  // Landing Page — pública
+  // Páginas públicas
+  { path: 'docs', component: DocsComponent },
+  { path: 'termos-de-uso', component: LegalComponent, data: { tipo: 'termos' } },
+  { path: 'privacidade', component: LegalComponent, data: { tipo: 'privacidade' } },
+
+  // Landing page
+  { path: '', loadChildren: () => import('./pages/landing/landing.module').then((m) => m.LandingModule) },
+
+  // Login único
+  { path: 'login', loadChildren: () => import('./pages/login/login.module').then((m) => m.LoginModule) },
+
+  // Cadastro público (mantido para link da landing)
+  { path: 'cliente/cadastro', loadChildren: () => import('./pages/cliente/cadastro/cliente-cadastro.module').then((m) => m.ClienteCadastroModule) },
+
+  // Portal unificado (admin + cliente — guarda apenas exige JWT válido)
   {
-    path: '',
-    loadChildren: () => import('./pages/landing/landing.module').then(m => m.LandingModule),
+    path: 'portal',
+    canActivate: [authGuard],
+    loadChildren: () => import('./pages/portal/portal.module').then((m) => m.PortalModule),
   },
 
-  // Login / cadastro sem guard
-  { path: 'admin/login',    loadChildren: () => import('./pages/admin/login/admin-login.module').then(m => m.AdminLoginModule) },
-  { path: 'cliente/login',  loadChildren: () => import('./pages/cliente/login/cliente-login.module').then(m => m.ClienteLoginModule) },
-  { path: 'cliente/cadastro', loadChildren: () => import('./pages/cliente/cadastro/cliente-cadastro.module').then(m => m.ClienteCadastroModule) },
-
-  // Área administrativa
-  {
-    path: 'admin',
-    canActivate: [adminGuard],
-    loadChildren: () => import('./pages/admin/admin.module').then(m => m.AdminModule),
-  },
-
-  // Área do cliente
-  {
-    path: 'cliente',
-    canActivate: [clienteGuard],
-    loadChildren: () => import('./pages/cliente/cliente.module').then(m => m.ClienteModule),
-  },
+  // Redirects de compatibilidade com rotas antigas
+  { path: 'admin/login', redirectTo: '/login', pathMatch: 'full' },
+  { path: 'admin', redirectTo: '/portal', pathMatch: 'full' },
+  { path: 'cliente/login', redirectTo: '/login', pathMatch: 'full' },
+  { path: 'cliente', redirectTo: '/portal', pathMatch: 'full' },
 
   { path: '**', redirectTo: '' },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' })],
+  imports: [
+    DocsModule,
+    LegalModule,
+    RouterModule.forRoot(routes, {
+      scrollPositionRestoration: 'top',
+      anchorScrolling: 'enabled',
+    }),
+  ],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

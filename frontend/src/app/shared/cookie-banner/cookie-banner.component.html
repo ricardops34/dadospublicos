@@ -1,0 +1,92 @@
+<div class="cookie-banner" *ngIf="visivel">
+  <div class="cookie-banner__backdrop"></div>
+
+  <section class="cookie-banner__dialog" aria-label="Preferências de cookies">
+    <header class="cookie-banner__header">
+      <div class="cookie-banner__title-wrap">
+        <span class="cookie-banner__title-icon an an-cookie"></span>
+        <h2>Cookies</h2>
+      </div>
+      <button type="button" class="cookie-banner__close" (click)="fechar()" aria-label="Fechar">
+        <span class="an an-x"></span>
+      </button>
+    </header>
+
+    <ng-container *ngIf="!personalizando; else preferenciasTpl">
+      <p class="cookie-banner__lead">
+        Utilizamos cookies para melhorar sua experiência. Ao continuar, você concorda com nosso uso de cookies.
+      </p>
+
+      <div class="cookie-banner__actions">
+        <button type="button" class="cookie-banner__button cookie-banner__button--primary" (click)="aceitarTudo()">
+          Aceitar
+        </button>
+        <button type="button" class="cookie-banner__button cookie-banner__button--ghost" (click)="rejeitarOpcionais()">
+          Rejeitar
+        </button>
+        <button type="button" class="cookie-banner__button cookie-banner__button--link" (click)="abrirPersonalizacao()">
+          <span class="an an-gear-six"></span>
+          Personalizar
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-template #preferenciasTpl>
+      <div class="cookie-banner__prefs">
+        <div class="cookie-banner__pref-item">
+          <div>
+            <h3>Cookies Necessários</h3>
+            <p>Essenciais para o funcionamento</p>
+          </div>
+          <span class="cookie-banner__status">Sempre ativo</span>
+        </div>
+
+        <div class="cookie-banner__pref-item">
+          <div>
+            <h3>Cookies de Análise</h3>
+            <p>Entendem como você usa o site</p>
+          </div>
+          <label class="cookie-banner__switch">
+            <input type="checkbox" [(ngModel)]="preferencias.analise" />
+            <span></span>
+          </label>
+        </div>
+
+        <div class="cookie-banner__pref-item">
+          <div>
+            <h3>Cookies de Marketing</h3>
+            <p>Personalizam anúncios</p>
+          </div>
+          <label class="cookie-banner__switch">
+            <input type="checkbox" [(ngModel)]="preferencias.marketing" />
+            <span></span>
+          </label>
+        </div>
+
+        <div class="cookie-banner__pref-item">
+          <div>
+            <h3>Cookies Funcionais</h3>
+            <p>Funcionalidades avançadas</p>
+          </div>
+          <label class="cookie-banner__switch">
+            <input type="checkbox" [(ngModel)]="preferencias.funcional" />
+            <span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="cookie-banner__actions cookie-banner__actions--prefs">
+        <button type="button" class="cookie-banner__button cookie-banner__button--primary" (click)="salvar()">
+          Salvar
+        </button>
+        <button type="button" class="cookie-banner__button cookie-banner__button--ghost" (click)="voltar()">
+          Voltar
+        </button>
+      </div>
+    </ng-template>
+
+    <footer class="cookie-banner__footer">
+      Mais informações em nossa <a routerLink="/privacidade">Política de Privacidade</a>.
+    </footer>
+  </section>
+</div>

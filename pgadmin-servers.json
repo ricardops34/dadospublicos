@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "RFB Postgres Local",
+      "Group": "DadosPublicos",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "dados_rfb",
+      "Username": "rfb_user",
+      "SSLMode": "prefer"
+    }
+  }
+}

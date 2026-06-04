@@ -1,0 +1,17 @@
+<po-page-default p-title="Consumo por cliente">
+
+  <div class="po-row" style="margin-bottom:16px; align-items:flex-end; gap:12px;">
+    <po-number class="po-md-2" p-label="Mês" [(ngModel)]="mesAtual" [p-min]="1" [p-max]="12"></po-number>
+    <po-number class="po-md-2" p-label="Ano" [(ngModel)]="anoAtual"></po-number>
+    <po-button p-label="Consultar" p-kind="primary" p-icon="an an-magnifying-glass" (p-click)="carregar()"></po-button>
+  </div>
+
+  <po-table
+    [p-columns]="colunas"
+    [p-items]="registros"
+    [p-loading]="carregando"
+    p-striped="true"
+    p-sort="true">
+  </po-table>
+
+</po-page-default>

@@ -1,0 +1,46 @@
+<po-page-default p-title="Faturas">
+
+  <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+
+  <ng-container *ngIf="!carregando">
+
+    <!-- Resumo -->
+    <div class="faturas-cards" *ngIf="faturas.length">
+      <div class="faturas-card">
+        <span class="an an-receipt faturas-card__icon"></span>
+        <div>
+          <strong>{{ faturas.length }}</strong>
+          <small>Total de faturas</small>
+        </div>
+      </div>
+      <div class="faturas-card">
+        <span class="an an-check-circle faturas-card__icon faturas-card__icon--green"></span>
+        <div>
+          <strong>R$ {{ totalPago | number:'1.2-2' }}</strong>
+          <small>Total pago</small>
+        </div>
+      </div>
+      <div class="faturas-card" *ngIf="faturasPendentes > 0">
+        <span class="an an-warning faturas-card__icon faturas-card__icon--orange"></span>
+        <div>
+          <strong>{{ faturasPendentes }}</strong>
+          <small>Pendente(s)</small>
+        </div>
+      </div>
+    </div>
+
+    <po-table
+      [p-columns]="colunas"
+      [p-items]="faturas"
+      p-striped="true"
+      p-sort="true">
+    </po-table>
+
+    <div *ngIf="!faturas.length" style="text-align:center; padding:48px; color:#9ca3af;">
+      <span class="an an-receipt" style="font-size:3rem; display:block; margin-bottom:12px;"></span>
+      Nenhuma fatura encontrada.
+    </div>
+
+  </ng-container>
+
+</po-page-default>

@@ -1,9 +1,18 @@
 <section class="rfb-planos" id="planos">
   <div class="rfb-planos__container">
-
     <div class="rfb-section-header">
       <h2>Planos e preços</h2>
-      <p>Comece grátis, escale conforme sua necessidade</p>
+    </div>
+
+    <div class="rfb-planos__cycles" role="tablist" aria-label="Ciclo de cobrança">
+      <button
+        *ngFor="let ciclo of ciclos"
+        type="button"
+        class="rfb-planos__cycle"
+        [class.rfb-planos__cycle--active]="cicloSelecionado === ciclo.id"
+        (click)="selecionarCiclo(ciclo.id)">
+        {{ ciclo.label }}
+      </button>
     </div>
 
     <div class="rfb-planos__grid">
@@ -12,63 +21,33 @@
         [class.rfb-planos__card--destaque]="p.destaque"
         *ngFor="let p of planos">
 
-        <div class="rfb-planos__destaque-badge" *ngIf="p.destaque">Mais popular</div>
+        <div class="rfb-planos__destaque-badge" *ngIf="p.seloDestaque">{{ p.seloDestaque }}</div>
 
         <div class="rfb-planos__header">
           <h3 class="rfb-planos__nome">{{ p.nome }}</h3>
           <p class="rfb-planos__desc">{{ p.descricao }}</p>
           <div class="rfb-planos__preco">
-            <span class="rfb-planos__valor">{{ formatarPreco(p.precoMensal) }}</span>
-            <span class="rfb-planos__periodo" *ngIf="p.precoMensal > 0">/mês</span>
+            <span class="rfb-planos__valor">{{ formatarPreco(precoDoPlano(p)) }}</span>
+            <span class="rfb-planos__periodo">{{ periodoDoPlano() }}</span>
           </div>
+          <p class="rfb-planos__billing">{{ rotuloCobranca(p) }}</p>
         </div>
 
         <ul class="rfb-planos__features">
-          <li>
-            <span class="an an-gauge rfb-planos__fi"></span>
-            <strong>{{ p.rateLimitPorMinuto }} req/min</strong>
-          </li>
-          <li>
-            <span class="an an-calendar-blank rfb-planos__fi"></span>
-            {{ p.limiteMensal ? (p.limiteMensal | number) + ' req/mês' : 'Ilimitado*' }}
-          </li>
-          <li [class.rfb-planos__feat--off]="!p.acessoCnpj">
-            <span class="an rfb-planos__fi" [ngClass]="p.acessoCnpj ? 'an-check-circle' : 'an-x-circle'"></span>
-            Consulta CNPJ
-          </li>
-          <li [class.rfb-planos__feat--off]="!p.acessoCnpjRaiz">
-            <span class="an rfb-planos__fi" [ngClass]="p.acessoCnpjRaiz ? 'an-check-circle' : 'an-x-circle'"></span>
-            Filiais (CNPJ raiz)
-          </li>
-          <li [class.rfb-planos__feat--off]="!p.acessoGeocode">
-            <span class="an rfb-planos__fi" [ngClass]="p.acessoGeocode ? 'an-check-circle' : 'an-x-circle'"></span>
-            Geocodificação de CEP
-          </li>
-          <li [class.rfb-planos__feat--off]="!p.acessoMapa">
-            <span class="an rfb-planos__fi" [ngClass]="p.acessoMapa ? 'an-check-circle' : 'an-x-circle'"></span>
-            Mapa de prospecção
-          </li>
-          <li [class.rfb-planos__feat--off]="!p.acessoPesquisa">
-            <span class="an rfb-planos__fi" [ngClass]="p.acessoPesquisa ? 'an-check-circle' : 'an-x-circle'"></span>
-            Pesquisa avançada (14 filtros)
+          <li *ngFor="let recurso of p.recursos">
+            <span class="an an-check-circle rfb-planos__fi"></span>
+            {{ recurso.descricaoExibicao }}
           </li>
         </ul>
 
         <po-button
-          [p-label]="p.precoMensal === 0 ? 'Começar grátis' : 'Assinar'"
+          p-label="Assinar"
           [p-kind]="p.destaque ? 'primary' : 'secondary'"
           p-size="large"
           class="rfb-planos__cta"
           p-url="/cliente/cadastro">
         </po-button>
-
       </div>
     </div>
-
-    <p class="rfb-planos__nota">
-      * Plano gratuito limitado a 3 req/min por IP.
-      Após limite mensal dos planos pagos, rate cai para 4 req/min até o próximo ciclo.
-    </p>
-
   </div>
 </section>

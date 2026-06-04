@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { LpAnalyticsService } from '../../services/lp-analytics.service';
 
 @Component({
   selector: 'app-landing',
   standalone: false,
   template: `
     <app-navbar></app-navbar>
-    <main>
+    <main class="landing-main">
       <app-hero></app-hero>
       <app-como-funciona></app-como-funciona>
       <app-planos></app-planos>
@@ -13,5 +14,14 @@ import { Component } from '@angular/core';
     </main>
     <app-footer></app-footer>
   `,
+  styles: [`
+    .landing-main { padding-top: 64px; }
+  `],
 })
-export class LandingComponent {}
+export class LandingComponent implements OnInit {
+  constructor(public analytics: LpAnalyticsService) {}
+
+  ngOnInit() {
+    this.analytics.init();
+  }
+}

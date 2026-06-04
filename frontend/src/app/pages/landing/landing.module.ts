@@ -23,5 +23,6 @@ const routes: Routes = [{ path: '', component: LandingComponent }];
     NavbarComponent,
   ],
   imports: [CommonModule, PoModule, RouterModule.forChild(routes)],
+  exports: [FooterComponent, NavbarComponent],
 })
 export class LandingModule {}

@@ -1,24 +1,19 @@
 <nav class="rfb-navbar">
   <div class="rfb-navbar__container">
-
     <a routerLink="/" class="rfb-navbar__brand">
-      <span class="rfb-navbar__logo-icon an an-database"></span>
-      <span class="rfb-navbar__logo-text">RFB<strong>Data</strong></span>
+      <img class="rfb-navbar__logo-image" src="logo_bj.png" alt="BJ Soft" />
+      <span class="rfb-navbar__logo-text">Busca<strong>Dados</strong></span>
     </a>
 
     <ul class="rfb-navbar__links">
-      <li><a href="#como-funciona">Como funciona</a></li>
-      <li><a href="#planos">Planos</a></li>
-      <li><a href="#exemplos">Exemplos</a></li>
-      <li><a href="/docs" target="_blank">Documentação <span class="an an-arrow-square-out"></span></a></li>
+      <li><a href="#como-funciona" (click)="$event.preventDefault(); irParaAncora('como-funciona')">Como funciona</a></li>
+      <li><a href="#planos" (click)="$event.preventDefault(); irParaAncora('planos')">Planos</a></li>
+      <li><a href="#exemplos" (click)="$event.preventDefault(); irParaAncora('exemplos')">Exemplos</a></li>
+      <li><a [href]="docsUrl">Documentação</a></li>
     </ul>
 
     <div class="rfb-navbar__actions">
-      <po-button
-        p-label="Entrar"
-        p-kind="tertiary"
-        p-icon="an an-sign-in"
-        p-url="/cliente/login">
+      <po-button p-label="Entrar" p-kind="tertiary" p-icon="an an-sign-in" p-url="/login">
       </po-button>
       <po-button
         p-label="Começar grátis"
@@ -27,6 +22,5 @@
         p-url="/cliente/cadastro">
       </po-button>
     </div>
-
   </div>
 </nav>

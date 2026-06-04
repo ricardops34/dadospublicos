@@ -1,0 +1,73 @@
+<po-page-default p-title="Planos">
+
+  <div class="po-row" style="margin-bottom:16px; gap:12px; justify-content:flex-end;">
+    <po-button
+      p-label="Criar planos padrão"
+      p-kind="tertiary"
+      p-icon="an an-magic-wand"
+      (p-click)="seedPlanos()">
+    </po-button>
+    <po-button
+      p-label="Novo plano"
+      p-kind="primary"
+      p-icon="an an-plus"
+      (p-click)="novo()">
+    </po-button>
+  </div>
+
+  <po-table
+    [p-columns]="colunas"
+    [p-items]="planos"
+    [p-actions]="acoes"
+    [p-loading]="carregando"
+    p-striped="true"
+    p-sort="true">
+  </po-table>
+
+</po-page-default>
+
+<po-modal
+  #modalPlano
+  [p-title]="modoEdicao ? 'Editar plano' : 'Novo plano'"
+  p-size="lg"
+  [p-primary-action]="acaoSalvar"
+  [p-secondary-action]="acaoCancelar">
+
+  <div class="po-row">
+    <po-input class="po-md-6" p-label="Nome *" p-placeholder="Ex: Profissional" [(ngModel)]="form.nome"></po-input>
+    <po-input class="po-md-3" p-label="Slug *" p-placeholder="Ex: profissional" [(ngModel)]="form.slug"></po-input>
+    <po-number class="po-md-3" p-label="Ordem" [(ngModel)]="form.ordem"></po-number>
+  </div>
+
+  <po-textarea class="po-md-12" p-label="Descrição" [p-rows]="2" [(ngModel)]="form.descricao"></po-textarea>
+
+  <po-divider p-label="Preços (R$)"></po-divider>
+  <div class="po-row">
+    <po-decimal class="po-md-4" p-label="Mensal *" [(ngModel)]="form.precoMensal"></po-decimal>
+    <po-decimal class="po-md-4" p-label="Semestral" [(ngModel)]="form.precoSemestral"></po-decimal>
+    <po-decimal class="po-md-4" p-label="Anual" [(ngModel)]="form.precoAnual"></po-decimal>
+  </div>
+
+  <po-divider p-label="Limites"></po-divider>
+  <div class="po-row">
+    <po-number class="po-md-6" p-label="Requisições/mês (0 = ilimitado)" [(ngModel)]="form.limiteMensal"></po-number>
+    <po-number class="po-md-6" p-label="Rate limit (req/min) *" [(ngModel)]="form.rateLimitPorMinuto"></po-number>
+  </div>
+
+  <po-divider p-label="Acessos"></po-divider>
+  <div class="po-row">
+    <po-switch class="po-md-4" p-label="CNPJ básico" [(ngModel)]="form.acessoCnpj"></po-switch>
+    <po-switch class="po-md-4" p-label="CNPJ raiz" [(ngModel)]="form.acessoCnpjRaiz"></po-switch>
+    <po-switch class="po-md-4" p-label="Pesquisa avançada" [(ngModel)]="form.acessoPesquisa"></po-switch>
+  </div>
+  <div class="po-row">
+    <po-switch class="po-md-4" p-label="Geocode / CEP" [(ngModel)]="form.acessoGeocode"></po-switch>
+  </div>
+
+  <po-divider p-label="Destaque"></po-divider>
+  <div class="po-row">
+    <po-switch class="po-md-4" p-label="Mais popular" [(ngModel)]="form.maisPopular"></po-switch>
+    <po-input class="po-md-8" p-label="Selo destaque" p-placeholder='Ex: "Mais popular"' [(ngModel)]="form.seloDestaque"></po-input>
+  </div>
+
+</po-modal>

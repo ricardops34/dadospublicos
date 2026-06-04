@@ -1,12 +1,10 @@
 <section class="rfb-exemplos" id="exemplos">
   <div class="rfb-exemplos__container">
-
     <div class="rfb-section-header">
       <h2>Exemplos de uso</h2>
       <p>Integre em qualquer linguagem em minutos</p>
     </div>
 
-    <!-- Tabs de linguagem -->
     <div class="rfb-exemplos__tabs" role="tablist">
       <button
         *ngFor="let ex of exemplos; let i = index"
@@ -20,7 +18,6 @@
       </button>
     </div>
 
-    <!-- Bloco de código -->
     <div class="rfb-exemplos__editor">
       <div class="rfb-exemplos__editor-bar">
         <div class="rfb-exemplos__dot rfb-exemplos__dot--red"></div>
@@ -35,18 +32,17 @@
           {{ copiado ? 'Copiado!' : 'Copiar' }}
         </button>
       </div>
-      <pre class="rfb-exemplos__codigo"><code>{{ exemplos[abaAtiva].codigo }}</code></pre>
+      <pre class="rfb-exemplos__codigo">{{ exemplos[abaAtiva].codigo }}</pre>
     </div>
 
-    <!-- CTA -->
     <div class="rfb-exemplos__cta">
-      <po-button
-        p-label="Ver documentação completa"
-        p-kind="secondary"
-        p-icon="an an-book-open"
-        p-url="/docs"
-        p-target="_blank">
-      </po-button>
+      <a [href]="docsUrl" target="_blank" rel="noopener">
+        <po-button
+          p-label="Ver documentação completa"
+          p-kind="secondary"
+          p-icon="an an-book-open">
+        </po-button>
+      </a>
       <po-button
         p-label="Começar grátis agora"
         p-kind="primary"
@@ -54,6 +50,5 @@
         p-url="/cliente/cadastro">
       </po-button>
     </div>
-
   </div>
 </section>

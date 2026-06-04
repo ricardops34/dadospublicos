@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { FaturasService } from './faturas.service';
-import { AdminGuard } from '../admin/admin.guard';
-import { ClienteGuard } from '../clientes/cliente.guard';
+import { JwtPortalGuard } from '../portal/jwt-portal.guard';
+import { Perfil } from '../portal/perfil.decorator';
 
 @ApiTags('Faturas')
 @Controller('faturas')
@@ -12,18 +12,19 @@ export class FaturasController {
   // --- Cliente autenticado ---
 
   @Get('minhas')
-  @UseGuards(ClienteGuard)
-  @ApiSecurity('x_cliente_id')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Histórico de faturas do cliente logado' })
   minhas(@Req() req: any) {
-    return this.service.findByCliente(req['clienteId']);
+    return this.service.findByCliente(req['usuario'].sub);
   }
 
   // --- Admin ---
 
   @Get()
-  @UseGuards(AdminGuard)
-  @ApiSecurity('token')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Lista todas as faturas' })
   @ApiQuery({ name: 'status', required: false, enum: ['pendente', 'paga', 'vencida', 'cancelada'] })
   @ApiQuery({ name: 'pagina', required: false })
@@ -33,8 +34,9 @@ export class FaturasController {
   }
 
   @Patch(':id/paga')
-  @UseGuards(AdminGuard)
-  @ApiSecurity('token')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Marca fatura como paga e registra NF' })
   marcarPaga(
     @Param('id') id: string,
@@ -45,16 +47,18 @@ export class FaturasController {
   }
 
   @Post('gerar-mensais')
-  @UseGuards(AdminGuard)
-  @ApiSecurity('token')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Gera faturas do mês anterior (equivalente ao cron)' })
   gerarMensais() {
     return this.service.gerarFaturasMensais();
   }
 
   @Post('gerar-manual')
-  @UseGuards(AdminGuard)
-  @ApiSecurity('token')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Gera fatura avulsa para uma assinatura' })
   gerarManual(
     @Body('assinatura_id') assinaturaId: string,

@@ -24,6 +24,9 @@ export class ClienteApi {
   @Column({ type: 'varchar', length: 20, nullable: true })
   telefone: string | null;
 
+  @Column({ type: 'varchar', length: 20, default: 'cliente' })
+  perfil: 'admin' | 'cliente';
+
   @Column({ default: true })
   ativo: boolean;
 

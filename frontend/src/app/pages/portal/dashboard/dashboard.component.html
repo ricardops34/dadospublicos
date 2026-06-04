@@ -1,0 +1,125 @@
+<!-- ─── ADMIN ────────────────────────────────────────────────────── -->
+<po-page-default *ngIf="isAdmin" p-title="Dashboard">
+  <div style="padding:48px; text-align:center;">
+    <span class="an an-gauge" style="font-size:3rem; color:#1a56db;"></span>
+    <h2 style="margin:16px 0 8px;">Olá, {{ nome }}!</h2>
+    <p style="color:#6b7280;">Painel de métricas em construção — utilize o menu lateral para acessar as seções.</p>
+  </div>
+</po-page-default>
+
+<!-- ─── CLIENTE ──────────────────────────────────────────────────── -->
+<po-page-default *ngIf="!isAdmin" [p-title]="'Olá, ' + nome + '!'">
+
+  <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+
+  <ng-container *ngIf="!carregando">
+
+    <!-- Sem assinatura -->
+    <div *ngIf="!assinatura" class="dash-empty">
+      <span class="an an-rocket-launch"></span>
+      <h3>Você não tem assinatura ativa</h3>
+      <p>Contrate um plano para começar a usar a API de dados da Receita Federal.</p>
+      <po-button p-label="Ver planos" p-kind="primary" p-url="/portal/meu-plano"></po-button>
+    </div>
+
+    <ng-container *ngIf="assinatura">
+
+      <!-- Cards de status -->
+      <div class="dash-cards">
+        <div class="dash-card dash-card--plano">
+          <div class="dash-card__icon"><span class="an an-tag"></span></div>
+          <div>
+            <small>Plano ativo</small>
+            <strong>{{ assinatura.plano }}</strong>
+            <po-tag [p-value]="assinatura.status | titlecase"
+              [p-color]="assinatura.status === 'ativa' ? 'color-10' : 'color-07'">
+            </po-tag>
+          </div>
+          <a routerLink="/portal/meu-plano" class="dash-card__link">Ver plano →</a>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card__icon dash-card__icon--blue"><span class="an an-chart-bar"></span></div>
+          <div>
+            <small>Requisições este mês</small>
+            <strong>{{ (consumoAtual?.quantidade ?? 0) | number }}</strong>
+            <span *ngIf="assinatura.limite_mensal" style="font-size:0.8rem; color:#6b7280;">
+              de {{ assinatura.limite_mensal | number }}
+            </span>
+          </div>
+          <a routerLink="/portal/consumo" class="dash-card__link">Ver consumo →</a>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card__icon dash-card__icon--purple"><span class="an an-key"></span></div>
+          <div>
+            <small>Token de API</small>
+            <code *ngIf="tokenMascarado" class="dash-token">{{ tokenMascarado }}</code>
+            <span *ngIf="!tokenMascarado" style="color:#9ca3af;">—</span>
+          </div>
+          <a routerLink="/portal/meu-token" class="dash-card__link">Gerenciar →</a>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card__icon dash-card__icon--green"><span class="an an-calendar"></span></div>
+          <div>
+            <small>Próx. vencimento</small>
+            <strong>{{ assinatura.proximo_vencimento | date:'dd/MM/yyyy' }}</strong>
+            <span style="font-size:0.8rem; color:#6b7280;">{{ assinatura.rate_limit }} req/min</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de uso -->
+      <div *ngIf="assinatura.limite_mensal" class="dash-progresso">
+        <div class="dash-progresso__header">
+          <span>Uso do limite mensal</span>
+          <strong [class.text-red]="percentualUso >= 90">{{ percentualUso }}%</strong>
+        </div>
+        <po-progress [p-value]="percentualUso" [p-info]="''"></po-progress>
+      </div>
+
+      <!-- Linha: gráfico + faturas -->
+      <div class="dash-row">
+
+        <!-- Gráfico consumo -->
+        <div class="dash-col--large">
+          <po-divider p-label="Consumo recente"></po-divider>
+          <po-chart *ngIf="chartConsumo.length"
+            [p-type]="chartTypeBar"
+            [p-series]="chartConsumo"
+            [p-categories]="chartCategories"
+            [p-height]="220">
+          </po-chart>
+          <p *ngIf="!chartConsumo.length" style="color:#9ca3af; text-align:center; padding:32px;">
+            Sem histórico de consumo.
+          </p>
+        </div>
+
+        <!-- Últimas faturas -->
+        <div class="dash-col--small">
+          <po-divider p-label="Últimas faturas"></po-divider>
+          <div *ngFor="let f of ultimasFaturas" class="dash-fatura">
+            <div>
+              <strong>{{ f.competencia }}</strong>
+              <span>{{ f.plano }}</span>
+            </div>
+            <div class="dash-fatura__direita">
+              <span>R$ {{ f.valor | number:'1.2-2' }}</span>
+              <po-tag [p-value]="f.status | titlecase"
+                [p-color]="f.status === 'paga' ? 'color-10' : f.status === 'vencida' ? 'color-05' : 'color-07'">
+              </po-tag>
+            </div>
+          </div>
+          <p *ngIf="!ultimasFaturas.length" style="color:#9ca3af; font-size:0.875rem; padding:16px 0;">
+            Nenhuma fatura ainda.
+          </p>
+          <a routerLink="/portal/minhas-faturas" style="font-size:0.8rem; color:#1a56db;">Ver todas →</a>
+        </div>
+
+      </div>
+
+    </ng-container>
+  </ng-container>
+
+</po-page-default>

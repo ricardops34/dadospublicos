@@ -1,0 +1,95 @@
+<po-page-default p-title="Analytics - Landing Page">
+  <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+    <po-select
+      p-label="Periodo"
+      [p-options]="periodoOptions"
+      [ngModel]="dias"
+      (ngModelChange)="onPeriodoChange($event)">
+    </po-select>
+  </div>
+
+  <div *ngIf="carregando" style="text-align:center; padding:64px;">
+    <po-loading p-text="Carregando analytics..."></po-loading>
+  </div>
+
+  <ng-container *ngIf="!carregando && relatorio">
+    <div class="analytics-cards">
+      <div class="analytics-card">
+        <span class="an an-users analytics-card__icon"></span>
+        <div>
+          <strong>{{ relatorio.total_visitas }}</strong>
+          <small>Visitas</small>
+        </div>
+      </div>
+      <div class="analytics-card">
+        <span class="an an-check-circle analytics-card__icon analytics-card__icon--green"></span>
+        <div>
+          <strong>{{ relatorio.total_conversoes }}</strong>
+          <small>Conversoes</small>
+        </div>
+      </div>
+      <div class="analytics-card">
+        <span class="an an-percent analytics-card__icon analytics-card__icon--blue"></span>
+        <div>
+          <strong>{{ relatorio.taxa_conversao }}</strong>
+          <small>Taxa de conversao</small>
+        </div>
+      </div>
+      <div class="analytics-card">
+        <span class="an an-scroll analytics-card__icon analytics-card__icon--purple"></span>
+        <div>
+          <strong>{{ relatorio.scroll_medio_percent }}%</strong>
+          <small>Scroll medio</small>
+        </div>
+      </div>
+    </div>
+
+    <po-divider p-label="Visitas por dia"></po-divider>
+    <po-chart
+      p-title="Visitas e conversoes diarias"
+      [p-type]="chartTypeLine"
+      [p-series]="chartDiario"
+      [p-height]="280">
+    </po-chart>
+
+    <div class="analytics-row">
+      <div class="analytics-col">
+        <po-divider p-label="Fontes de trafego"></po-divider>
+        <po-chart
+          [p-type]="chartTypePie"
+          [p-series]="chartFontes"
+          [p-height]="260">
+        </po-chart>
+      </div>
+
+      <div class="analytics-col">
+        <po-divider p-label="Dispositivos"></po-divider>
+        <po-chart
+          [p-type]="chartTypePie"
+          [p-series]="chartDispositivos"
+          [p-height]="260">
+        </po-chart>
+      </div>
+    </div>
+
+    <po-divider p-label="Secoes mais vistas"></po-divider>
+    <po-chart
+      p-title="Visualizacoes por secao"
+      [p-type]="chartTypeBar"
+      [p-series]="chartSecoes"
+      [p-height]="240">
+    </po-chart>
+
+    <po-divider p-label="Campanhas UTM"></po-divider>
+    <po-table
+      [p-columns]="[
+        { property: 'campanha', label: 'Campanha', width: '50%' },
+        { property: 'total', label: 'Visitas', type: 'number' },
+        { property: 'conversoes', label: 'Conversoes', type: 'number' }
+      ]"
+      [p-items]="relatorio.por_campanha"
+      [p-sort]="true"
+      [p-striped]="true">
+    </po-table>
+  </ng-container>
+</po-page-default>

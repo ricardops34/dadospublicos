@@ -1,29 +1,33 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '../auth/auth.guard';
-import { PlanoMinimo } from '../auth/plano.decorator';
 import { EtlService } from './etl.service';
+import { JwtPortalGuard } from '../portal/jwt-portal.guard';
+import { Perfil } from '../portal/perfil.decorator';
+import { EtlFase } from '../../entities/etl-log.entity';
 
 @ApiTags('ETL')
 @Controller('etl')
-@UseGuards(AuthGuard)
+@UseGuards(JwtPortalGuard)
+@Perfil('admin')
+@ApiSecurity('bearer')
 export class EtlController {
   constructor(private readonly service: EtlService) {}
 
   @Get('status')
-  @PlanoMinimo('premium')
-  @ApiSecurity('token')
-  @ApiOperation({ summary: 'Status e histórico de cargas ETL' })
+  @ApiOperation({ summary: '[Admin] Status atual e histórico de execuções ETL' })
   status() {
     return this.service.status();
   }
 
+  @Get('arquivos')
+  @ApiOperation({ summary: '[Admin] Lista arquivos RFB no servidor (ZIP e CSV extraído)' })
+  arquivos() {
+    return this.service.listarArquivos();
+  }
+
   @Post('executar')
-  @PlanoMinimo('premium')
-  @ApiSecurity('token')
-  @ApiOperation({ summary: 'Dispara carga ETL manual (não aguarda conclusão)' })
-  executar() {
-    this.service.executar(true).catch(() => {});
-    return { mensagem: 'ETL iniciado em background. Acompanhe em GET /etl/status.' };
+  @ApiOperation({ summary: '[Admin] Inicia ETL — fase: completo | download | extracao | carga' })
+  executar(@Body('fase') fase: EtlFase = 'completo') {
+    return this.service.executar(fase);
   }
 }

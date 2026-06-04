@@ -19,7 +19,7 @@
 
 ```env
 # backend/.env do CRM
-RFB_API_URL=http://localhost:3001
+RFB_API_URL=https://api.buscadados.bjsoft.com.br
 RFB_API_TOKEN=token_do_plano_premium
 ```
 

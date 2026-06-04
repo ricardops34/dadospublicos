@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Assinatura } from './assinatura.entity';
+import { PlanoRecurso } from './plano-recurso.entity';
 
 @Entity('planos')
 export class Plano {
@@ -7,24 +8,29 @@ export class Plano {
   id: string;
 
   @Column({ type: 'varchar', length: 50, unique: true })
-  nome: string;           // ex: Gratuito, Básico, Profissional, Premium
+  nome: string;
 
   @Column({ type: 'varchar', length: 20, unique: true })
-  slug: string;           // gratuito | basico | profissional | premium
+  slug: string;
 
   @Column({ type: 'text', nullable: true })
   descricao: string | null;
 
   @Column({ name: 'preco_mensal', type: 'decimal', precision: 10, scale: 2, default: 0 })
-  precoMensal: number;    // 0 = gratuito
+  precoMensal: number;
+
+  @Column({ name: 'preco_semestral', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  precoSemestral: number;
+
+  @Column({ name: 'preco_anual', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  precoAnual: number;
 
   @Column({ name: 'limite_mensal', type: 'integer', nullable: true })
-  limiteMensal: number | null;   // null = ilimitado
+  limiteMensal: number | null;
 
   @Column({ name: 'rate_limit_por_minuto', type: 'integer', default: 3 })
   rateLimitPorMinuto: number;
 
-  // Endpoints liberados
   @Column({ name: 'acesso_cnpj', default: true })
   acessoCnpj: boolean;
 
@@ -47,7 +53,13 @@ export class Plano {
   ativo: boolean;
 
   @Column({ default: 0 })
-  ordem: number;          // ordem de exibição na página de preços
+  ordem: number;
+
+  @Column({ name: 'mais_popular', default: false })
+  maisPopular: boolean;
+
+  @Column({ name: 'selo_destaque', type: 'varchar', length: 60, nullable: true })
+  seloDestaque: string | null;
 
   @CreateDateColumn({ name: 'criado_em' })
   criadoEm: Date;
@@ -55,6 +67,9 @@ export class Plano {
   @UpdateDateColumn({ name: 'atualizado_em' })
   atualizadoEm: Date;
 
-  @OneToMany(() => Assinatura, (a) => a.plano)
+  @OneToMany(() => Assinatura, (assinatura) => assinatura.plano)
   assinaturas: Assinatura[];
+
+  @OneToMany(() => PlanoRecurso, (planoRecurso) => planoRecurso.plano)
+  recursos: PlanoRecurso[];
 }

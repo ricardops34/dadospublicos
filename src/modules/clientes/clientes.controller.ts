@@ -2,8 +2,8 @@ import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ClientesService } from './clientes.service';
 import { CreateClienteDto, LoginClienteDto, UpdateClienteDto } from './dto/create-cliente.dto';
-import { AdminGuard } from '../admin/admin.guard';
-import { ClienteGuard } from './cliente.guard';
+import { JwtPortalGuard } from '../portal/jwt-portal.guard';
+import { Perfil } from '../portal/perfil.decorator';
 
 @ApiTags('Clientes')
 @Controller('clientes')
@@ -33,42 +33,45 @@ export class ClientesController {
   // --- Cliente autenticado ---
 
   @Get('me')
-  @UseGuards(ClienteGuard)
-  @ApiSecurity('x_cliente_token')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Perfil do cliente logado + assinatura + token de API' })
   meuPerfil(@Req() req: any) {
-    return this.service.meuPerfil(req['clienteId']);
+    return this.service.meuPerfil(req['usuario'].sub);
   }
 
   @Patch('me')
-  @UseGuards(ClienteGuard)
-  @ApiSecurity('x_cliente_token')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Atualiza dados do perfil' })
   atualizar(@Req() req: any, @Body() dto: UpdateClienteDto) {
-    return this.service.atualizar(req['clienteId'], dto);
+    return this.service.atualizar(req['usuario'].sub, dto);
   }
 
   // --- Admin ---
 
   @Get()
-  @UseGuards(AdminGuard)
-  @ApiSecurity('token')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Lista todos os clientes' })
   findAll(@Query('pagina') pagina = 1, @Query('limite') limite = 50) {
     return this.service.findAll(+pagina, +limite);
   }
 
   @Get(':id')
-  @UseGuards(AdminGuard)
-  @ApiSecurity('token')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Detalhe do cliente com assinaturas e faturas' })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
   @Patch(':id/ativo')
-  @UseGuards(AdminGuard)
-  @ApiSecurity('token')
+  @UseGuards(JwtPortalGuard)
+  @Perfil('admin')
+  @ApiSecurity('bearer')
   @ApiOperation({ summary: '[Admin] Ativa ou suspende cliente' })
   ativar(@Param('id') id: string, @Body('ativo') ativo: boolean) {
     return this.service.ativar(id, ativo);

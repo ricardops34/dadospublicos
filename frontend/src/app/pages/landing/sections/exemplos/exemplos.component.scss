@@ -109,13 +109,20 @@
     margin: 0;
     padding: 24px;
     font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 0.85rem;
-    line-height: 1.7;
-    color: #a5f3fc;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.8;
+    color: #dbeafe;
+    background: transparent;
     overflow-x: auto;
     min-height: 140px;
+    white-space: pre-wrap;
+    word-break: break-word;
 
-    code { color: #7dd3fc; }
+    &::selection {
+      background: rgba(59, 130, 246, 0.35);
+      color: #f8fafc;
+    }
   }
 
   // ── CTA ───────────────────────────────────────────

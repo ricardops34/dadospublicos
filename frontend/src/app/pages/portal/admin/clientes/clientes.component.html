@@ -1,0 +1,91 @@
+<po-page-default p-title="Clientes">
+
+  <po-table
+    [p-columns]="colunas"
+    [p-items]="clientes"
+    [p-actions]="acoes"
+    [p-loading]="carregando"
+    p-striped="true"
+    p-sort="true"
+    [p-height]="500">
+
+    <ng-template p-table-row-template let-row="row" let-column="column">
+      <ng-container *ngIf="column.property === 'plano'">
+        <po-tag *ngIf="row.plano !== '—'" [p-value]="row.plano" p-color="color-08"></po-tag>
+        <span *ngIf="row.plano === '—'" style="color:#9ca3af">—</span>
+      </ng-container>
+    </ng-template>
+
+  </po-table>
+
+  <div class="po-row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="color:#64748b; font-size:0.875rem;">Página {{ pagina }}</span>
+      <po-button
+        p-label="Anterior"
+        p-kind="tertiary"
+        [p-disabled]="pagina <= 1"
+        (p-click)="onPaginaChange(pagina - 1)">
+      </po-button>
+      <po-button
+        p-label="Próxima"
+        p-kind="tertiary"
+        [p-disabled]="pagina * limite >= total"
+        (p-click)="onPaginaChange(pagina + 1)">
+      </po-button>
+    </div>
+  </div>
+
+</po-page-default>
+
+<!-- Modal de detalhe -->
+<po-modal
+  #modalDetalhe
+  p-title="Detalhe do cliente"
+  p-size="lg"
+  [p-hide-close]="false">
+
+  <ng-container *ngIf="clienteSelecionado">
+    <div class="po-row">
+      <po-info class="po-md-6" p-label="Nome"  [p-value]="clienteSelecionado.nome"></po-info>
+      <po-info class="po-md-6" p-label="E-mail" [p-value]="clienteSelecionado.email"></po-info>
+    </div>
+    <div class="po-row">
+      <po-info class="po-md-4" p-label="CNPJ"    [p-value]="clienteSelecionado.cnpj ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Telefone" [p-value]="clienteSelecionado.telefone ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Status"
+        [p-value]="clienteSelecionado.ativo ? 'Ativo' : 'Suspenso'"></po-info>
+    </div>
+
+    <po-divider p-label="Assinaturas"></po-divider>
+
+    <po-table
+      [p-columns]="[
+        { property: 'plano.nome',           label: 'Plano'   },
+        { property: 'status',               label: 'Status',   type: 'label',
+          labels: [
+            { value: 'ativa',     label: 'Ativa',     color: 'color-10' },
+            { value: 'suspensa',  label: 'Suspensa',  color: 'color-07' },
+            { value: 'cancelada', label: 'Cancelada', color: 'color-05' },
+            { value: 'trial',     label: 'Trial',     color: 'color-08' }
+          ]
+        },
+        { property: 'dataInicio',        label: 'Início',     type: 'date', format: 'dd/MM/yyyy' },
+        { property: 'proximoVencimento', label: 'Vencimento', type: 'date', format: 'dd/MM/yyyy' }
+      ]"
+      [p-items]="clienteSelecionado.assinaturas ?? []"
+      p-striped="true">
+    </po-table>
+
+    <po-divider p-label="Token de API"></po-divider>
+    <div *ngIf="planoAtivo(clienteSelecionado)?.token as tk; else semToken">
+      <po-info p-label="Token" [p-value]="tk.token"></po-info>
+      <po-info p-label="Plano API" [p-value]="tk.plano"></po-info>
+      <po-info p-label="Ativo" [p-value]="tk.ativo ? 'Sim' : 'Não'"></po-info>
+    </div>
+    <ng-template #semToken>
+      <p style="color:#9ca3af; font-size:0.875rem;">Sem assinatura ativa / sem token.</p>
+    </ng-template>
+  </ng-container>
+
+</po-modal>

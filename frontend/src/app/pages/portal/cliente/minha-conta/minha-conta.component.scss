@@ -1,0 +1,17 @@
+.mc-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 0 16px;
+  h2 { margin: 0 0 4px; font-size: 1.2rem; font-weight: 700; }
+}
+
+.mc-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #eff6ff;
+  display: flex; align-items: center; justify-content: center;
+  span { font-size: 3rem; color: #1a56db; }
+}
+
+.mc-email { font-size: 0.875rem; color: #6b7280; }

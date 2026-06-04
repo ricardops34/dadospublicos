@@ -1,0 +1,41 @@
+<po-page-default p-title="Assinaturas">
+
+  <div class="po-row" style="margin-bottom:16px; align-items:flex-end;">
+    <po-select
+      class="po-md-4"
+      p-label="Filtrar por status"
+      [p-options]="statusOptions"
+      [ngModel]="filtroStatus"
+      (ngModelChange)="filtroStatus = $event; onFiltroChange()">
+    </po-select>
+  </div>
+
+  <po-table
+    [p-columns]="colunas"
+    [p-items]="assinaturas"
+    [p-actions]="acoes"
+    [p-loading]="carregando"
+    p-striped="true"
+    p-sort="true"
+    [p-height]="500">
+  </po-table>
+
+  <div class="po-row" style="margin-top:16px; justify-content:flex-end;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="color:#64748b; font-size:0.875rem;">Página {{ pagina }}</span>
+      <po-button
+        p-label="Anterior"
+        p-kind="tertiary"
+        [p-disabled]="pagina <= 1"
+        (p-click)="onPaginaChange(pagina - 1)">
+      </po-button>
+      <po-button
+        p-label="Próxima"
+        p-kind="tertiary"
+        [p-disabled]="pagina * limite >= total"
+        (p-click)="onPaginaChange(pagina + 1)">
+      </po-button>
+    </div>
+  </div>
+
+</po-page-default>

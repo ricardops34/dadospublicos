@@ -1,0 +1,118 @@
+<po-page-default p-title="Meu Plano">
+
+  <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+
+  <!-- Assinatura ativa -->
+  <ng-container *ngIf="!carregando && assinatura">
+
+    <div class="plano-card">
+      <div class="plano-card__header">
+        <div>
+          <h2>{{ assinatura.plano }}</h2>
+          <po-tag [p-value]="statusLabel" [p-color]="statusColor"></po-tag>
+        </div>
+        <po-button
+          *ngIf="assinatura.status === 'ativa'"
+          p-label="Cancelar assinatura"
+          p-kind="danger"
+          p-icon="an an-x-circle"
+          (p-click)="abrirCancelar()">
+        </po-button>
+      </div>
+
+      <div class="po-row" style="margin-top:20px;">
+        <po-info class="po-md-3" p-label="Vigência desde"    [p-value]="(assinatura.dataInicio | date:'dd/MM/yyyy') ?? ''"></po-info>
+        <po-info class="po-md-3" p-label="Próx. vencimento"  [p-value]="(assinatura.proximo_vencimento | date:'dd/MM/yyyy') || '—'"></po-info>
+        <po-info class="po-md-3" p-label="Rate limit"        [p-value]="assinatura.rate_limit + ' req/min'"></po-info>
+        <po-info class="po-md-3" p-label="Limite mensal"     [p-value]="assinatura.limite_mensal ? (assinatura.limite_mensal | number) + ' req/mês' : 'Ilimitado'"></po-info>
+      </div>
+
+      <po-divider p-label="Acessos incluídos"></po-divider>
+      <div class="plano-acessos">
+        <div class="plano-acesso" [class.plano-acesso--ativo]="assinatura.acessos?.cnpj">
+          <span class="an" [class.an-check-circle]="assinatura.acessos?.cnpj" [class.an-x-circle]="!assinatura.acessos?.cnpj"></span>
+          Consulta por CNPJ
+        </div>
+        <div class="plano-acesso" [class.plano-acesso--ativo]="assinatura.acessos?.cnpj_raiz">
+          <span class="an" [class.an-check-circle]="assinatura.acessos?.cnpj_raiz" [class.an-x-circle]="!assinatura.acessos?.cnpj_raiz"></span>
+          CNPJ Raiz (matriz + filiais)
+        </div>
+        <div class="plano-acesso" [class.plano-acesso--ativo]="assinatura.acessos?.pesquisa">
+          <span class="an" [class.an-check-circle]="assinatura.acessos?.pesquisa" [class.an-x-circle]="!assinatura.acessos?.pesquisa"></span>
+          Pesquisa avançada
+        </div>
+        <div class="plano-acesso" [class.plano-acesso--ativo]="assinatura.acessos?.geocode">
+          <span class="an" [class.an-check-circle]="assinatura.acessos?.geocode" [class.an-x-circle]="!assinatura.acessos?.geocode"></span>
+          Geocode / CEP
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- Sem assinatura -->
+  <ng-container *ngIf="!carregando && !assinatura">
+    <div class="plano-vazio">
+      <span class="an an-tag" style="font-size:3rem; color:#9ca3af;"></span>
+      <h3>Você não tem assinatura ativa</h3>
+      <p>Escolha um plano abaixo para começar a usar a API.</p>
+    </div>
+  </ng-container>
+
+  <!-- Planos disponíveis -->
+  <ng-container *ngIf="!carregando && planos.length">
+    <po-divider p-label="Planos disponíveis"></po-divider>
+
+    <div class="planos-grid">
+      <div class="plano-opcao" *ngFor="let p of planos"
+        [class.plano-opcao--destaque]="p.maisPopular">
+
+        <div *ngIf="p.seloDestaque" class="plano-opcao__selo">{{ p.seloDestaque }}</div>
+
+        <h3>{{ p.nome }}</h3>
+        <div class="plano-opcao__preco">
+          R$ <strong>{{ p.precoMensal | number:'1.2-2' }}</strong>/mês
+        </div>
+        <p class="plano-opcao__desc">{{ p.descricao }}</p>
+
+        <ul class="plano-opcao__recursos">
+          <li *ngFor="let r of p.recursos">
+            <span class="an an-check"></span> {{ r.descricaoExibicao }}
+          </li>
+        </ul>
+
+        <po-button
+          [p-label]="assinatura?.plano === p.nome ? 'Plano atual' : 'Contratar'"
+          p-kind="primary"
+          p-icon="an an-rocket-launch"
+          [p-disabled]="assinatura?.plano === p.nome"
+          (p-click)="abrirContratar(p)">
+        </po-button>
+      </div>
+    </div>
+  </ng-container>
+
+</po-page-default>
+
+<!-- Modal cancelar -->
+<po-modal #modalCancelar p-title="Cancelar assinatura" p-size="sm"
+  [p-primary-action]="acaoCancelar" [p-secondary-action]="acaoFecharCancelar">
+  <p style="color:#dc2626; margin-bottom:16px;">
+    Ao cancelar, seu token de API será desativado imediatamente.
+  </p>
+  <po-textarea p-label="Motivo do cancelamento (opcional)" [p-rows]="3"
+    [(ngModel)]="motivoCancelamento">
+  </po-textarea>
+</po-modal>
+
+<!-- Modal contratar -->
+<po-modal #modalContratar p-title="Confirmar contratação" p-size="sm"
+  [p-primary-action]="acaoContratar" [p-secondary-action]="acaoFecharContratar">
+  <ng-container *ngIf="planoSelecionado">
+    <po-info p-label="Plano"       [p-value]="planoSelecionado.nome"></po-info>
+    <po-info p-label="Valor mensal" [p-value]="'R$ ' + (planoSelecionado.precoMensal | number:'1.2-2')"></po-info>
+    <p style="color:#6b7280; font-size:0.875rem; margin-top:8px;">
+      Um token de API será gerado e enviado após a confirmação.
+    </p>
+  </ng-container>
+</po-modal>

@@ -8,7 +8,7 @@ import { AuthService } from '../../../services/auth.service';
   template: `
     <div class="admin-login">
       <div class="admin-login__card">
-        <h1>Admin — RFB Data Service</h1>
+        <h1>Admin — Busca Dados</h1>
         <po-input
           p-label="Chave de administrador"
           p-type="password"

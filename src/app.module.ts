@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -17,6 +17,10 @@ import { ClientesModule } from './modules/clientes/clientes.module';
 import { AssinaturasModule } from './modules/assinaturas/assinaturas.module';
 import { FaturasModule } from './modules/faturas/faturas.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { PortalModule } from './modules/portal/portal.module';
+import { AnalyticsLpModule } from './modules/analytics-lp/analytics-lp.module';
+import { AccessLogModule } from './modules/access-log/access-log.module';
+import { AccessLogMiddleware } from './modules/access-log/access-log.middleware';
 
 @Module({
   imports: [
@@ -44,6 +48,8 @@ import { AdminModule } from './modules/admin/admin.module';
     // Infra
     AdminModule,
     AuthModule,
+    PortalModule,
+    AccessLogModule,
 
     // API de dados
     CnpjModule,
@@ -54,6 +60,9 @@ import { AdminModule } from './modules/admin/admin.module';
     EtlModule,
     HealthModule,
 
+    // Analytics
+    AnalyticsLpModule,
+
     // Plataforma comercial
     PlanosModule,
     ClientesModule,
@@ -61,4 +70,16 @@ import { AdminModule } from './modules/admin/admin.module';
     FaturasModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AccessLogMiddleware)
+      .forRoutes({ path: 'cnpj*', method: RequestMethod.ALL },
+                 { path: 'cnpj-raiz*', method: RequestMethod.ALL },
+                 { path: 'pesquisa*', method: RequestMethod.ALL },
+                 { path: 'geocode*', method: RequestMethod.ALL },
+                 { path: 'suframa*', method: RequestMethod.ALL },
+                 { path: 'consumo*', method: RequestMethod.ALL },
+                 { path: 'mapa*', method: RequestMethod.ALL });
+  }
+}

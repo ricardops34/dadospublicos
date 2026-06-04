@@ -1,0 +1,29 @@
+<po-page-default p-title="Recursos — Catálogo">
+
+  <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+    <po-button p-label="Novo recurso" p-kind="primary" p-icon="an an-plus" (p-click)="novo()"></po-button>
+  </div>
+
+  <po-table
+    [p-columns]="colunas"
+    [p-items]="recursos"
+    [p-actions]="acoes"
+    [p-loading]="carregando"
+    p-striped="true"
+    p-sort="true">
+  </po-table>
+
+</po-page-default>
+
+<po-modal #modal [p-title]="modoEdicao ? 'Editar recurso' : 'Novo recurso'" p-size="sm"
+  [p-primary-action]="acaoSalvar" [p-secondary-action]="acaoCancelar">
+
+  <po-input p-label="Nome *" p-placeholder="Ex: Consulta por CNPJ"
+    [(ngModel)]="form.nome" (ngModelChange)="autoSlug()"></po-input>
+
+  <po-input p-label="Slug *" p-placeholder="Ex: consulta-cnpj"
+    [(ngModel)]="form.slug" [p-disabled]="modoEdicao ? 'true' : 'false'"></po-input>
+
+  <po-switch *ngIf="modoEdicao" p-label="Ativo" [(ngModel)]="form.ativo"></po-switch>
+
+</po-modal>

@@ -5,11 +5,10 @@ import { FaturasService } from './faturas.service';
 import { Fatura } from '../../entities/fatura.entity';
 import { Assinatura } from '../../entities/assinatura.entity';
 import { Consumo } from '../../entities/consumo.entity';
-import { AdminModule } from '../admin/admin.module';
-import { ClientesModule } from '../clientes/clientes.module';
+import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Fatura, Assinatura, Consumo]), AdminModule, ClientesModule],
+  imports: [TypeOrmModule.forFeature([Fatura, Assinatura, Consumo]), PortalModule],
   controllers: [FaturasController],
   providers: [FaturasService],
 })

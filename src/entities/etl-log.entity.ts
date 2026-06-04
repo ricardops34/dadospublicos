@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export type EtlStatus = 'iniciado' | 'download' | 'extracao' | 'carga' | 'concluido' | 'erro';
+export type EtlFase = 'completo' | 'download' | 'extracao' | 'carga';
 
 @Entity('etl_logs')
 export class EtlLog {
@@ -21,6 +22,9 @@ export class EtlLog {
 
   @Column({ name: 'total_socios', type: 'bigint', nullable: true })
   totalSocios: number | null;
+
+  @Column({ name: 'fase', type: 'varchar', length: 20, default: 'completo' })
+  fase: EtlFase;
 
   @Column({ name: 'detalhe', type: 'text', nullable: true })
   detalhe: string | null;

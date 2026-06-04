@@ -1,57 +1,109 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+
+export interface JwtPayload {
+  sub: string;
+  nome: string;
+  email: string;
+  perfil: 'admin' | 'cliente';
+  iat: number;
+  exp: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly TOKEN_KEY = 'portal_token';
+  private readonly ADMIN_KEY = 'admin_key';
+  private readonly CLIENTE_ID = 'cliente_id';
+  private readonly CLIENTE_NOME = 'cliente_nome';
+
   constructor(private http: HttpClient) {}
 
-  // ── Admin ──────────────────────────────────────
-  isAdmin(): boolean {
-    return !!localStorage.getItem('admin_key');
+  login(email: string, senha: string) {
+    return this.http
+      .post<{ token: string; perfil: string; nome: string }>(`${environment.apiUrl}/portal/login`, { email, senha })
+      .pipe(tap((res) => localStorage.setItem(this.TOKEN_KEY, res.token)));
   }
 
-  setAdminKey(key: string) {
-    localStorage.setItem('admin_key', key);
-  }
-
-  getAdminKey(): string {
-    return localStorage.getItem('admin_key') ?? '';
-  }
-
-  logoutAdmin() {
-    localStorage.removeItem('admin_key');
-  }
-
-  // ── Cliente ────────────────────────────────────
-  isCliente(): boolean {
-    return !!localStorage.getItem('cliente_id');
-  }
-
-  getClienteId(): string {
-    return localStorage.getItem('cliente_id') ?? '';
-  }
-
-  loginCliente(clienteId: string, nome: string) {
-    localStorage.setItem('cliente_id', clienteId);
-    localStorage.setItem('cliente_nome', nome);
-  }
-
-  logoutCliente() {
-    localStorage.removeItem('cliente_id');
-    localStorage.removeItem('cliente_nome');
-  }
-
-  getClienteNome(): string {
-    return localStorage.getItem('cliente_nome') ?? '';
-  }
-
-  // ── API calls ──────────────────────────────────
   loginApi(email: string, senha: string) {
     return this.http.post<any>(`${environment.apiUrl}/clientes/login`, { email, senha });
   }
 
   signupApi(dados: any) {
     return this.http.post<any>(`${environment.apiUrl}/clientes/signup`, dados);
+  }
+
+  loginCliente(id: string, nome: string) {
+    localStorage.setItem(this.CLIENTE_ID, id);
+    localStorage.setItem(this.CLIENTE_NOME, nome);
+  }
+
+  logoutCliente() {
+    localStorage.removeItem(this.CLIENTE_ID);
+    localStorage.removeItem(this.CLIENTE_NOME);
+    this.logout();
+  }
+
+  getClienteNome(): string {
+    return localStorage.getItem(this.CLIENTE_NOME) ?? this.getNome();
+  }
+
+  setAdminKey(key: string) {
+    localStorage.setItem(this.ADMIN_KEY, key);
+  }
+
+  getAdminKey(): string {
+    return localStorage.getItem(this.ADMIN_KEY) ?? '';
+  }
+
+  logoutAdmin() {
+    localStorage.removeItem(this.ADMIN_KEY);
+    this.logout();
+  }
+
+  logout() {
+    localStorage.removeItem(this.TOKEN_KEY);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getPayload(): JwtPayload | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64)) as JwtPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  isLogado(): boolean {
+    const p = this.getPayload();
+    if (p) return p.exp * 1000 > Date.now();
+    return !!localStorage.getItem(this.CLIENTE_ID) || !!localStorage.getItem(this.ADMIN_KEY);
+  }
+
+  getPerfil(): 'admin' | 'cliente' | null {
+    if (localStorage.getItem(this.ADMIN_KEY)) return 'admin';
+    if (localStorage.getItem(this.CLIENTE_ID)) return 'cliente';
+    return this.getPayload()?.perfil ?? null;
+  }
+
+  getNome(): string {
+    return this.getPayload()?.nome ?? localStorage.getItem(this.CLIENTE_NOME) ?? '';
+  }
+
+  isAdmin(): boolean {
+    return this.getPerfil() === 'admin';
+  }
+
+  isCliente(): boolean {
+    return this.getPerfil() === 'cliente';
   }
 }

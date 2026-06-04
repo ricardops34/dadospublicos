@@ -3,10 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EtlController } from './etl.controller';
 import { EtlService } from './etl.service';
 import { EtlLog } from '../../entities/etl-log.entity';
-import { AuthModule } from '../auth/auth.module';
+import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([EtlLog]), AuthModule],
+  imports: [TypeOrmModule.forFeature([EtlLog]), PortalModule],
   controllers: [EtlController],
   providers: [EtlService],
   exports: [EtlService],

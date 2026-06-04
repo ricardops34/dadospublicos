@@ -3,13 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientesController } from './clientes.controller';
 import { ClientesService } from './clientes.service';
 import { ClienteApi } from '../../entities/cliente.entity';
-import { AdminModule } from '../admin/admin.module';
-import { ClienteGuard } from './cliente.guard';
+import { PortalModule } from '../portal/portal.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ClienteApi]), AdminModule],
+  imports: [TypeOrmModule.forFeature([ClienteApi]), PortalModule],
   controllers: [ClientesController],
-  providers: [ClientesService, ClienteGuard],
-  exports: [ClientesService, ClienteGuard, TypeOrmModule],
+  providers: [ClientesService],
+  exports: [ClientesService, TypeOrmModule],
 })
 export class ClientesModule {}
