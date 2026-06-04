@@ -1,17 +1,9 @@
-<po-header
-  [p-brand]="headerBrand"
-  [p-actions-tools]="headerActionsTools"
-  [p-header-user]="headerUser">
+<po-header [p-brand]="headerBrand" [p-actions-tools]="headerActionsTools" [p-header-user]="headerUser">
 </po-header>
 
-<po-wrapper>
-  <po-menu 
-    [p-menus]="menuItems" 
-    p-logo="logo_bj.png"
-    [p-collapsed]="true"
-    [p-automatic-toggle]="true"
-    [p-filter]="true">
+<div class="po-wrapper">
+  <po-menu [p-menus]="menuItems" [p-collapsed]="true" [p-automatic-toggle]="true" [p-filter]="true">
   </po-menu>
 
   <router-outlet></router-outlet>
-</po-wrapper>
+</div>
