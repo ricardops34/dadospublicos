@@ -22,7 +22,6 @@ export class PortalShellComponent implements OnInit {
     items: [
       {
         label: 'Sair',
-        icon: 'an an-sign-out',
         action: () => this.sair(),
       }
     ]
@@ -31,16 +30,25 @@ export class PortalShellComponent implements OnInit {
   headerActionsTools: PoHeaderActionTool[] = [];
 
   private readonly MENUS_ADMIN: PoMenuItem[] = [
-    { label: 'Dashboard',          icon: 'an an-gauge',        link: '/portal/dashboard' },
-    { label: 'Recursos',           icon: 'an an-puzzle-piece', link: '/portal/recursos' },
-    { label: 'Planos',             icon: 'an an-tag',          link: '/portal/planos' },
-    { label: 'Recurso × Planos',   icon: 'an an-link',         link: '/portal/recurso-planos' },
-    { label: 'Clientes',           icon: 'an an-users',        link: '/portal/clientes' },
-    { label: 'Assinaturas',        icon: 'an an-file-text',    link: '/portal/assinaturas' },
-    { label: 'Faturas',            icon: 'an an-receipt',      link: '/portal/faturas' },
-    { label: 'Consumo',            icon: 'an an-chart-bar',    link: '/portal/consumo-admin' },
-    { label: 'ETL / Sistema',      icon: 'an an-gear',         link: '/portal/etl' },
-    { label: 'Analytics LP',       icon: 'an an-chart-line',   link: '/portal/analytics' },
+    { label: 'Dashboards', icon: 'an an-gauge', subItems: [
+        { label: 'Visão Geral', link: '/portal/dashboard' },
+        { label: 'Analytics LP', link: '/portal/analytics' }
+    ]},
+    { label: 'Comercial', icon: 'an an-handshake', subItems: [
+        { label: 'Clientes', link: '/portal/clientes' },
+        { label: 'Planos', link: '/portal/planos' },
+        { label: 'Recursos', link: '/portal/recursos' },
+        { label: 'Recurso × Planos', link: '/portal/recurso-planos' }
+    ]},
+    { label: 'Financeiro', icon: 'an an-currency-dollar', subItems: [
+        { label: 'Assinaturas', link: '/portal/assinaturas' },
+        { label: 'Faturas', link: '/portal/faturas' },
+        { label: 'Consumo', link: '/portal/consumo-admin' }
+    ]},
+    { label: 'Configurações', icon: 'an an-gear', subItems: [
+        { label: 'Parâmetros', link: '/portal/parametros' },
+        { label: 'ETL / Sistema', link: '/portal/etl' }
+    ]}
   ];
 
   private readonly MENUS_CLIENTE: PoMenuItem[] = [

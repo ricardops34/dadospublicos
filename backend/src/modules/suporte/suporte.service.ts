@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ParametrosService } from '../parametros/parametros.service';
 
 export interface SuporteConfig {
   whatsappNumero: string;
@@ -16,20 +17,23 @@ export interface ContatoDto {
 
 @Injectable()
 export class SuporteService {
-  constructor(private config: ConfigService) {}
+  constructor(
+    private config: ConfigService,
+    private paramSvc: ParametrosService
+  ) {}
 
-  getConfig(): SuporteConfig {
+  async getConfig(): Promise<SuporteConfig> {
     return {
-      whatsappNumero:     this.config.get('SUPORTE_WHATSAPP', ''),
-      atendente:          this.config.get('SUPORTE_ATENDENTE', 'Suporte'),
-      mensagemBoasVindas: this.config.get('SUPORTE_MSG', 'Olá! Como posso te ajudar hoje? 👋'),
-      emailDestino:       this.config.get('SUPORTE_EMAIL', ''),
+      whatsappNumero:     await this.paramSvc.getValor('SUPORTE_WHATSAPP', this.config.get('SUPORTE_WHATSAPP', '')),
+      atendente:          await this.paramSvc.getValor('SUPORTE_ATENDENTE', this.config.get('SUPORTE_ATENDENTE', 'Suporte')),
+      mensagemBoasVindas: await this.paramSvc.getValor('SUPORTE_MSG', this.config.get('SUPORTE_MSG', 'Olá! Como posso te ajudar hoje? 👋')),
+      emailDestino:       await this.paramSvc.getValor('SUPORTE_EMAIL', this.config.get('SUPORTE_EMAIL', '')),
     };
   }
 
   async enviarContato(dto: ContatoDto) {
-    const emailDestino = this.config.get('SUPORTE_EMAIL', '');
-    const smtpHost     = this.config.get('SMTP_HOST', '');
+    const emailDestino = await this.paramSvc.getValor('SUPORTE_EMAIL', this.config.get('SUPORTE_EMAIL', ''));
+    const smtpHost     = await this.paramSvc.getValor('SMTP_HOST', this.config.get('SMTP_HOST', ''));
 
     if (!smtpHost || !emailDestino) {
       // SMTP não configurado — apenas loga
@@ -42,18 +46,23 @@ export class SuporteService {
     const nodemailer = (() => { try { return require('nodemailer'); } catch { return null; } })();
     if (!nodemailer) return { enviado: false, mensagem: 'Nodemailer não instalado.' };
 
+    const smtpPort = await this.paramSvc.getValor('SMTP_PORT', this.config.get('SMTP_PORT', '587'));
+    const smtpSecure = await this.paramSvc.getValor('SMTP_SECURE', this.config.get('SMTP_SECURE', 'false'));
+    const smtpUser = await this.paramSvc.getValor('SMTP_USER', this.config.get('SMTP_USER', ''));
+    const smtpPass = await this.paramSvc.getValor('SMTP_PASS', this.config.get('SMTP_PASS', ''));
+
     const transporter = nodemailer.createTransport({
       host:   smtpHost,
-      port:   +this.config.get('SMTP_PORT', '587'),
-      secure: this.config.get('SMTP_SECURE', 'false') === 'true',
+      port:   +smtpPort,
+      secure: smtpSecure === 'true',
       auth: {
-        user: this.config.get('SMTP_USER', ''),
-        pass: this.config.get('SMTP_PASS', ''),
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
     await transporter.sendMail({
-      from:    `"BuscaDados" <${this.config.get('SMTP_USER', '')}>`,
+      from:    `"BuscaDados" <${smtpUser}>`,
       to:      emailDestino,
       subject: `[Suporte BuscaDados] Contato de ${dto.nome}`,
       html: `

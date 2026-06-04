@@ -22,6 +22,7 @@ import { AnalyticsLpModule } from './modules/analytics-lp/analytics-lp.module';
 import { AccessLogModule } from './modules/access-log/access-log.module';
 import { AccessLogMiddleware } from './modules/access-log/access-log.middleware';
 import { SuporteModule } from './modules/suporte/suporte.module';
+import { ParametrosModule } from './modules/parametros/parametros.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { SuporteModule } from './modules/suporte/suporte.module';
     AuthModule,
     PortalModule,
     AccessLogModule,
+    ParametrosModule,
 
     // API de dados
     CnpjModule,

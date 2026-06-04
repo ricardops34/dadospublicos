@@ -26,6 +26,7 @@ const routes: Routes = [
       { path: 'consumo-admin',   canActivate: [adminGuard], loadChildren: () => import('./admin/consumo-admin/consumo-admin.module').then((m) => m.ConsumoAdminModule) },
       { path: 'etl',             canActivate: [adminGuard], loadChildren: () => import('./admin/etl/etl.module').then((m) => m.PortalEtlModule) },
       { path: 'analytics',       canActivate: [adminGuard], loadChildren: () => import('./admin/analytics/analytics.module').then((m) => m.PortalAnalyticsModule) },
+      { path: 'parametros',      canActivate: [adminGuard], loadChildren: () => import('./parametros/parametros.module').then((m) => m.ParametrosModule) },
 
       // Área Cliente (lazy)
       {

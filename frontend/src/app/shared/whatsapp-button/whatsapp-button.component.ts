@@ -104,16 +104,12 @@ export class WhatsappButtonComponent implements OnInit, AfterViewChecked {
 
   private submeterFormulario(mensagemFinal: string) {
     const payload = {
-      access_key: '4dc14390-3dcd-43a5-a138-fcb15b5410b6',
-      name:    this.userData.nome,
-      email:   this.userData.email,
-      subject: 'Novo Lead — Chat WhatsApp BuscaDados',
-      message: `Telefone: ${this.userData.telefone}\nMensagem: ${mensagemFinal}`,
+      nome: this.userData.nome,
+      email: this.userData.email,
+      mensagem: `Telefone: ${this.userData.telefone}\nMensagem: ${mensagemFinal}`,
     };
 
-    this.http.post('https://api.web3forms.com/submit', payload, {
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    }).subscribe({
+    this.http.post(`${environment.apiUrl}/suporte/contato`, payload).subscribe({
       next: () => {
         this.mensagens.push({ texto: this.perguntas[3](), tipo: 'bot' });
         this.passo++;

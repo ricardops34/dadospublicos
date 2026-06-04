@@ -16,8 +16,8 @@ export class SuporteController {
 
   @Get('config')
   @ApiOperation({ summary: 'Configurações públicas do canal de suporte (WhatsApp, atendente, msg)' })
-  config() {
-    const cfg = this.svc.getConfig();
+  async config() {
+    const cfg = await this.svc.getConfig();
     // Nunca expõe o e-mail de destino publicamente
     return {
       whatsappNumero:     cfg.whatsappNumero,
