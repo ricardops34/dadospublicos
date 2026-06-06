@@ -1,7 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { Plano } from '../../entities/plano.entity';
 import { RecursoPlano } from '../../entities/recurso-plano.entity';
 import { PlanoRecurso } from '../../entities/plano-recurso.entity';
@@ -22,38 +21,24 @@ export class PlanosService {
     @InjectRepository(Plano, 'buscadados') private planos: Repository<Plano>,
     @InjectRepository(RecursoPlano, 'buscadados') private recursos: Repository<RecursoPlano>,
     @InjectRepository(PlanoRecurso, 'buscadados') private planosRecursos: Repository<PlanoRecurso>,
-    private cache: RedisCacheService,
   ) {}
 
   async findAll(apenasAtivos = true) {
-    const cacheKey = apenasAtivos ? 'planos:ativos' : 'planos:todos';
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
     const planos = await this.planos.find({
-      where: apenasAtivos ? { ativo: true } : {},
+      where: apenasAtivos ? { ativo: true, exibirNaLp: true } : {},
       relations: ['recursos', 'recursos.recurso'],
       order: { ordem: 'ASC' },
     });
-
-    const result = planos.map((plano) => this.toPublicPayload(plano));
-    await this.cache.set(cacheKey, result, 3600); // 1h
-    return result;
+    return planos.map((plano) => this.toPublicPayload(plano));
   }
 
   async findOne(id: string) {
-    const cacheKey = `plano:${id}`;
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
     const plano = await this.planos.findOne({
       where: { id },
       relations: ['recursos', 'recursos.recurso'],
     });
     if (!plano) throw new NotFoundException('Plano não encontrado.');
-    const result = this.toPublicPayload(plano);
-    await this.cache.set(cacheKey, result, 3600); // 1h
-    return result;
+    return this.toPublicPayload(plano);
   }
 
   async findBySlug(slug: string) {
@@ -65,18 +50,14 @@ export class PlanosService {
   async create(dto: CreatePlanoDto) {
     const existente = await this.planos.findOne({ where: { slug: dto.slug } });
     if (existente) throw new ConflictException(`Slug "${dto.slug}" já existe.`);
-    const result = await this.planos.save(this.planos.create(dto));
-    await this.cache.del('planos:ativos', 'planos:todos');
-    return result;
+    return this.planos.save(this.planos.create(dto));
   }
 
   async update(id: string, dto: UpdatePlanoDto) {
     const plano = await this.planos.findOne({ where: { id } });
     if (!plano) throw new NotFoundException('Plano não encontrado.');
     Object.assign(plano, dto);
-    const result = await this.planos.save(plano);
-    await this.cache.del(`plano:${id}`, 'planos:ativos', 'planos:todos');
-    return result;
+    return this.planos.save(plano);
   }
 
   // ─── Recursos (catálogo) ────────────────────────────────────────────────────
@@ -143,16 +124,18 @@ export class PlanosService {
     if (!plano) throw new NotFoundException('Plano não encontrado.');
     plano.ativo = false;
     await this.planos.save(plano);
-    await this.cache.del(`plano:${id}`, 'planos:ativos', 'planos:todos');
   }
 
   async seed() {
     const recursosPadrao = [
+      { slug: 'limite-free', nome: 'Limite Free' },
+      { slug: 'limite-gratuito', nome: 'Limite Gratuito' },
       { slug: 'limite-basico', nome: 'Limite Básico' },
       { slug: 'limite-intermediario', nome: 'Limite Intermediário' },
       { slug: 'limite-avancado', nome: 'Limite Avançado' },
       { slug: 'limite-premium', nome: 'Limite Premium' },
       { slug: 'consulta-cnpj', nome: 'Consulta por CNPJ' },
+      { slug: 'consulta-cep', nome: 'Consulta de CEP' },
       { slug: 'inscricao-estadual', nome: 'Inscrição Estadual' },
       { slug: 'inscricao-suframa', nome: 'Inscrição Suframa' },
       { slug: 'validacao-suframa', nome: 'Validação Suframa' },
@@ -162,6 +145,57 @@ export class PlanosService {
 
     const planosPadrao: SeedPlano[] = [
       {
+        nome: 'Free',
+        slug: 'free',
+        descricao: 'Plano de entrada com consulta de CEP e até 3 CNPJs por hora.',
+        precoMensal: 0,
+        precoSemestral: 0,
+        precoAnual: 0,
+        limiteMensal: 0,
+        rateLimitPorMinuto: 3,
+        rateLimitPorHora: 3,
+        acessoCnpj: true,
+        acessoCnpjRaiz: false,
+        acessoPesquisa: false,
+        acessoGeocode: true,
+        acessoSuframa: false,
+        acessoMapa: false,
+        exibirNaLp: true,
+        ordem: 0,
+        maisPopular: false,
+        seloDestaque: null,
+        recursos: [
+          { slug: 'limite-free', descricaoExibicao: '3 consultas CNPJ por hora' },
+          { slug: 'consulta-cnpj', descricaoExibicao: 'Consulta por CNPJ' },
+          { slug: 'consulta-cep', descricaoExibicao: 'Consulta de CEP' },
+        ],
+      },
+      {
+        nome: 'Gratuito',
+        slug: 'gratuito',
+        descricao: 'Comece gratuitamente e explore a plataforma.',
+        precoMensal: 0,
+        precoSemestral: 0,
+        precoAnual: 0,
+        limiteMensal: 1000,
+        rateLimitPorMinuto: 3,
+        rateLimitPorHora: null,
+        acessoCnpj: true,
+        acessoCnpjRaiz: false,
+        acessoPesquisa: false,
+        acessoGeocode: false,
+        acessoSuframa: false,
+        acessoMapa: false,
+        exibirNaLp: true,
+        ordem: 1,
+        maisPopular: false,
+        seloDestaque: null,
+        recursos: [
+          { slug: 'limite-gratuito', descricaoExibicao: '1.000 requisições/mês' },
+          { slug: 'consulta-cnpj', descricaoExibicao: 'Consulta por CNPJ' },
+        ],
+      },
+      {
         nome: 'Básico',
         slug: 'basico',
         descricao: 'Entrada para integrações de menor volume.',
@@ -170,13 +204,15 @@ export class PlanosService {
         precoAnual: 1009.8,
         limiteMensal: 160000,
         rateLimitPorMinuto: 120,
+        rateLimitPorHora: null,
         acessoCnpj: true,
         acessoCnpjRaiz: false,
         acessoPesquisa: false,
         acessoGeocode: false,
         acessoSuframa: true,
         acessoMapa: false,
-        ordem: 1,
+        exibirNaLp: true,
+        ordem: 2,
         maisPopular: false,
         seloDestaque: null,
         recursos: [
@@ -195,13 +231,15 @@ export class PlanosService {
         precoAnual: 2029.8,
         limiteMensal: 300000,
         rateLimitPorMinuto: 300,
+        rateLimitPorHora: null,
         acessoCnpj: true,
         acessoCnpjRaiz: true,
         acessoPesquisa: false,
         acessoGeocode: false,
         acessoSuframa: true,
         acessoMapa: false,
-        ordem: 2,
+        exibirNaLp: true,
+        ordem: 3,
         maisPopular: false,
         seloDestaque: null,
         recursos: [
@@ -221,13 +259,15 @@ export class PlanosService {
         precoAnual: 3049.8,
         limiteMensal: 600000,
         rateLimitPorMinuto: 600,
+        rateLimitPorHora: null,
         acessoCnpj: true,
         acessoCnpjRaiz: true,
         acessoPesquisa: false,
         acessoGeocode: false,
         acessoSuframa: true,
         acessoMapa: false,
-        ordem: 3,
+        exibirNaLp: true,
+        ordem: 4,
         maisPopular: true,
         seloDestaque: 'Mais popular',
         recursos: [
@@ -247,13 +287,15 @@ export class PlanosService {
         precoAnual: 5089.8,
         limiteMensal: 1000000,
         rateLimitPorMinuto: 1200,
+        rateLimitPorHora: null,
         acessoCnpj: true,
         acessoCnpjRaiz: true,
         acessoPesquisa: true,
         acessoGeocode: false,
         acessoSuframa: true,
         acessoMapa: false,
-        ordem: 4,
+        exibirNaLp: true,
+        ordem: 5,
         maisPopular: false,
         seloDestaque: null,
         recursos: [
@@ -314,7 +356,6 @@ export class PlanosService {
       }
     }
 
-    await this.cache.del('planos:ativos', 'planos:todos');
     return this.findAll(false);
   }
 

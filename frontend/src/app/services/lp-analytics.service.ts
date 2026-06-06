@@ -10,6 +10,8 @@ const SESSION_KEY = 'buscadados_session';
 export class LpAnalyticsService implements OnDestroy {
   private sessionId = '';
   private cookiesAtivos = false;
+  private inicializado = false;
+  private trackingIniciado = false;
   private scrollMarcosEnviados = new Set<number>();
   private secoesVistas = new Set<string>();
   private inicioVisita = Date.now();
@@ -20,6 +22,12 @@ export class LpAnalyticsService implements OnDestroy {
   constructor(private http: HttpClient) {}
 
   init() {
+    if (this.inicializado) {
+      if (this.cookiesAtivos) this.iniciarTracking();
+      return;
+    }
+
+    this.inicializado = true;
     this.sessionId = this.obterOuCriarSessionId();
     const cookiesJaAceitos = localStorage.getItem('bjsoft_cookies_accepted') === 'true';
 
@@ -46,11 +54,19 @@ export class LpAnalyticsService implements OnDestroy {
     this.http.post(`${this.api}/conversao`, { sessionId: this.sessionId, clienteId }).subscribe();
   }
 
+  registrarClique(local: string, alvo?: string) {
+    if (!this.cookiesAtivos) return;
+    this.enviarEvento('clique', { local, alvo });
+  }
+
   getSessionId(): string {
     return this.sessionId;
   }
 
   private iniciarTracking() {
+    if (this.trackingIniciado) return;
+
+    this.trackingIniciado = true;
     this.inicioVisita = Date.now();
     this.registrarScrollDepth();
     this.registrarSecoesVistas();

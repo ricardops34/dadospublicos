@@ -5,7 +5,7 @@ import { AuthService } from '../services/auth.service';
 export const clienteGuard = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (auth.isCliente()) return true;
+  if (auth.isCliente() || auth.isAdmin()) return true;
   router.navigate(['/cliente/login']);
   return false;
 };

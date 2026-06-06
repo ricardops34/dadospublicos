@@ -1,5 +1,5 @@
 import { NotifService } from '../../../../services/notif.service';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { PoModalComponent, PoModalAction, PoTableAction, PoTableColumn, PoSelectOption } from '@po-ui/ng-components';
 import { AdminService } from '../admin.service';
 
@@ -47,7 +47,7 @@ export class RecursosPlanosComponent implements OnInit {
   };
   acaoCancelarEdit: PoModalAction = { label: 'Cancelar', action: () => this.modalEdit.close() };
 
-  constructor(private svc: AdminService, private notif: NotifService) {}
+  constructor(private svc: AdminService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.listarPlanos().subscribe((p) => {
@@ -72,8 +72,8 @@ export class RecursosPlanosComponent implements OnInit {
     if (!this.planoSelecionadoId) return;
     this.carregando = true;
     this.svc.listarRecursosDePlano(this.planoSelecionadoId).subscribe({
-      next: (a) => { this.associacoes = a; this.carregando = false; },
-      error: () => { this.carregando = false; },
+      next: (a) => { this.associacoes = a; this.carregando = false; this.cdr.detectChanges(); },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
   }
 
@@ -133,6 +133,7 @@ export class RecursosPlanosComponent implements OnInit {
   }
 
   onRecursoChange(recursoId: string) {
+    this.formAdd.recursoId = recursoId;
     const rc = this.recursosOptions.find((r) => r.value === recursoId);
     if (rc && !this.formAdd.descricaoExibicao) {
       this.formAdd.descricaoExibicao = rc.label as string;

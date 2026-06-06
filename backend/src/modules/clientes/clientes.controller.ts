@@ -1,16 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ClientesService } from './clientes.service';
-import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, RecuperarSenhaDto, UpdateClienteDto } from './dto/create-cliente.dto';
+import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, RecuperarSenhaDto, UpdateClienteDto, VerificarEmailCodigoDto } from './dto/create-cliente.dto';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
-import { Perfil } from '../portal/perfil.decorator';
 
 @ApiTags('Clientes')
 @Controller('clientes')
 export class ClientesController {
   constructor(private readonly service: ClientesService) {}
-
-  // --- Público ---
 
   @Post('signup')
   @ApiOperation({ summary: 'Cadastro de novo cliente (público)' })
@@ -31,12 +28,38 @@ export class ClientesController {
   }
 
   @Get('verificar-email/:token')
-  @ApiOperation({ summary: 'Verifica e-mail via token enviado por e-mail' })
+  @ApiOperation({ summary: 'Verifica e-mail via token enviado por e-mail (fluxo antigo)' })
   verificarEmail(@Param('token') token: string) {
     return this.service.verificarEmail(token);
   }
 
-  // --- Cliente autenticado ---
+  @Post('verificar-email-codigo')
+  @ApiOperation({ summary: 'Verifica e-mail por código de 6 dígitos' })
+  verificarEmailCodigo(@Body() dto: VerificarEmailCodigoDto) {
+    return this.service.verificarEmailCodigo(dto.email, dto.codigo);
+  }
+
+  @Post('reenviar-codigo')
+  @ApiOperation({ summary: 'Reenvia código de verificação por e-mail' })
+  reenviarCodigo(@Body('email') email: string) {
+    return this.service.reenviarCodigoVerificacao(email);
+  }
+
+  @Post('verificar-codigo-reset')
+  @ApiOperation({ summary: 'Valida código de redefinição de senha (6 dígitos)' })
+  verificarCodigoReset(@Body('email') email: string, @Body('codigo') codigo: string) {
+    return this.service.verificarCodigoReset(email, codigo);
+  }
+
+  @Post('redefinir-senha')
+  @ApiOperation({ summary: 'Redefine senha com código de verificação' })
+  redefinirSenha(
+    @Body('email') email: string,
+    @Body('codigo') codigo: string,
+    @Body('novaSenha') novaSenha: string,
+  ) {
+    return this.service.redefinirSenhaComCodigo(email, codigo, novaSenha);
+  }
 
   @Get('me')
   @UseGuards(JwtPortalGuard)
@@ -57,78 +80,17 @@ export class ClientesController {
   @Post('me/agendar-exclusao')
   @UseGuards(JwtPortalGuard)
   @ApiSecurity('bearer')
-  @ApiOperation({ summary: 'Solicita exclusão imediata ou agendada para fim do plano' })
+  @ApiOperation({ summary: 'Solicita exclusão definitiva ou anonimização agendada' })
   agendarExclusao(@Req() req: any, @Body() dto: AgendarExclusaoDto) {
     return this.service.agendarExclusao(req['usuario'].sub, dto);
   }
 
-  // --- Admin ---
-
-  @Get()
+  @Post('me/cancelar-exclusao')
   @UseGuards(JwtPortalGuard)
-  @Perfil('admin')
   @ApiSecurity('bearer')
-  @ApiOperation({ summary: '[Admin] Lista todos os clientes' })
-  findAll(
-    @Query('pagina') pagina = 1,
-    @Query('limite') limite = 50,
-    @Query('busca') busca?: string,
-    @Query('status') status?: string,
-  ) {
-    return this.service.findAll(+pagina, +limite, busca, status);
+  @ApiOperation({ summary: 'Cancela exclusão agendada da própria conta' })
+  cancelarExclusao(@Req() req: any) {
+    return this.service.cancelarExclusao(req['usuario'].sub);
   }
 
-  @Get(':id')
-  @UseGuards(JwtPortalGuard)
-  @Perfil('admin')
-  @ApiSecurity('bearer')
-  @ApiOperation({ summary: '[Admin] Detalhe do cliente com assinaturas e faturas' })
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtPortalGuard)
-  @Perfil('admin')
-  @ApiSecurity('bearer')
-  @ApiOperation({ summary: '[Admin] Atualiza dados do cliente' })
-  atualizarAdmin(@Param('id') id: string, @Body() dto: UpdateClienteDto) {
-    return this.service.atualizar(id, dto);
-  }
-
-  @Patch(':id/ativo')
-  @UseGuards(JwtPortalGuard)
-  @Perfil('admin')
-  @ApiSecurity('bearer')
-  @ApiOperation({ summary: '[Admin] Ativa ou suspende cliente' })
-  ativar(@Param('id') id: string, @Body('ativo') ativo: boolean) {
-    return this.service.ativar(id, ativo);
-  }
-
-  @Patch(':id/confirmar-email')
-  @UseGuards(JwtPortalGuard)
-  @Perfil('admin')
-  @ApiSecurity('bearer')
-  @ApiOperation({ summary: '[Admin] Marca e-mail do cliente como verificado' })
-  confirmarEmail(@Param('id') id: string) {
-    return this.service.confirmarEmail(id);
-  }
-
-  @Post(':id/enviar-reset-senha')
-  @UseGuards(JwtPortalGuard)
-  @Perfil('admin')
-  @ApiSecurity('bearer')
-  @ApiOperation({ summary: '[Admin] Envia link de redefinição de senha ao cliente' })
-  enviarResetSenha(@Param('id') id: string) {
-    return this.service.enviarResetPorAdmin(id);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtPortalGuard)
-  @Perfil('admin')
-  @ApiSecurity('bearer')
-  @ApiOperation({ summary: '[Admin] Exclui e anonimiza imediatamente a conta do cliente' })
-  excluirContaAdmin(@Param('id') id: string) {
-    return this.service.excluirConta(id);
-  }
 }

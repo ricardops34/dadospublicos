@@ -18,43 +18,38 @@ export class AdminService {
     private painel360Service: Painel360Service,
   ) {}
 
-  // ─── Clientes ─────────────────────────────────────────────────────────────
-  listarClientes(pagina = 1, limite = 20, busca?: string, status?: string) {
-    let params = new HttpParams().set('pagina', pagina).set('limite', limite);
-    if (busca) params = params.set('busca', busca);
-    if (status) params = params.set('status', status);
-    return this.http.get<any>(`${API}/clientes`, { params });
-  }
-
-  criarCliente(dto: any) {
-    return this.http.post<any>(`${API}/clientes/signup`, dto);
-  }
-
   detalheCliente(id: string) {
-    return this.http.get<any>(`${API}/clientes/${id}`);
+    return this.http.get<any>(`${API}/admin/clientes-poui/${id}`);
   }
 
   ativarCliente(id: string, ativo: boolean) {
-    return this.http.patch<any>(`${API}/clientes/${id}/ativo`, { ativo });
+    return this.http.patch<any>(`${API}/admin/clientes-poui/${id}/ativo`, { ativo });
   }
 
-  atualizarCliente(id: string, dto: any) {
-    return this.http.patch<any>(`${API}/clientes/${id}`, dto);
+  agendarExclusaoCliente(id: string, agendarPara: 'agora' | 'fim-plano') {
+    return this.http.post<any>(`${API}/admin/clientes-poui/${id}/agendar-exclusao`, { agendarPara });
   }
 
-  excluirContaCliente(id: string) {
-    return this.http.delete<any>(`${API}/clientes/${id}`);
+  cancelarExclusaoCliente(id: string) {
+    return this.http.post<any>(`${API}/admin/clientes-poui/${id}/cancelar-exclusao`, {});
   }
 
   confirmarEmailCliente(id: string) {
-    return this.http.patch<any>(`${API}/clientes/${id}/confirmar-email`, {});
+    return this.http.patch<any>(`${API}/admin/clientes-poui/${id}/confirmar-email`, {});
   }
 
   enviarResetSenhaCliente(id: string) {
-    return this.http.post<any>(`${API}/clientes/${id}/enviar-reset-senha`, {});
+    return this.http.post<any>(`${API}/admin/clientes-poui/${id}/enviar-reset-senha`, {});
   }
 
-  // ─── Assinaturas ──────────────────────────────────────────────────────────
+  lookupCnpj(cnpj: string) {
+    return this.http.get<any>(`${API}/admin/clientes-poui/lookup/cnpj/${cnpj.replace(/\D/g, '')}`);
+  }
+
+  lookupCep(cep: string) {
+    return this.http.get<any>(`${API}/admin/clientes-poui/lookup/cep/${cep.replace(/\D/g, '')}`);
+  }
+
   listarAssinaturas(pagina = 1, limite = 20) {
     const params = new HttpParams().set('pagina', pagina).set('limite', limite);
     return this.http.get<any>(`${API}/assinaturas`, { params });
@@ -80,7 +75,6 @@ export class AdminService {
     return this.http.patch<any>(`${API}/consumo/admin/${consumoId}`, { quantidade });
   }
 
-  // ─── Faturas ──────────────────────────────────────────────────────────────
   listarFaturas(status?: string, pagina = 1, limite = 20) {
     let params = new HttpParams().set('pagina', pagina).set('limite', limite);
     if (status) params = params.set('status', status);
@@ -95,7 +89,6 @@ export class AdminService {
     return this.http.post<any>(`${API}/faturas/gerar-mensais`, {});
   }
 
-  // ─── Planos ───────────────────────────────────────────────────────────────
   listarPlanos() {
     return this.http.get<any[]>(`${API}/planos?todos=true`);
   }
@@ -116,7 +109,10 @@ export class AdminService {
     return this.http.post<any>(`${API}/planos/seed`, {});
   }
 
-  // ─── Recursos (catálogo) ──────────────────────────────────────────────────
+  flushCachePlanos() {
+    return this.http.post<any>(`${API}/planos/cache/flush`, {});
+  }
+
   listarRecursos() {
     return this.http.get<any[]>(`${API}/planos/recursos/catalogo`);
   }
@@ -133,7 +129,6 @@ export class AdminService {
     return this.http.delete<any>(`${API}/planos/recursos/catalogo/${id}`);
   }
 
-  // ─── Recurso × Plano ─────────────────────────────────────────────────────
   listarRecursosDePlano(planoId: string) {
     return this.http.get<any[]>(`${API}/planos/${planoId}/recursos`);
   }

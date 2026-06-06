@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { PoTableColumn } from '@po-ui/ng-components';
 import { ClientePortalService } from '../cliente.service';
 
@@ -30,7 +30,7 @@ export class MinhasFaturasComponent implements OnInit {
     { property: 'totalRequisicoes', label: 'Req.',      type: 'number', width: '7%' },
   ];
 
-  constructor(private svc: ClientePortalService) {}
+  constructor(private svc: ClientePortalService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.minhasFaturas().subscribe({
@@ -42,8 +42,9 @@ export class MinhasFaturasComponent implements OnInit {
           nf: fatura.urlNf ? { label: fatura.numeroNf || 'Ver NF', value: fatura.urlNf } : null,
         }));
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
   }
 

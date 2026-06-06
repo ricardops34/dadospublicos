@@ -65,4 +65,35 @@ imports: [PoModule, FormsModule]
 imports: [PoButtonComponent, PoTableComponent]
 ```
 
+## 8. PO-UI v21 — `po-page-dynamic-edit`: campo `validate` e atualização de outros campos
+
+**NUNCA** tente acessar o formulário interno via `(pageEdit as any).dynamicForm.form` — essa propriedade interna não é acessível no PO-UI v21.
+
+Para preencher outros campos a partir do retorno de um `validate` (ex: CEP preenchendo endereço), usar o mecanismo oficial: retornar `fields` no objeto de resposta.
+
+```typescript
+// ✅ Correto — PO-UI v21
+validarCep = (changedValue: any) => {
+  return this.http.post('/validate-cep', changedValue).pipe(
+    map((res: any) => ({
+      value: changedValue.value,          // mantém o valor do campo atual
+      fields: [                           // atualiza outros campos
+        { property: 'logradouro', value: res.value.logradouro },
+        { property: 'bairro',     value: res.value.bairro     },
+        { property: 'uf',         value: res.value.uf         },
+        { property: 'municipio',  value: res.value.municipio  },
+      ].filter(f => f.value),
+    })),
+  );
+};
+
+// ❌ Errado — não funciona no PO-UI v21
+private aplicarValoresDinamicos(value: any) {
+  const ngForm = (this.pageEdit as any).dynamicForm.form; // undefined no v21
+  ngForm.control.patchValue(value);                       // quebra silenciosamente
+}
+```
+
+Para combos dependentes (UF → Município), chamar `mudarUf()` manualmente **antes** de retornar os `fields`, para que o `optionsService` do município seja atualizado.
+
 

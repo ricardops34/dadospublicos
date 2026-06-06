@@ -33,6 +33,9 @@ export class ClienteApi {
   @Column({ type: 'varchar', length: 20, nullable: true })
   telefone: string | null;
 
+  @Column({ type: 'boolean', nullable: true, default: null })
+  whatsapp: boolean | null;
+
   @Column({ type: 'varchar', length: 10, nullable: true })
   cep: string | null;
 
@@ -69,8 +72,17 @@ export class ClienteApi {
   @Column({ name: 'email_verificado', default: false })
   emailVerificado: boolean;
 
+  @Column({ name: 'onboarding_pendente', default: true })
+  onboardingPendente: boolean;
+
   @Column({ name: 'token_verificacao', type: 'varchar', length: 64, nullable: true })
   tokenVerificacao: string | null;
+
+  @Column({ name: 'codigo_verificacao', type: 'varchar', length: 6, nullable: true })
+  codigoVerificacao: string | null;
+
+  @Column({ name: 'codigo_verificacao_expira', type: 'timestamp', nullable: true })
+  codigoVerificacaoExpira: Date | null;
 
   @Column({ name: 'reset_token', type: 'varchar', length: 64, nullable: true })
   resetToken: string | null;

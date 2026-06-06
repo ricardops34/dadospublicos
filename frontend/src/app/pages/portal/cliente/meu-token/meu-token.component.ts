@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { NotifService } from '../../../../services/notif.service';
 import { ClientePortalService } from '../cliente.service';
 
@@ -16,15 +16,16 @@ export class MeuTokenComponent implements OnInit {
   regerando = false;
   novoToken: string | null = null;
 
-  constructor(private svc: ClientePortalService, private notif: NotifService) {}
+  constructor(private svc: ClientePortalService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.meuPerfil().subscribe({
       next: (p) => {
         this.perfil = p;
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
     this.svc.minhaAssinatura().subscribe({
       next: (a) => { this.assinatura = a; },

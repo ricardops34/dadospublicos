@@ -27,7 +27,7 @@
           <span [ngClass]="exemplos[abaAtiva].icone"></span>
           {{ exemplos[abaAtiva].linguagem }}
         </span>
-        <button class="rfb-exemplos__copiar" (click)="copiar()" title="Copiar código">
+        <button class="rfb-exemplos__copiar" (click)="copiar()" title="Copiar codigo">
           <span class="an an-copy"></span>
           {{ copiado ? 'Copiado!' : 'Copiar' }}
         </button>
@@ -36,15 +36,15 @@
     </div>
 
     <div class="rfb-exemplos__cta">
-      <a [href]="docsUrl" rel="noopener">
+      <a [href]="docsUrl" rel="noopener" (click)="registrarCliqueDocumentacao()">
         <po-button
-          p-label="Ver documentação"
+          p-label="Ver documentacao"
           p-kind="secondary"
           p-icon="an an-book-open">
-        </po-button> 
+        </po-button>
       </a>
       <po-button
-        p-label="Começar grátis"
+        p-label="Criar conta gratis"
         p-kind="primary"
         p-icon="an an-rocket-launch"
         (p-click)="irParaCadastro()">

@@ -1,5 +1,5 @@
 import { NotifService } from '../../../../services/notif.service';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import {
   PoModalAction, PoModalComponent,
   PoTableAction, PoTableColumn, PoSelectOption,
@@ -103,10 +103,9 @@ export class PortalAssinaturasComponent implements OnInit {
     label: 'Cancelar', action: () => this.modalConsumo.close(),
   };
 
-  constructor(private svc: AdminService, private notif: NotifService) {}
+  constructor(private svc: AdminService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.carregar();
     this.svc.listarPlanos().subscribe({
       next: (planos: any[]) => {
         this.planosOpcoes = planos
@@ -134,8 +133,9 @@ export class PortalAssinaturasComponent implements OnInit {
           }));
         this.total = count;
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
   }
 

@@ -7,7 +7,8 @@ import { PoTemplatesModule } from '@po-ui/ng-templates';
 
 import { PortalShellComponent } from './portal-shell.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { adminGuard } from '../../guards/auth.guard';
+import { adminGuard, clienteGuard } from '../../guards/auth.guard';
+import { clienteOnboardingGuard } from '../../guards/cliente-onboarding.guard';
 import { clienteRecursoGuard } from '../../guards/cliente-recurso.guard';
 
 const routes: Routes = [
@@ -15,7 +16,7 @@ const routes: Routes = [
     path: '',
     component: PortalShellComponent,
     children: [
-      { path: 'dashboard', component: DashboardComponent },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [clienteOnboardingGuard] },
 
       // Área Admin (lazy)
       { path: 'recursos',        canActivate: [adminGuard], loadChildren: () => import('./admin/recursos/recursos.module').then((m) => m.PortalRecursosModule) },
@@ -33,28 +34,38 @@ const routes: Routes = [
 
       // Área Cliente (lazy)
       {
+        path: 'primeiro-acesso',
+        canActivate: [clienteGuard],
+        loadChildren: () => import('./cliente/primeiro-acesso/primeiro-acesso.module').then((m) => m.PrimeiroAcessoModule),
+      },
+      {
         path: 'minha-conta',
+        canActivate: [clienteOnboardingGuard],
         loadChildren: () => import('./cliente/minha-conta/minha-conta.module').then((m) => m.MinhaContaModule),
       },
       {
         path: 'meu-plano',
+        canActivate: [clienteOnboardingGuard],
         loadChildren: () => import('./cliente/meu-plano/meu-plano.module').then((m) => m.MeuPlanoModule),
       },
       {
         path: 'meu-token',
+        canActivate: [clienteOnboardingGuard],
         loadChildren: () => import('./cliente/meu-token/meu-token.module').then((m) => m.MeuTokenModule),
       },
       {
         path: 'consumo',
+        canActivate: [clienteOnboardingGuard],
         loadChildren: () => import('./cliente/consumo/consumo.module').then((m) => m.ConsumoModule),
       },
       {
         path: 'minhas-faturas',
+        canActivate: [clienteOnboardingGuard],
         loadChildren: () => import('./cliente/minhas-faturas/minhas-faturas.module').then((m) => m.MinhasFaturasModule),
       },
       {
         path: 'painel-360',
-        canActivate: [clienteRecursoGuard],
+        canActivate: [clienteOnboardingGuard, clienteRecursoGuard],
         loadChildren: () => import('./cliente/painel-360/painel-360.module').then((m) => m.Painel360ClienteModule),
       },
 

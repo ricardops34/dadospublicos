@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-export type Plano = 'gratuito' | 'basico' | 'premium';
+export type Plano = 'free' | 'gratuito' | 'basico' | 'intermediario' | 'avancado' | 'premium';
 
 @Entity('tokens')
 export class Token {

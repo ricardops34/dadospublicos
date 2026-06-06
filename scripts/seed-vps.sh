@@ -146,7 +146,22 @@ seed_ibge() {
   fi
 
   log "Sincronizando UFs e municípios do IBGE..."
-  curl -fsS "${API_BASE_URL}/public-seed/ibge" >/dev/null
+  api_node <<'NODE'
+const { NestFactory } = require('@nestjs/core');
+const { AppModule } = require('./dist/app.module');
+const { GeocodeService } = require('./dist/modules/geocode/geocode.service');
+
+(async () => {
+  const app = await NestFactory.createApplicationContext(AppModule, { logger: false });
+  const service = app.get(GeocodeService);
+  const result = await service.syncIbge();
+  console.log(JSON.stringify(result));
+  process.exit(0);
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+NODE
 }
 
 ensure_admin_plan() {

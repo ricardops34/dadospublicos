@@ -1,31 +1,31 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateClienteDto {
-  @ApiProperty({ example: 'João Silva' })    @IsString()              nome: string;
-  @ApiProperty({ example: 'joao@empresa.com' }) @IsEmail()            email: string;
+  @ApiProperty({ example: 'João Silva' }) @IsString() nome: string;
+  @ApiProperty({ example: 'joao@empresa.com' }) @IsEmail() email: string;
   @ApiProperty({ example: 'Senha@123', minLength: 8 }) @IsString() @MinLength(8) senha: string;
-  @ApiProperty({ example: 'J', enum: ['F', 'J'] }) @IsString() tipoPessoa: 'F' | 'J';
+  @ApiPropertyOptional({ example: 'J', enum: ['F', 'J'] }) @IsOptional() @IsString() tipoPessoa?: 'F' | 'J';
   @ApiPropertyOptional() @IsOptional() @IsString() cpf?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() dataNascimento?: string;
   @ApiPropertyOptional({ example: '12.345.678/0001-90' }) @IsOptional() @IsString() cnpj?: string;
-  @ApiPropertyOptional()                      @IsOptional() @IsString() razaoSocial?: string;
-  
-  @ApiProperty() @IsString() telefone: string;
-  @ApiProperty() @IsString() cep: string;
-  @ApiProperty() @IsString() logradouro: string;
-  @ApiProperty() @IsString() numero: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() razaoSocial?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() telefone?: string;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() whatsapp?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsString() cep?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() logradouro?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() numero?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() complemento?: string;
-  @ApiProperty() @IsString() bairro: string;
-  @ApiProperty() @IsString() municipio: string;
-  @ApiProperty() @IsString() uf: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() bairro?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() municipio?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() uf?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoEstadual?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoMunicipal?: string;
 }
 
 export class LoginClienteDto {
-  @ApiProperty() @IsEmail()   email: string;
-  @ApiProperty() @IsString()  senha: string;
+  @ApiProperty() @IsEmail() email: string;
+  @ApiProperty() @IsString() senha: string;
 }
 
 export class AgendarExclusaoDto {
@@ -38,14 +38,23 @@ export class RecuperarSenhaDto {
   @ApiProperty({ example: 'joao@empresa.com' }) @IsEmail() email: string;
 }
 
+export class VerificarEmailCodigoDto {
+  @ApiProperty({ example: 'joao@empresa.com' }) @IsEmail() email: string;
+  @ApiProperty({ example: '123456' }) @IsString() codigo: string;
+}
+
 export class UpdateClienteDto {
-  @ApiPropertyOptional() @IsOptional() @IsString() nome?: string;
+  @ApiPropertyOptional() @IsOptional() nome?: string;
+  @ApiPropertyOptional() @IsOptional() onboardingPendente?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsEmail() email?: string;
+  @ApiPropertyOptional({ minLength: 8 }) @IsOptional() @IsString() @MinLength(8) senha?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() tipoPessoa?: 'F' | 'J';
   @ApiPropertyOptional() @IsOptional() @IsString() cpf?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() dataNascimento?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() cnpj?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() razaoSocial?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() telefone?: string;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() whatsapp?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsString() cep?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() logradouro?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() numero?: string;

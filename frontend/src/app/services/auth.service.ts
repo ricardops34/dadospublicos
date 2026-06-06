@@ -14,17 +14,33 @@ export interface JwtPayload {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly TOKEN_KEY = 'portal_token';
-  private readonly ADMIN_KEY = 'admin_key';
-  private readonly CLIENTE_ID = 'cliente_id';
+  private readonly TOKEN_KEY    = 'portal_token';
+  private readonly API_TOKEN_KEY = 'api_token';
+  private readonly ADMIN_KEY    = 'admin_key';
+  private readonly CLIENTE_ID   = 'cliente_id';
   private readonly CLIENTE_NOME = 'cliente_nome';
 
   constructor(private http: HttpClient) {}
 
   login(email: string, senha: string) {
     return this.http
-      .post<{ token: string; perfil: string; nome: string }>(`${environment.apiUrl}/portal/login`, { email, senha })
-      .pipe(tap((res) => localStorage.setItem(this.TOKEN_KEY, res.token)));
+      .post<{ token: string; perfil: string; nome: string; apiToken?: string }>(
+        `${environment.apiUrl}/portal/login`, { email, senha },
+      )
+      .pipe(
+        tap((res) => {
+          localStorage.setItem(this.TOKEN_KEY, res.token);
+          if (res.apiToken) {
+            localStorage.setItem(this.API_TOKEN_KEY, res.apiToken);
+          } else {
+            localStorage.removeItem(this.API_TOKEN_KEY);
+          }
+        }),
+      );
+  }
+
+  getApiToken(): string | null {
+    return localStorage.getItem(this.API_TOKEN_KEY);
   }
 
   loginApi(email: string, senha: string) {
@@ -37,6 +53,22 @@ export class AuthService {
 
   recuperarSenha(email: string) {
     return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/recuperar-senha`, { email });
+  }
+
+  verificarEmailCodigo(email: string, codigo: string) {
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/verificar-email-codigo`, { email, codigo });
+  }
+
+  reenviarCodigoVerificacao(email: string) {
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/reenviar-codigo`, { email });
+  }
+
+  verificarCodigoReset(email: string, codigo: string) {
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/verificar-codigo-reset`, { email, codigo });
+  }
+
+  redefinirSenhaComCodigo(email: string, codigo: string, novaSenha: string) {
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/redefinir-senha`, { email, codigo, novaSenha });
   }
 
   loginCliente(id: string, nome: string) {
@@ -69,6 +101,7 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.API_TOKEN_KEY);
   }
 
   getToken(): string | null {

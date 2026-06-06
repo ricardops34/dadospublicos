@@ -8,26 +8,25 @@
 
       <h1 class="rfb-hero__title">
         API de <span class="rfb-hero__title--highlight">CNPJ</span><br />
-        simples e rápida
+        simples e rapida
       </h1>
 
       <p class="rfb-hero__subtitle">
-        Consulte dados de qualquer empresa brasileira em milissegundos.
-        Endereço, CNAE, sócios, Simples Nacional e muito mais,
-        direto da Receita Federal, em formato JSON.
+        Gere seu token no plano Free e consulte CNPJ e CEP em JSON.
+        Para volumes maiores, evolua para os planos pagos e libere mais recursos.
       </p>
 
       <div class="rfb-hero__ctas">
         <po-button
-          p-label="Começar grátis"
+          p-label="Criar conta gratis"
           p-kind="primary"
           p-size="large"
           p-icon="an an-rocket-launch"
           (p-click)="irParaCadastro()">
         </po-button>
-        <a [href]="docsUrl" rel="noopener">
+        <a [href]="docsUrl" rel="noopener" (click)="registrarCliqueDocumentacao()">
           <po-button
-            p-label="Ver documentação"
+            p-label="Ver documentacao"
             p-kind="secondary"
             p-size="large"
             p-icon="an an-book-open">
@@ -41,12 +40,12 @@
           <span>Empresas</span>
         </div>
         <div class="rfb-hero__stat">
-          <strong>&lt; 50ms</strong>
-          <span>Resposta média</span>
+          <strong>Free</strong>
+          <span>Plano de entrada</span>
         </div>
         <div class="rfb-hero__stat">
-          <strong>99,9%</strong>
-          <span>Disponibilidade</span>
+          <strong>3/h</strong>
+          <span>CNPJ no plano Free</span>
         </div>
       </div>
     </div>
@@ -60,6 +59,7 @@
           GET /cnpj/{{ cnpjExemplo }}
         </span>
       </div>
+      <div class="rfb-hero__preview-token">Header: x_api_token: SEU_TOKEN</div>
       <pre class="rfb-hero__preview-code">{{ respostaExemplo }}</pre>
     </div>
   </div>

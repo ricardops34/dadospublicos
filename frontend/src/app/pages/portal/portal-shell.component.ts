@@ -72,6 +72,18 @@ export class PortalShellComponent implements OnInit {
         { label: 'ETL / Sistema', shortLabel: 'ETL', link: '/portal/etl' },
       ],
     },
+    {
+      label: 'Minha Conta',
+      shortLabel: 'Minha Cta',
+      icon: 'an an-user-circle',
+      subItems: [
+        { label: 'Dados pessoais', shortLabel: 'Dados', link: '/portal/minha-conta' },
+        { label: 'Meu Plano', shortLabel: 'Plano', link: '/portal/meu-plano' },
+        { label: 'Meu Token API', shortLabel: 'Token', link: '/portal/meu-token' },
+        { label: 'Meu Consumo', shortLabel: 'Consumo', link: '/portal/consumo' },
+        { label: 'Minhas Faturas', shortLabel: 'Faturas', link: '/portal/minhas-faturas' },
+      ],
+    },
     { label: 'Sair', shortLabel: 'Sair', icon: 'an an-sign-out', action: () => this.sair(), type: 'danger' },
   ];
 
@@ -82,6 +94,12 @@ export class PortalShellComponent implements OnInit {
     { label: 'Meu Token API', shortLabel: 'Token', icon: 'an an-key', link: '/portal/meu-token' },
     { label: 'Consumo', shortLabel: 'Consumo', icon: 'an an-chart-bar', link: '/portal/consumo' },
     { label: 'Faturas', shortLabel: 'Faturas', icon: 'an an-receipt', link: '/portal/minhas-faturas' },
+    { label: 'Sair', shortLabel: 'Sair', icon: 'an an-sign-out', action: () => this.sair(), type: 'danger' },
+  ];
+
+  private readonly MENUS_CLIENTE_ONBOARDING: PoMenuItem[] = [
+    { label: 'Primeiro acesso', shortLabel: 'Onboarding', icon: 'an an-user-circle', link: '/portal/primeiro-acesso' },
+    { label: 'Minha Conta', shortLabel: 'Conta', icon: 'an an-shield-warning', link: '/portal/minha-conta' },
     { label: 'Sair', shortLabel: 'Sair', icon: 'an an-sign-out', action: () => this.sair(), type: 'danger' },
   ];
 
@@ -103,15 +121,26 @@ export class PortalShellComponent implements OnInit {
       return;
     }
 
-    this.menuItems = this.montarMenuCliente(false);
-
     if (perfil === 'cliente') {
-      this.clienteService.minhaAssinatura().subscribe({
-        next: (assinatura) => {
-          this.menuItems = this.montarMenuCliente(this.clienteService.assinaturaTemPainel360(assinatura));
+      this.menuItems = this.MENUS_CLIENTE_ONBOARDING;
+      this.clienteService.meuPerfil().subscribe({
+        next: (perfilCliente) => {
+          if (this.clienteService.temOnboardingPendente(perfilCliente)) {
+            this.menuItems = this.MENUS_CLIENTE_ONBOARDING;
+            return;
+          }
+
+          this.clienteService.minhaAssinatura().subscribe({
+            next: (assinatura) => {
+              this.menuItems = this.montarMenuCliente(this.clienteService.assinaturaTemPainel360(assinatura));
+            },
+            error: () => {
+              this.menuItems = this.montarMenuCliente(false);
+            },
+          });
         },
         error: () => {
-          this.menuItems = this.montarMenuCliente(false);
+          this.menuItems = this.MENUS_CLIENTE_ONBOARDING;
         },
       });
     }
@@ -133,6 +162,7 @@ export class PortalShellComponent implements OnInit {
   }
 
   sair() {
+    this.clienteService.invalidarPerfilCache();
     this.auth.logout();
     this.router.navigate(['/login']);
   }

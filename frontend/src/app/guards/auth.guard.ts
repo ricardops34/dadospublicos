@@ -17,3 +17,11 @@ export const adminGuard = () => {
   router.navigate(['/login']);
   return false;
 };
+
+export const clienteGuard = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (auth.isLogado() && auth.isCliente()) return true;
+  router.navigate(['/login']);
+  return false;
+};

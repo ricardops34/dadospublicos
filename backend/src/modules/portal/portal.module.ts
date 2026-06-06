@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClienteApi } from '../../entities/cliente.entity';
 import { Assinatura } from '../../entities/assinatura.entity';
+import { Token } from '../../entities/token.entity';
 import { PortalService } from './portal.service';
 import { PortalController } from './portal.controller';
 import { JwtPortalGuard } from './jwt-portal.guard';
@@ -12,7 +13,7 @@ import { AdminModule } from '../admin/admin.module';
 @Module({
   imports: [
     JwtModule.register({}),
-    TypeOrmModule.forFeature([ClienteApi, Assinatura], 'buscadados'),
+    TypeOrmModule.forFeature([ClienteApi, Assinatura, Token], 'buscadados'),
     AdminModule,
   ],
   controllers: [PortalController],

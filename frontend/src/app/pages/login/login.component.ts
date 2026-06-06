@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { PoModalAction, PoModalComponent } from '@po-ui/ng-components';
 import { AuthService } from '../../services/auth.service';
 
 type Aba = 'login' | 'cadastro' | 'recuperar';
@@ -12,7 +11,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
   template: `
     <div class="auth">
 
-      <!-- ===== Painel esquerdo: Branding ===== -->
       <div class="auth__brand">
         <div class="auth__brand-inner">
           <div class="auth__logo">
@@ -36,17 +34,14 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
         </div>
       </div>
 
-      <!-- ===== Painel direito: Formulário ===== -->
       <div class="auth__form-wrap">
         <div class="auth__card">
 
-          <!-- Logo mobile -->
           <div class="auth__logo auth__logo--mobile">
             <img src="logo_bj.png" alt="BJ Soft" class="auth__logo-img" />
             <span class="auth__logo-text">Busca<strong>Dados</strong></span>
           </div>
 
-          <!-- Tabs — ocultas na tela de recuperação -->
           <div class="auth__tabs" role="tablist" *ngIf="aba !== 'recuperar'">
             <button role="tab" type="button" class="auth__tab"
               [class.auth__tab--active]="aba === 'login'"
@@ -60,7 +55,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
             </button>
           </div>
 
-          <!-- ── LOGIN ── -->
           <div *ngIf="aba === 'login'" class="auth__section">
             <h1>Bem-vindo de volta</h1>
             <p class="auth__sub">Acesse sua conta BuscaDados</p>
@@ -87,49 +81,17 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
             </po-button>
           </div>
 
-          <!-- ── CADASTRO ── -->
           <div *ngIf="aba === 'cadastro'" class="auth__section">
             <h1>Criar conta grátis</h1>
-
+            
             <div *ngIf="sucesso" class="auth__alert auth__alert--ok">
               <span class="an an-check-circle"></span> Conta criada! Carregando seu painel...
             </div>
 
             <div class="auth__fields">
-              <po-radio-group p-name="tipoPessoa" [(ngModel)]="tipoPessoa"
-                [p-options]="[{ label: 'Pessoa Jurídica', value: 'J' }, { label: 'Pessoa Física', value: 'F' }]">
-              </po-radio-group>
-              
-              <!-- Pessoa Jurídica -->
-              <ng-container *ngIf="tipoPessoa === 'J'">
-                <po-input p-label="CNPJ" [(ngModel)]="cnpjCad" p-mask="99.999.999/9999-99" (p-blur)="buscarCnpj()" p-name="cnpjCad"></po-input>
-                <po-input p-label="Razão Social" [(ngModel)]="razaoSocialCad" p-name="razaoSocialCad"></po-input>
-              </ng-container>
-
-              <!-- Pessoa Física -->
-              <ng-container *ngIf="tipoPessoa === 'F'">
-                <po-input p-label="CPF" [(ngModel)]="cpfCad" p-mask="999.999.999-99" p-name="cpfCad"></po-input>
-                <po-datepicker p-label="Data de Nascimento" [(ngModel)]="dataNascimentoCad" p-name="dataNascimentoCad"></po-datepicker>
-              </ng-container>
-
-              <po-input p-label="Nome Completo / Fantasia" [(ngModel)]="nome" p-placeholder="Seu nome" p-name="nome"></po-input>
+              <po-input p-label="Nome" [(ngModel)]="nome" p-placeholder="Seu nome" p-name="nome"></po-input>
               <po-email p-label="E-mail principal" [(ngModel)]="emailCad" p-placeholder="seu@email.com" p-name="emailCad"></po-email>
               <po-password p-label="Senha" [(ngModel)]="senhaCad" p-placeholder="Mínimo 8 caracteres" p-name="senhaCad"></po-password>
-              <po-input p-label="Telefone / Celular" [(ngModel)]="telefoneCad" p-mask="(99) 99999-9999" p-name="telefoneCad"></po-input>
-
-              <!-- Endereço -->
-              <h3 style="margin: 16px 0 8px; font-size: 1rem;">Endereço de Faturamento</h3>
-              <po-input p-label="CEP" [(ngModel)]="cepCad" p-mask="99999-999" (p-blur)="buscarCep()" p-name="cepCad"></po-input>
-              <div style="display: flex; gap: 8px;">
-                <po-input p-label="Logradouro" [(ngModel)]="logradouroCad" p-name="logradouroCad" style="flex: 2;"></po-input>
-                <po-input p-label="Número" [(ngModel)]="numeroCad" p-name="numeroCad" style="flex: 1;"></po-input>
-              </div>
-              <po-input p-label="Complemento" [(ngModel)]="complementoCad" p-name="complementoCad" [p-optional]="true"></po-input>
-              <div style="display: flex; gap: 8px;">
-                <po-input p-label="Bairro" [(ngModel)]="bairroCad" p-name="bairroCad" style="flex: 1;"></po-input>
-                <po-input p-label="Município" [(ngModel)]="municipioCad" p-name="municipioCad" style="flex: 1;"></po-input>
-                <po-input p-label="UF" [(ngModel)]="ufCad" p-name="ufCad" style="width: 70px;"></po-input>
-              </div>
             </div>
 
             <div *ngIf="erroCad" class="auth__alert auth__alert--erro">
@@ -141,7 +103,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
             </po-button>
           </div>
 
-          <!-- ── RECUPERAR SENHA ── -->
           <div *ngIf="aba === 'recuperar'" class="auth__section">
             <button class="auth__back" (click)="trocarAba('login')">
               <span class="an an-arrow-left"></span> Voltar
@@ -171,7 +132,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
             </ng-container>
           </div>
 
-          <!-- Footer -->
           <div class="auth__footer">
             <span *ngIf="aba === 'login'">
               Não tem conta?
@@ -192,12 +152,76 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
         </div>
       </div>
     </div>
+
+    <!-- Modal: verificar e-mail (cadastro) -->
+    <po-modal #modalVerificar
+      p-title="Verifique seu e-mail"
+      p-size="sm"
+      [p-primary-action]="acaoVerificar"
+      [p-secondary-action]="acaoReenviar">
+      <p style="color:#6b7280;font-size:0.9rem;margin:0 0 16px;line-height:1.5;">
+        Enviamos um código de <strong>6 dígitos</strong> para
+        <strong>{{ emailVerificar }}</strong>. Ele expira em 15 minutos.
+      </p>
+      <div *ngIf="erroVerificar" style="background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:0.84rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <span class="an an-warning-circle"></span> {{ erroVerificar }}
+      </div>
+      <po-input
+        p-label="Código de verificação"
+        [(ngModel)]="codigoVerificacao"
+        p-placeholder="000000"
+        [p-maxlength]="6"
+        p-name="codigoVerif">
+      </po-input>
+    </po-modal>
+
+    <!-- Modal 1: código de reset de senha -->
+    <po-modal #modalCodigoReset
+      p-title="Código de redefinição"
+      p-size="sm"
+      [p-primary-action]="acaoVerificarReset"
+      [p-secondary-action]="acaoReenviarReset">
+      <p style="color:#6b7280;font-size:0.9rem;margin:0 0 16px;line-height:1.5;">
+        Enviamos um código de <strong>6 dígitos</strong> para
+        <strong>{{ emailRecuperar }}</strong>. Ele expira em 15 minutos.
+      </p>
+      <div *ngIf="erroCodigoReset" style="background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:0.84rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <span class="an an-warning-circle"></span> {{ erroCodigoReset }}
+      </div>
+      <po-input
+        p-label="Código recebido por e-mail"
+        [(ngModel)]="codigoReset"
+        p-placeholder="000000"
+        [p-maxlength]="6"
+        p-name="codigoReset">
+      </po-input>
+    </po-modal>
+
+    <!-- Modal 2: nova senha -->
+    <po-modal #modalNovaSenha
+      p-title="Defina sua nova senha"
+      p-size="sm"
+      [p-primary-action]="acaoSalvarSenha"
+      [p-secondary-action]="acaoFecharNovaSenha">
+      <div *ngIf="erroNovaSenha" style="background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:0.84rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <span class="an an-warning-circle"></span> {{ erroNovaSenha }}
+      </div>
+      <po-password
+        p-label="Nova senha"
+        [(ngModel)]="novaSenha"
+        p-placeholder="Mínimo 8 caracteres"
+        p-name="novaSenha">
+      </po-password>
+      <po-password
+        p-label="Confirmar senha"
+        [(ngModel)]="confirmarSenha"
+        p-placeholder="Repita a nova senha"
+        p-name="confirmarSenha">
+      </po-password>
+    </po-modal>
   `,
   styles: [`
-    /* ── Layout ── */
     .auth { min-height: 100vh; display: flex; }
-
-    /* ── Painel esquerdo ── */
     .auth__brand {
       flex: 0 0 50%;
       background: linear-gradient(150deg, #0f172a 0%, #3b0764 50%, #4c1d95 100%);
@@ -228,15 +252,11 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
       color: #c4b5fd; font-size: 0.78rem; padding: 8px 14px; border-radius: 100px;
     }
     .auth__brand-badge span { color: #4ade80; }
-
-    /* ── Logo ── */
     .auth__logo { display: flex; align-items: center; gap: 9px; }
     .auth__logo-img { width: 28px; height: 28px; object-fit: contain; }
     .auth__logo-text { font-size: 1.15rem; letter-spacing: -.3px; color: #fff; strong { color: #a78bfa; } }
     .auth__logo--mobile { display: none; margin-bottom: 24px; }
     .auth__logo--mobile .auth__logo-text { color: #0f172a; }
-
-    /* ── Painel direito ── */
     .auth__form-wrap {
       flex: 1; display: flex; align-items: center; justify-content: center;
       background: #f8fafc; padding: 40px 24px;
@@ -246,8 +266,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
       box-shadow: 0 4px 24px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04);
       padding: 40px; width: 100%; max-width: 420px;
     }
-
-    /* ── Tabs ── */
     .auth__tabs {
       display: flex; align-items: center; gap: 4px; padding: 4px; margin-bottom: 32px;
       border: 1px solid var(--rfb-border, #e5e7eb); border-radius: 12px;
@@ -265,19 +283,13 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
       background: var(--rfb-primary, #7c3aed); color: #fff;
       box-shadow: 0 4px 12px rgba(124,58,237,.3);
     }
-
-    /* ── Seção ── */
     .auth__section h1 { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
     .auth__sub { font-size: 0.85rem; color: #64748b; margin: 0 0 20px; }
     .auth__fields { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
-
-    /* ── Link "Esqueceu a senha?" ── */
     .auth__forgot {
       display: block; text-align: right;
       font-size: 0.8rem; margin-bottom: 14px; cursor: pointer;
     }
-
-    /* ── Botão voltar (recuperar senha) ── */
     .auth__back {
       display: inline-flex; align-items: center; gap: 6px;
       background: none; border: none; color: #64748b;
@@ -287,8 +299,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
       &:hover { color: #7c3aed; }
       span { font-size: 0.85rem; }
     }
-
-    /* ── Alertas ── */
     .auth__alert {
       display: flex; align-items: center; gap: 8px;
       font-size: 0.84rem; padding: 10px 14px;
@@ -296,8 +306,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
     }
     .auth__alert--erro { background: #fef2f2; color: #dc2626; }
     .auth__alert--ok   { background: #f0fdf4; color: #16a34a; }
-
-    /* ── Botões ── */
     po-button[p-kind="primary"] .po-button {
       background: #7c3aed !important; border-color: #7c3aed !important;
       border-radius: 8px !important; color: #fff !important; font-weight: 600 !important;
@@ -305,8 +313,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
       box-shadow: 0 2px 10px rgba(124,58,237,.35) !important;
       &:hover { background: #6d28d9 !important; border-color: #6d28d9 !important; box-shadow: 0 4px 16px rgba(109,40,217,.45) !important; }
     }
-
-    /* ── Footer ── */
     .auth__footer {
       margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f5f9;
       font-size: 0.82rem; color: #94a3b8;
@@ -317,8 +323,6 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
       color: #7c3aed; cursor: pointer; text-decoration: none; font-weight: 500;
       &:hover { text-decoration: underline; }
     }
-
-    /* ── Mobile ── */
     @media (max-width: 768px) {
       .auth { flex-direction: column; }
       .auth__brand { display: none; }
@@ -329,26 +333,65 @@ type Aba = 'login' | 'cadastro' | 'recuperar';
   `],
 })
 export class LoginComponent implements OnInit {
+  @ViewChild('modalVerificar')   modalVerificar!: PoModalComponent;
+  @ViewChild('modalCodigoReset') modalCodigoReset!: PoModalComponent;
+  @ViewChild('modalNovaSenha')   modalNovaSenha!: PoModalComponent;
+
   aba: Aba = 'login';
 
-  // Login
-  email = ''; senha = ''; erro = ''; carregando = false;
+  email = '';
+  senha = '';
+  erro = '';
+  carregando = false;
 
-  // Cadastro
-  nome = ''; emailCad = ''; senhaCad = '';
-  tipoPessoa: 'F' | 'J' = 'J';
-  cpfCad = ''; dataNascimentoCad = '';
-  cnpjCad = ''; razaoSocialCad = '';
-  telefoneCad = ''; cepCad = ''; logradouroCad = ''; numeroCad = '';
-  complementoCad = ''; bairroCad = ''; municipioCad = ''; ufCad = '';
+  nome = '';
+  emailCad = '';
+  senhaCad = '';
+  erroCad = '';
+  sucesso = false;
+  carregandoCad = false;
 
-  erroCad = ''; sucesso = false; carregandoCad = false;
+  emailRecuperar = '';
+  erroRecuperar = '';
+  recuperarSucesso = false;
+  carregandoRecuperar = false;
 
-  // Recuperar senha
-  emailRecuperar = ''; erroRecuperar = '';
-  recuperarSucesso = false; carregandoRecuperar = false;
+  emailVerificar = '';
+  senhaParaAutoLogin = '';
+  codigoVerificacao = '';
+  erroVerificar = '';
+  carregandoVerificar = false;
 
-  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute, private http: HttpClient) {}
+  acaoVerificar: PoModalAction = {
+    label: 'Verificar', loading: false, action: () => this.verificarCodigo(),
+  };
+  acaoReenviar: PoModalAction = {
+    label: 'Reenviar código', action: () => this.reenviarCodigo(),
+  };
+
+  // Reset de senha
+  codigoReset = '';
+  erroCodigoReset = '';
+  carregandoCodigoReset = false;
+  novaSenha = '';
+  confirmarSenha = '';
+  erroNovaSenha = '';
+  carregandoNovaSenha = false;
+
+  acaoVerificarReset: PoModalAction = {
+    label: 'Confirmar código', loading: false, action: () => this.verificarCodigoReset(),
+  };
+  acaoReenviarReset: PoModalAction = {
+    label: 'Reenviar código', action: () => this.reenviarCodigoReset(),
+  };
+  acaoSalvarSenha: PoModalAction = {
+    label: 'Salvar nova senha', loading: false, action: () => this.salvarNovaSenha(),
+  };
+  acaoFecharNovaSenha: PoModalAction = {
+    label: 'Cancelar', action: () => this.modalNovaSenha.close(),
+  };
+
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) { }
 
   ngOnInit() {
     if (this.route.snapshot.queryParamMap.get('tab') === 'cadastro') this.aba = 'cadastro';
@@ -356,56 +399,67 @@ export class LoginComponent implements OnInit {
 
   trocarAba(aba: Aba) {
     this.aba = aba;
-    this.erro = ''; this.erroCad = ''; this.erroRecuperar = '';
-    this.sucesso = false; this.recuperarSucesso = false;
+    this.erro = '';
+    this.erroCad = '';
+    this.erroRecuperar = '';
+    this.erroVerificar = '';
+    this.sucesso = false;
+    this.recuperarSucesso = false;
   }
 
   entrar() {
-    if (!this.email || !this.senha) { this.erro = 'Preencha e-mail e senha.'; return; }
-    this.carregando = true; this.erro = '';
+    if (!this.email || !this.senha) {
+      this.erro = 'Preencha e-mail e senha.';
+      return;
+    }
+
+    this.carregando = true;
+    this.erro = '';
     this.auth.login(this.email, this.senha).subscribe({
       next: () => this.router.navigate(['/portal/dashboard']),
       error: (err: any) => {
         const msg = err?.error?.message ?? '';
-        this.erro = msg === 'EMAIL_NAO_VERIFICADO'
-          ? 'Confirme seu e-mail antes de acessar. Verifique sua caixa de entrada.'
-          : 'E-mail ou senha inválidos.';
+        if (msg === 'EMAIL_NAO_VERIFICADO') {
+          this.emailVerificar = this.email;
+          this.senhaParaAutoLogin = this.senha;
+          this.codigoVerificacao = '';
+          this.erroVerificar = '';
+          this.modalVerificar.open();
+        } else {
+          this.erro = 'E-mail ou senha inválidos.';
+        }
         this.carregando = false;
       },
     });
   }
 
   cadastrar() {
-    if (!this.nome || !this.emailCad || !this.senhaCad || !this.cepCad || !this.logradouroCad || !this.numeroCad || !this.bairroCad || !this.municipioCad || !this.ufCad || !this.telefoneCad) {
-      this.erroCad = 'Preencha todos os campos obrigatórios, incluindo endereço e telefone.';
+    if (!this.nome || !this.emailCad || !this.senhaCad) {
+      this.erroCad = 'Preencha nome, e-mail e senha.';
       return;
     }
-    if (this.tipoPessoa === 'J' && !this.cnpjCad) { this.erroCad = 'CNPJ é obrigatório.'; return; }
-    if (this.tipoPessoa === 'F' && !this.cpfCad) { this.erroCad = 'CPF é obrigatório.'; return; }
-    if (this.senhaCad.length < 8) { this.erroCad = 'Senha deve ter no mínimo 8 caracteres.'; return; }
-    
-    this.carregandoCad = true; this.erroCad = '';
+    if (this.senhaCad.length < 8) {
+      this.erroCad = 'Senha deve ter no mínimo 8 caracteres.';
+      return;
+    }
+
+    this.carregandoCad = true;
+    this.erroCad = '';
 
     const payload = {
-      nome: this.nome, email: this.emailCad, senha: this.senhaCad,
-      tipoPessoa: this.tipoPessoa,
-      cpf: this.tipoPessoa === 'F' ? this.cpfCad : undefined,
-      dataNascimento: this.tipoPessoa === 'F' ? this.dataNascimentoCad : undefined,
-      cnpj: this.tipoPessoa === 'J' ? this.cnpjCad : undefined,
-      razaoSocial: this.tipoPessoa === 'J' ? this.razaoSocialCad : undefined,
-      telefone: this.telefoneCad, cep: this.cepCad, logradouro: this.logradouroCad,
-      numero: this.numeroCad, complemento: this.complementoCad,
-      bairro: this.bairroCad, municipio: this.municipioCad, uf: this.ufCad
+      nome: this.nome,
+      email: this.emailCad,
+      senha: this.senhaCad,
     };
 
     this.auth.signupApi(payload).subscribe({
       next: () => {
-        this.sucesso = true;
-        // Auto-login após cadastro e redireciona para o painel
-        this.auth.login(this.emailCad, this.senhaCad).subscribe({
-          next: () => this.router.navigate(['/portal/dashboard']),
-          error: () => { this.carregandoCad = false; this.trocarAba('login'); },
-        });
+        this.carregandoCad = false;
+        this.emailVerificar = this.emailCad;
+        this.senhaParaAutoLogin = this.senhaCad;
+        this.codigoVerificacao = '';
+        this.erroVerificar = '';
+        this.modalVerificar.open();
       },
       error: (err: any) => {
         this.erroCad = err?.error?.message ?? 'Erro ao criar conta. Tente novamente.';
@@ -414,56 +468,146 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  buscarCep() {
-    if (!this.cepCad) return;
-    const cepStr = this.cepCad.replace(/\D/g, '');
-    if (cepStr.length !== 8) return;
-    
-    this.http.get<any>(`${environment.apiUrl}/geocode/cep/${cepStr}`).subscribe({
-      next: data => {
-        console.log('CEP data received:', data);
-        if (data) {
-          if (!this.logradouroCad) this.logradouroCad = data.logradouro;
-          if (!this.bairroCad) this.bairroCad = data.bairro;
-          if (!this.municipioCad) this.municipioCad = data.municipio;
-          if (!this.ufCad) this.ufCad = data.ufSigla;
+  verificarCodigo() {
+    if (!this.codigoVerificacao || this.codigoVerificacao.length !== 6) {
+      this.erroVerificar = 'Digite o código de 6 dígitos.';
+      return;
+    }
+    this.acaoVerificar = { ...this.acaoVerificar, loading: true };
+    this.erroVerificar = '';
+    this.auth.verificarEmailCodigo(this.emailVerificar, this.codigoVerificacao).subscribe({
+      next: () => {
+        this.acaoVerificar = { ...this.acaoVerificar, loading: false };
+        this.modalVerificar.close();
+        if (this.senhaParaAutoLogin) {
+          this.auth.login(this.emailVerificar, this.senhaParaAutoLogin).subscribe({
+            next: () => this.router.navigate(['/portal/dashboard']),
+            error: () => {
+              this.trocarAba('login');
+              this.sucesso = true;
+            },
+          });
+        } else {
+          this.trocarAba('login');
+          this.sucesso = true;
         }
       },
-      error: err => {
-        console.error('Erro ao buscar CEP na API:', err);
-      }
+      error: (err: any) => {
+        const msg = err?.error?.message ?? '';
+        this.erroVerificar =
+          msg === 'CODIGO_EXPIRADO' ? 'Código expirado. Clique em "Reenviar código".' :
+          msg === 'CODIGO_INVALIDO' ? 'Código incorreto. Tente novamente.' :
+          'Erro ao verificar. Tente novamente.';
+        this.acaoVerificar = { ...this.acaoVerificar, loading: false };
+      },
     });
   }
 
-  buscarCnpj() {
-    if (!this.cnpjCad) return;
-    const cnpjStr = this.cnpjCad.replace(/\D/g, '');
-    if (cnpjStr.length !== 14) return;
-    this.http.get<any>(`${environment.apiUrl}/cnpj/${cnpjStr}`).subscribe({
-      next: (data) => {
-        if (data && data.estabelecimento) {
-          this.razaoSocialCad = data.razao_social;
-          this.cepCad = data.estabelecimento.cep;
-          this.logradouroCad = (data.estabelecimento.tipo_logradouro ? data.estabelecimento.tipo_logradouro + ' ' : '') + data.estabelecimento.logradouro;
-          this.numeroCad = data.estabelecimento.numero;
-          this.complementoCad = data.estabelecimento.complemento;
-          this.bairroCad = data.estabelecimento.bairro;
-          this.municipioCad = data.estabelecimento.cidade?.nome;
-          this.ufCad = data.estabelecimento.estado?.sigla;
-          if (data.estabelecimento.ddd_1 && data.estabelecimento.telefone_1) {
-            this.telefoneCad = data.estabelecimento.ddd_1 + data.estabelecimento.telefone_1;
-          }
-        }
-      }
+  reenviarCodigo() {
+    this.auth.reenviarCodigoVerificacao(this.emailVerificar).subscribe({
+      next: () => {
+        this.erroVerificar = '';
+        this.codigoVerificacao = '';
+      },
     });
+  }
+
+  abrirModalVerificar(email: string, senha: string) {
+    this.emailVerificar = email;
+    this.senhaParaAutoLogin = senha;
+    this.codigoVerificacao = '';
+    this.erroVerificar = '';
+    this.acaoVerificar = { ...this.acaoVerificar, loading: false };
+    this.modalVerificar.open();
   }
 
   solicitarReset() {
-    if (!this.emailRecuperar) { this.erroRecuperar = 'Informe seu e-mail.'; return; }
-    this.carregandoRecuperar = true; this.erroRecuperar = '';
+    if (!this.emailRecuperar) {
+      this.erroRecuperar = 'Informe seu e-mail.';
+      return;
+    }
+    this.carregandoRecuperar = true;
+    this.erroRecuperar = '';
     this.auth.recuperarSenha(this.emailRecuperar).subscribe({
-      next: () => { this.recuperarSucesso = true; this.carregandoRecuperar = false; },
-      error: () => { this.erroRecuperar = 'Erro ao enviar. Tente novamente.'; this.carregandoRecuperar = false; },
+      next: () => {
+        this.carregandoRecuperar = false;
+        this.codigoReset = '';
+        this.erroCodigoReset = '';
+        this.acaoVerificarReset = { ...this.acaoVerificarReset, loading: false };
+        this.modalCodigoReset.open();
+        this.trocarAba('login');
+      },
+      error: () => {
+        this.erroRecuperar = 'Erro ao enviar. Tente novamente.';
+        this.carregandoRecuperar = false;
+      },
+    });
+  }
+
+  verificarCodigoReset() {
+    if (!this.codigoReset || this.codigoReset.length !== 6) {
+      this.erroCodigoReset = 'Digite o código de 6 dígitos.';
+      return;
+    }
+    this.acaoVerificarReset = { ...this.acaoVerificarReset, loading: true };
+    this.erroCodigoReset = '';
+    this.auth.verificarCodigoReset(this.emailRecuperar, this.codigoReset).subscribe({
+      next: () => {
+        this.acaoVerificarReset = { ...this.acaoVerificarReset, loading: false };
+        this.modalCodigoReset.close();
+        this.novaSenha = '';
+        this.confirmarSenha = '';
+        this.erroNovaSenha = '';
+        this.acaoSalvarSenha = { ...this.acaoSalvarSenha, loading: false };
+        this.modalNovaSenha.open();
+      },
+      error: (err: any) => {
+        const msg = err?.error?.message ?? '';
+        this.erroCodigoReset =
+          msg === 'CODIGO_EXPIRADO' ? 'Código expirado. Reenvie um novo.' :
+          msg === 'CODIGO_INVALIDO' ? 'Código incorreto. Tente novamente.' :
+          'Erro ao validar. Tente novamente.';
+        this.acaoVerificarReset = { ...this.acaoVerificarReset, loading: false };
+      },
+    });
+  }
+
+  reenviarCodigoReset() {
+    this.auth.recuperarSenha(this.emailRecuperar).subscribe({
+      next: () => { this.codigoReset = ''; this.erroCodigoReset = ''; },
+    });
+  }
+
+  salvarNovaSenha() {
+    if (!this.novaSenha || this.novaSenha.length < 8) {
+      this.erroNovaSenha = 'Senha deve ter no mínimo 8 caracteres.';
+      return;
+    }
+    if (this.novaSenha !== this.confirmarSenha) {
+      this.erroNovaSenha = 'As senhas não coincidem.';
+      return;
+    }
+    this.acaoSalvarSenha = { ...this.acaoSalvarSenha, loading: true };
+    this.erroNovaSenha = '';
+    this.auth.redefinirSenhaComCodigo(this.emailRecuperar, this.codigoReset, this.novaSenha).subscribe({
+      next: () => {
+        this.acaoSalvarSenha = { ...this.acaoSalvarSenha, loading: false };
+        this.modalNovaSenha.close();
+        this.auth.login(this.emailRecuperar, this.novaSenha).subscribe({
+          next: () => this.router.navigate(['/portal/dashboard']),
+          error: () => {
+            this.trocarAba('login');
+            this.erro = 'Senha redefinida! Faça login para continuar.';
+          },
+        });
+      },
+      error: (err: any) => {
+        const msg = err?.error?.message ?? '';
+        this.erroNovaSenha =
+          msg === 'CODIGO_EXPIRADO' ? 'Código expirado. Reinicie o processo.' :
+          'Erro ao salvar. Tente novamente.';
+        this.acaoSalvarSenha = { ...this.acaoSalvarSenha, loading: false };
+      },
     });
   }
 }

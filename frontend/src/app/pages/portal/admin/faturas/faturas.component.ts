@@ -1,5 +1,5 @@
 import { NotifService } from '../../../../services/notif.service';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import {
   PoModalComponent, PoModalAction,
   PoTableAction, PoTableColumn, PoSelectOption,
@@ -74,7 +74,7 @@ export class PortalFaturasComponent implements OnInit {
     action: () => this.modalPagamento.close(),
   };
 
-  constructor(private svc: AdminService, private notif: NotifService) {}
+  constructor(private svc: AdminService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.carregar(); }
 
@@ -90,8 +90,9 @@ export class PortalFaturasComponent implements OnInit {
         }));
         this.total = count;
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
   }
 

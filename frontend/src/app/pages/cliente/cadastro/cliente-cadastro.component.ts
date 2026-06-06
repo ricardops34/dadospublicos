@@ -13,25 +13,12 @@ import { AuthService } from '../../../services/auth.service';
           <strong>BuscaDados</strong>
         </div>
         <h1>Criar conta grátis</h1>
-       
+
         <po-input p-label="Nome" [(ngModel)]="nome" p-placeholder="Seu nome completo"></po-input>
         <po-input p-label="E-mail" p-type="email" [(ngModel)]="email" p-placeholder="seu@email.com"></po-input>
         <po-input p-label="Senha" p-type="password" [(ngModel)]="senha" p-placeholder="Mínimo 8 caracteres"></po-input>
 
-        <po-divider p-label="Dados de Faturamento (Opcional)"></po-divider>
-        <div class="po-row">
-          <po-input class="po-md-6" p-label="CNPJ" [(ngModel)]="cnpj" p-mask="99.999.999/9999-99"></po-input>
-          <po-input class="po-md-6" p-label="Razão Social" [(ngModel)]="razaoSocial"></po-input>
-          <po-input class="po-md-6" p-label="Inscrição Estadual" [(ngModel)]="inscricaoEstadual"></po-input>
-          <po-input class="po-md-6" p-label="Inscrição Municipal" [(ngModel)]="inscricaoMunicipal"></po-input>
-          <po-input class="po-md-4" p-label="CEP" [(ngModel)]="cep" p-mask="99999-999"></po-input>
-          <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="logradouro"></po-input>
-          <po-input class="po-md-2" p-label="Nº" [(ngModel)]="numero"></po-input>
-          <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="complemento"></po-input>
-          <po-input class="po-md-4" p-label="Bairro" [(ngModel)]="bairro"></po-input>
-          <po-input class="po-md-3" p-label="Município" [(ngModel)]="municipio"></po-input>
-          <po-input class="po-md-1" p-label="UF" [(ngModel)]="uf"></po-input>
-        </div>
+        <p class="cl-cadastro__sub">Os demais dados serão preenchidos no primeiro acesso.</p>
 
         <po-button p-label="Criar conta" p-kind="primary" p-icon="an an-user-plus"
           (p-click)="cadastrar()">
@@ -73,26 +60,27 @@ import { AuthService } from '../../../services/auth.service';
   `],
 })
 export class ClienteCadastroComponent {
-  nome = ''; email = ''; senha = ''; erro = '';
-  cnpj = ''; razaoSocial = ''; inscricaoEstadual = ''; inscricaoMunicipal = '';
-  cep = ''; logradouro = ''; numero = ''; complemento = ''; bairro = ''; municipio = ''; uf = '';
+  nome = '';
+  email = '';
+  senha = '';
+  erro = '';
 
   constructor(private auth: AuthService, private router: Router) {}
 
   cadastrar() {
-    if (!this.nome || !this.email || !this.senha) { this.erro = 'Preencha os campos obrigatórios (Nome, E-mail, Senha).'; return; }
-    if (this.senha.length < 8) { this.erro = 'Senha deve ter no mínimo 8 caracteres.'; return; }
-    
-    const payload = {
-      nome: this.nome, email: this.email, senha: this.senha,
-      cnpj: this.cnpj, razaoSocial: this.razaoSocial, inscricaoEstadual: this.inscricaoEstadual,
-      inscricaoMunicipal: this.inscricaoMunicipal, cep: this.cep, logradouro: this.logradouro,
-      numero: this.numero, complemento: this.complemento, bairro: this.bairro, municipio: this.municipio, uf: this.uf
-    };
+    if (!this.nome || !this.email || !this.senha) {
+      this.erro = 'Preencha os campos obrigatórios (Nome, E-mail, Senha).';
+      return;
+    }
+    if (this.senha.length < 8) {
+      this.erro = 'Senha deve ter no mínimo 8 caracteres.';
+      return;
+    }
+
+    const payload = { nome: this.nome, email: this.email, senha: this.senha };
 
     this.auth.signupApi(payload).subscribe({
-      next: (res: any) => {
-        // Redireciona para o login informando o sucesso
+      next: () => {
         this.router.navigate(['/login']);
       },
       error: (err: any) => {

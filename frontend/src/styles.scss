@@ -1,5 +1,8 @@
 /* PO-UI styles são carregados via angular.json */
 
+// NG0100 em dev mode impede contentOpacity=1 — forçar via CSS (override inline style)
+.po-page-content { opacity: 1 !important; }
+
 * { box-sizing: border-box; }
 
 body {

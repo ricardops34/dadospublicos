@@ -1,10 +1,7 @@
 <po-page-default p-title="Minha Conta">
-
   <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
 
   <ng-container *ngIf="!carregando && perfil">
-
-    <!-- Cabeçalho com avatar e ações -->
     <div class="mc-header">
       <div class="mc-avatar">
         <span class="an an-user-circle"></span>
@@ -15,10 +12,10 @@
         <po-tag
           [p-value]="emailVerificadoLabel"
           [p-color]="perfil.emailVerificado ? 'color-10' : 'color-07'"
-          style="margin-left:8px;">
+          style="margin-left: 8px;">
         </po-tag>
       </div>
-      <div style="margin-left:auto;">
+      <div style="margin-left: auto;">
         <po-button
           *ngIf="!editando"
           p-label="Editar dados"
@@ -31,15 +28,14 @@
 
     <po-divider p-label="Dados cadastrais"></po-divider>
 
-    <!-- Modo visualização -->
     <ng-container *ngIf="!editando">
       <div class="po-row">
-        <po-info class="po-md-6" p-label="Nome"        [p-value]="perfil.nome"></po-info>
-        <po-info class="po-md-6" p-label="E-mail"      [p-value]="perfil.email"></po-info>
+        <po-info class="po-md-6" p-label="Nome" [p-value]="perfil.nome"></po-info>
+        <po-info class="po-md-6" p-label="E-mail" [p-value]="perfil.email"></po-info>
       </div>
       <div class="po-row">
-        <po-info class="po-md-4" p-label="Telefone"    [p-value]="perfil.telefone || '—'"></po-info>
-        <po-info class="po-md-4" p-label="CNPJ"        [p-value]="perfil.cnpj || '—'"></po-info>
+        <po-info class="po-md-4" p-label="Telefone" [p-value]="perfil.telefone || '—'"></po-info>
+        <po-info class="po-md-4" p-label="CNPJ" [p-value]="perfil.cnpj || '—'"></po-info>
         <po-info class="po-md-4" p-label="Razão social" [p-value]="perfil.razaoSocial || '—'"></po-info>
       </div>
       <div class="po-row">
@@ -57,86 +53,106 @@
       </div>
     </ng-container>
 
-    <!-- Modo edição -->
     <ng-container *ngIf="editando">
       <div class="po-row">
-        <po-input class="po-md-6" p-label="Nome *"        [(ngModel)]="form.nome"></po-input>
-        <po-input class="po-md-6" p-label="Telefone"      [(ngModel)]="form.telefone" p-mask="(99) 9 9999-9999"></po-input>
+        <po-input class="po-md-6" p-label="Nome *" [(ngModel)]="form.nome"></po-input>
+        <po-input class="po-md-6" p-label="Telefone" [(ngModel)]="form.telefone" p-mask="(99) 9 9999-9999"></po-input>
       </div>
       <div class="po-row">
-        <po-input class="po-md-4" p-label="CNPJ"          [(ngModel)]="form.cnpj" p-mask="99.999.999/9999-99"></po-input>
-        <po-input class="po-md-8" p-label="Razão social"  [(ngModel)]="form.razaoSocial"></po-input>
+        <po-input class="po-md-4" p-label="CNPJ" [(ngModel)]="form.cnpj" p-mask="99.999.999/9999-99"
+          (p-blur)="buscarCnpj()">
+        </po-input>
+        <po-input class="po-md-8" p-label="Razão social" [(ngModel)]="form.razaoSocial"></po-input>
       </div>
       <div class="po-row">
         <po-input class="po-md-6" p-label="Inscrição Estadual" [(ngModel)]="form.inscricaoEstadual"></po-input>
         <po-input class="po-md-6" p-label="Inscrição Municipal" [(ngModel)]="form.inscricaoMunicipal"></po-input>
       </div>
       <div class="po-row">
-        <po-input class="po-md-4" p-label="CEP" [(ngModel)]="form.cep" p-mask="99999-999"></po-input>
+        <po-input class="po-md-4" p-label="CEP" [(ngModel)]="form.cep" p-mask="99999-999"
+          (p-blur)="buscarCep()">
+        </po-input>
         <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="form.logradouro"></po-input>
-        <po-input class="po-md-2" p-label="Nº" [(ngModel)]="form.numero"></po-input>
+        <po-input class="po-md-2" p-label="Número" [(ngModel)]="form.numero"></po-input>
       </div>
       <div class="po-row">
         <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="form.complemento"></po-input>
         <po-input class="po-md-4" p-label="Bairro" [(ngModel)]="form.bairro"></po-input>
-        <po-input class="po-md-3" p-label="Município" [(ngModel)]="form.municipio"></po-input>
-        <po-input class="po-md-1" p-label="UF" [(ngModel)]="form.uf"></po-input>
+        <po-combo class="po-md-3" p-label="Município" name="municipio"
+          [ngModel]="form.municipio"
+          (ngModelChange)="form.municipio = $event"
+          [p-filter-service]="municipioFilterService"
+          [p-disabled]="municipioDisabled"
+          [p-clean]="true">
+        </po-combo>
+        <po-combo class="po-md-1" p-label="UF" name="uf"
+          [ngModel]="form.uf"
+          (ngModelChange)="form.uf = $event"
+          [p-options]="ufOptions"
+          [p-filter-mode]="PoComboFilterMode.contains"
+          [p-clean]="true"
+          (p-change)="onUfChange($event)">
+        </po-combo>
       </div>
-      <div class="po-row" style="justify-content:flex-end; gap:8px; margin-top:8px;">
+      <div class="po-row" style="justify-content: flex-end; gap: 8px; margin-top: 8px;">
         <po-button p-label="Cancelar" p-kind="tertiary" (p-click)="cancelarEdicao()"></po-button>
-        <po-button p-label="Salvar" p-kind="primary" p-icon="an an-floppy-disk"
-          [p-loading]="salvando" (p-click)="salvar()">
-        </po-button>
+        <po-button p-label="Salvar" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="salvando" (p-click)="salvar()"></po-button>
       </div>
     </ng-container>
 
     <po-divider p-label="Informações da conta"></po-divider>
     <div class="po-row">
-      <po-info class="po-md-4" p-label="Membro desde"   [p-value]="(perfil.criadoEm | date:'dd/MM/yyyy') ?? ''"></po-info>
-      <po-info class="po-md-4" p-label="Último acesso"  [p-value]="(perfil.ultimoLogin | date:'dd/MM/yyyy HH:mm') ?? '—'"></po-info>
-      <po-info class="po-md-4" p-label="Status"         [p-value]="perfil.ativo ? 'Ativo' : 'Suspenso'"></po-info>
+      <po-info class="po-md-4" p-label="Membro desde" [p-value]="(perfil.criadoEm | date:'dd/MM/yyyy') ?? ''"></po-info>
+      <po-info class="po-md-4" p-label="Último acesso" [p-value]="(perfil.ultimoLogin | date:'dd/MM/yyyy HH:mm') ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Status" [p-value]="perfil.ativo ? 'Ativo' : 'Suspenso'"></po-info>
     </div>
 
-    <!-- Badge: exclusão já agendada -->
-    <po-tag *ngIf="agendarExclusaoEm"
-      [p-value]="'Exclusão agendada para ' + dataExclusaoFormatada"
-      p-color="color-07" p-icon="an an-clock" style="margin-bottom:8px; display:block;">
-    </po-tag>
-
-    <!-- Zona de perigo (só aparece se não agendada) -->
-    <ng-container *ngIf="!agendarExclusaoEm">
-      <po-divider p-label="Zona de perigo"></po-divider>
-      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:20px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+    <ng-container *ngIf="agendarExclusaoEm; else dangerZone">
+      <po-divider p-label="Exclusão agendada"></po-divider>
+      <div style="background: #fff7ed; border: 1px solid #fdba74; border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
         <div>
-          <strong style="color:#dc2626; font-size:0.95rem;">Excluir minha conta</strong>
-          <p style="margin:4px 0 0; color:#6b7280; font-size:0.85rem;">
-            Seus dados serão anonimizados permanentemente. Esta ação não pode ser desfeita.
-            <ng-container *ngIf="temPlanoAtivo">
-              <br>Você possui um plano ativo até <strong>{{ formatarData(dataFimPlano) }}</strong>.
-            </ng-container>
+          <strong style="color: #c2410c; font-size: 0.95rem;">Anonimização agendada</strong>
+          <p style="margin: 4px 0 0; color: #6b7280; font-size: 0.85rem;">
+            Seus dados estão programados para anonimização em <strong>{{ dataExclusaoFormatada }}</strong>.
+            Você pode desistir dessa solicitação antes do prazo.
           </p>
         </div>
-        <po-button p-label="Excluir conta" p-kind="danger" p-icon="an an-trash"
-          (p-click)="solicitarExclusao()">
-        </po-button>
+        <po-button p-label="Desistir da exclusão" p-kind="secondary" p-icon="an an-arrow-counter-clockwise" [p-loading]="exclusaoEmAndamento" (p-click)="desistirExclusao()"></po-button>
       </div>
     </ng-container>
 
+    <ng-template #dangerZone>
+      <po-divider p-label="Zona de perigo"></po-divider>
+      <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+        <div>
+          <strong style="color: #dc2626; font-size: 0.95rem;">Excluir minha conta</strong>
+          <p style="margin: 4px 0 0; color: #6b7280; font-size: 0.85rem;" *ngIf="!temPlanoPagoAtivo">
+            Como sua conta não possui plano pago ativo, a exclusão será definitiva e irreversível.
+          </p>
+          <p style="margin: 4px 0 0; color: #6b7280; font-size: 0.85rem;" *ngIf="temPlanoPagoAtivo">
+            Como sua conta possui plano pago ativo, a exclusão vira uma solicitação de anonimização agendada.
+            <br>Plano vigente até <strong>{{ formatarData(dataFimPlano) }}</strong>.
+          </p>
+        </div>
+        <po-button p-label="Solicitar exclusão" p-kind="danger" p-icon="an an-trash" (p-click)="solicitarExclusao()"></po-button>
+      </div>
+    </ng-template>
   </ng-container>
-
 </po-page-default>
 
-<!-- Modal de exclusão de conta -->
-<po-modal #modalExclusao p-title="Excluir minha conta" p-size="md"
+<po-modal
+  #modalExclusao
+  p-title="Excluir minha conta"
+  p-size="md"
   [p-primary-action]="acaoConfirmarExclusao"
   [p-secondary-action]="acaoCancelarExclusao">
 
-  <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:12px; font-size:0.875rem; color:#856404;">
-    ⚠️ Atenção: esta ação é irreversível. Seus dados pessoais serão anonimizados permanentemente e você perderá acesso ao sistema.
+  <div *ngIf="!temPlanoPagoAtivo" style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; font-size: 0.875rem; color: #856404;">
+    Atenção: esta ação é irreversível. Seus dados serão anonimizados imediatamente e você perderá acesso ao sistema.
   </div>
 
-  <div *ngIf="temPlanoAtivo" style="background:#cce5ff; border:1px solid #b8daff; border-radius:8px; padding:12px 16px; margin-bottom:12px; font-size:0.875rem; color:#004085;">
-    ℹ️ Você possui um plano ativo até <strong>{{ formatarData(dataFimPlano) }}</strong>. Escolha como deseja proceder:
+  <div *ngIf="temPlanoPagoAtivo" style="background: #cce5ff; border: 1px solid #b8daff; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; font-size: 0.875rem; color: #004085;">
+    Sua conta possui plano pago ativo até <strong>{{ formatarData(dataFimPlano) }}</strong>. Você pode agendar a anonimização e desistir antes da data final.
   </div>
 
   <po-radio-group
@@ -145,11 +161,13 @@
     [p-options]="opcoesExclusao">
   </po-radio-group>
 
-  <p *ngIf="opcaoExclusao === 'agora'" style="color:#6b7280; font-size:0.82rem; margin-top:8px;">
-    Sua conta será desativada imediatamente e os dados removidos após o período de retenção.
+  <p *ngIf="!temPlanoPagoAtivo" style="color: #6b7280; font-size: 0.82rem; margin-top: 8px;">
+    A confirmação executará a exclusão definitiva da sua conta.
   </p>
-  <p *ngIf="opcaoExclusao === 'fim-plano'" style="color:#6b7280; font-size:0.82rem; margin-top:8px;">
-    Você continuará com acesso até o fim do plano. Após isso, os dados serão removidos automaticamente.
+  <p *ngIf="temPlanoPagoAtivo && opcaoExclusao === 'agora'" style="color: #6b7280; font-size: 0.82rem; margin-top: 8px;">
+    A anonimização será programada para o prazo padrão configurado pela plataforma.
   </p>
-
+  <p *ngIf="temPlanoPagoAtivo && opcaoExclusao === 'fim-plano'" style="color: #6b7280; font-size: 0.82rem; margin-top: 8px;">
+    A anonimização ficará programada para o fim da vigência do plano atual.
+  </p>
 </po-modal>

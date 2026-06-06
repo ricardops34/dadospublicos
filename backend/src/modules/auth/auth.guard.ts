@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Unauthor
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Token, Plano } from '../../entities/token.entity';
 import { Consumo } from '../../entities/consumo.entity';
 
@@ -16,18 +17,17 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-    const planoMinimo = this.reflector.get<Plano>(PLANO_KEY, ctx.getHandler());
-    if (!planoMinimo || planoMinimo === 'gratuito') return true;
+    const planoMinimo = this.reflector.get<Plano>(PLANO_KEY, ctx.getHandler()) ?? 'gratuito';
 
     const req = ctx.switchToHttp().getRequest();
     const rawToken: string = req.headers['x_api_token'] ?? req.query['token'];
 
-    if (!rawToken) throw new UnauthorizedException('Token obrigatório para este endpoint.');
+    if (!rawToken) throw new UnauthorizedException('Token de API obrigatório. Obtenha o seu em buscadados.bjsoft.com.br');
 
     const token = await this.tokens.findOne({ where: { token: rawToken, ativo: true } });
     if (!token) throw new UnauthorizedException('Token inválido ou inativo.');
 
-    const ordem: Plano[] = ['gratuito', 'basico', 'premium'];
+    const ordem: Plano[] = ['free', 'gratuito', 'basico', 'intermediario', 'avancado', 'premium'];
     if (ordem.indexOf(token.plano) < ordem.indexOf(planoMinimo)) {
       throw new ForbiddenException(`Plano ${planoMinimo} necessário. Plano atual: ${token.plano}.`);
     }

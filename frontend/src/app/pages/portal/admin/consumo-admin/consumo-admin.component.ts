@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { PoTableColumn } from '@po-ui/ng-components';
 import { environment } from '../../../../../environments/environment';
@@ -24,7 +24,7 @@ export class ConsumoAdminComponent implements OnInit {
     { property: 'ano',        label: 'Ano',           type: 'number', width: '6%' },
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.carregar(); }
 
@@ -38,8 +38,9 @@ export class ConsumoAdminComponent implements OnInit {
             percentual: c.limite ? ((c.quantidade / c.limite) * 100).toFixed(1) + '%' : '—',
           }));
           this.carregando = false;
+          this.cdr.detectChanges();
         },
-        error: () => { this.carregando = false; },
+        error: () => { this.carregando = false; this.cdr.detectChanges(); },
       });
   }
 }

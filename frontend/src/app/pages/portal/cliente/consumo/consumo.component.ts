@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { PoChartSerie, PoChartType } from '@po-ui/ng-components';
 import { ClientePortalService } from '../cliente.service';
 
@@ -16,7 +16,7 @@ export class ConsumoComponent implements OnInit {
   chartSeries: PoChartSerie[] = [];
   chartCategories: string[] = [];
 
-  constructor(private svc: ClientePortalService) {}
+  constructor(private svc: ClientePortalService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.minhaAssinatura().subscribe({ next: (a) => { this.assinatura = a; }, error: () => {} });
@@ -31,8 +31,9 @@ export class ConsumoComponent implements OnInit {
         this.chartCategories = this.historico.map(r => r.competencia);
         this.chartSeries = [{ label: 'Requisições', data: this.historico.map(r => r.quantidade) }];
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
   }
 

@@ -1,12 +1,6 @@
 <po-page-default p-title="Planos">
 
-  <div class="po-row" style="margin-bottom:16px; gap:12px; justify-content:flex-end;">
-    <po-button
-      p-label="Criar planos padrão"
-      p-kind="tertiary"
-      p-icon="an an-magic-wand"
-      (p-click)="seedPlanos()">
-    </po-button>
+  <div class="po-row" style="margin-bottom:16px; justify-content:flex-end;">
     <po-button
       p-label="Novo plano"
       p-kind="primary"
@@ -62,6 +56,7 @@
   </div>
   <div class="po-row">
     <po-switch class="po-md-4" p-label="Geocode / CEP" [(ngModel)]="form.acessoGeocode"></po-switch>
+    <po-switch class="po-md-4" p-label="Exibir na LP" [(ngModel)]="form.exibirNaLp"></po-switch>
   </div>
 
   <po-divider p-label="Destaque"></po-divider>

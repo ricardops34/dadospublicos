@@ -40,6 +40,10 @@
                 "input": "public"
               }
             ],
+            "scripts": [
+              "./node_modules/zone.js/bundles/zone.umd.js",
+              "./node_modules/zone.js/bundles/zone-patch-fetch.umd.js"
+            ],
             "styles": [
               "node_modules/@po-ui/style/css/po-theme-default.min.css",
               "src/styles.scss"

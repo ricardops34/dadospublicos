@@ -25,6 +25,7 @@ import { AccessLogMiddleware } from './modules/access-log/access-log.middleware'
 import { SuporteModule } from './modules/suporte/suporte.module';
 import { ParametrosModule } from './modules/parametros/parametros.module';
 import { RedisCacheModule } from './modules/redis-cache/redis-cache.module';
+import { EmailModule } from './modules/email/email.module';
 import { ParametrosService } from './modules/parametros/parametros.service';
 import { InterPixModule } from './modules/inter-pix/inter-pix.module';
 import { Painel360Module } from './modules/painel-360/painel-360.module';
@@ -93,6 +94,7 @@ import { Painel360Module } from './modules/painel-360/painel-360.module';
 
     // Infra
     RedisCacheModule,
+    EmailModule,
     AdminModule,
     AuthModule,
     PortalModule,

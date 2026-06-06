@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { LpAnalyticsService } from '../../../../services/lp-analytics.service';
 import { ThemeService } from '../../../../services/theme.service';
 
 @Component({
@@ -14,26 +15,45 @@ export class NavbarComponent implements OnInit {
   private readonly navbarOffset = 76;
   private readonly maxScrollTentativas = 20;
 
-  constructor(private router: Router, public theme: ThemeService) {}
+  constructor(
+    private router: Router,
+    private analytics: LpAnalyticsService,
+    public theme: ThemeService,
+  ) {}
 
   ngOnInit() {
     this.theme.inicializar();
   }
 
-  irParaLogin() { this.router.navigateByUrl('/login'); }
-  irParaCadastro() { this.router.navigateByUrl('/cliente/cadastro'); }
+  irParaLogin() {
+    this.analytics.registrarClique('navbar', 'login');
+    this.router.navigateByUrl('/login');
+  }
+
+  irParaCadastro() {
+    this.analytics.registrarClique('navbar', 'cadastro');
+    this.router.navigateByUrl('/cliente/cadastro');
+  }
+
+  registrarCliqueDocumentacao() {
+    this.analytics.registrarClique('navbar', 'documentacao');
+  }
 
   irParaAncora(ancora: string) {
     const naLanding = this.router.url === '/' || this.router.url.startsWith('/#');
-    if (naLanding) { this.rolarParaElemento(ancora); return; }
+    if (naLanding) {
+      this.rolarParaElemento(ancora);
+      return;
+    }
     this.router.navigateByUrl('/').then(() => this.rolarParaElemento(ancora));
   }
 
   private rolarParaElemento(ancora: string, tentativa = 0) {
     const elemento = document.getElementById(ancora);
     if (!elemento) {
-      if (tentativa < this.maxScrollTentativas)
+      if (tentativa < this.maxScrollTentativas) {
         window.setTimeout(() => this.rolarParaElemento(ancora, tentativa + 1), 100);
+      }
       return;
     }
     const topo = elemento.getBoundingClientRect().top + window.scrollY - this.navbarOffset;

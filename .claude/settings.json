@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PGPASSWORD = \"95376a6b89720a684d3f88f71187721d\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin\\\\psql.exe\" -h localhost -p 5433 -U rfb_user -d buscadados -t -c \"SELECT token FROM tokens WHERE ativo = true LIMIT 1;\" 2>$null)",
+      "PowerShell(\\(Get-Command psql -ErrorAction SilentlyContinue\\).Source; \\(Get-Command pg_dump -ErrorAction SilentlyContinue\\).Source)"
+    ]
+  }
+}

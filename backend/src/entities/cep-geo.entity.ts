@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('ceps_geo')
 export class CepGeo {
@@ -7,6 +7,9 @@ export class CepGeo {
 
   @Column({ type: 'varchar', length: 150, nullable: true })
   logradouro: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  complemento: string | null;
 
   @Column({ type: 'varchar', length: 80, nullable: true })
   bairro: string | null;
@@ -28,6 +31,12 @@ export class CepGeo {
 
   @Column({ name: 'geocodificado_em', type: 'timestamp', nullable: true })
   geocodificadoEm: Date | null;
+
+  @Column({ name: 'origem_dados', type: 'varchar', length: 20, nullable: true })
+  origemDados: string | null;
+
+  @CreateDateColumn({ name: 'criado_em' })
+  criadoEm: Date;
 
   @UpdateDateColumn({ name: 'atualizado_em' })
   atualizadoEm: Date;

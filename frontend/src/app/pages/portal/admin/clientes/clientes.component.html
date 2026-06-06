@@ -49,51 +49,71 @@
 </po-page-list>
 
 <!-- ── Modal Incluir ── -->
-<po-modal #modalIncluir p-title="Incluir Cliente" p-size="md"
+<po-modal #modalIncluir p-title="Incluir Cliente" p-size="lg"
   [p-primary-action]="acaoSalvarIncluir" [p-secondary-action]="acaoCancelarIncluir">
   <div class="po-row">
-    <po-input class="po-md-12" p-label="Nome" [(ngModel)]="incluindo.nome" p-required="true"></po-input>
-    <po-email class="po-md-12" p-label="E-mail" [(ngModel)]="incluindo.email" p-required="true"></po-email>
+    <po-input  class="po-md-12" p-label="Nome"    [(ngModel)]="incluindo.nome"  p-required="true"></po-input>
+    <po-email  class="po-md-12" p-label="E-mail"  [(ngModel)]="incluindo.email" p-required="true"></po-email>
     <po-password class="po-md-12" p-label="Senha provisória" [(ngModel)]="incluindo.senha" p-required="true"></po-password>
+    <po-input  class="po-md-6"  p-label="CNPJ"
+      [(ngModel)]="incluindo.cnpj"
+      (p-change)="buscarCnpj(incluindo)"
+      p-mask="99.999.999/9999-99"
+      p-help="Preencha para auto-completar razão social e endereço">
+    </po-input>
+    <po-input  class="po-md-6"  p-label="Razão Social" [(ngModel)]="incluindo.razaoSocial"></po-input>
+    <po-input  class="po-md-6"  p-label="Telefone"     [(ngModel)]="incluindo.telefone"></po-input>
     <po-divider class="po-md-12" p-label="Endereço"></po-divider>
-    <po-input class="po-md-4" p-label="CEP" [(ngModel)]="incluindo.cep" (p-change)="buscarCep(incluindo)" p-mask="99999-999"></po-input>
-    <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="incluindo.logradouro"></po-input>
-    <po-input class="po-md-2" p-label="Número" [(ngModel)]="incluindo.numero"></po-input>
-    <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="incluindo.complemento"></po-input>
-    <po-input class="po-md-3" p-label="Bairro" [(ngModel)]="incluindo.bairro"></po-input>
-    <po-input class="po-md-3" p-label="Município" [(ngModel)]="incluindo.municipio"></po-input>
-    <po-input class="po-md-2" p-label="UF" [(ngModel)]="incluindo.uf"></po-input>
+    <po-input class="po-md-3" p-label="CEP"
+      [(ngModel)]="incluindo.cep"
+      (p-change)="buscarCep(incluindo)"
+      p-mask="99999-999">
+    </po-input>
+    <po-input class="po-md-7" p-label="Logradouro"  [(ngModel)]="incluindo.logradouro"></po-input>
+    <po-input class="po-md-2" p-label="Número"       [(ngModel)]="incluindo.numero"></po-input>
+    <po-input class="po-md-4" p-label="Complemento"  [(ngModel)]="incluindo.complemento"></po-input>
+    <po-input class="po-md-3" p-label="Bairro"       [(ngModel)]="incluindo.bairro"></po-input>
+    <po-input class="po-md-3" p-label="Município"    [(ngModel)]="incluindo.municipio"></po-input>
+    <po-input class="po-md-2" p-label="UF"           [(ngModel)]="incluindo.uf"></po-input>
   </div>
 </po-modal>
 
 <!-- ── Modal Busca Avançada ── -->
-<po-modal #modalBuscaAvancada p-title="Busca Avançada" p-size="md"
+<po-modal #modalBuscaAvancada p-title="Busca Avançada" p-size="sm"
   [p-primary-action]="acaoAplicarBusca" [p-secondary-action]="acaoCancelarBusca">
   <div class="po-row">
-    <po-select class="po-md-12" p-label="Status" name="statusFiltroTemp" 
+    <po-select class="po-md-12" p-label="Status"
       [ngModel]="statusFiltroTemp" (ngModelChange)="statusFiltroTemp = $event"
-      [p-options]="[{label: 'Todos', value: ''}, {label: 'Ativos', value: 'ativo'}, {label: 'Suspensos', value: 'suspenso'}]">
+      [p-options]="[{label:'Todos',value:''},{label:'Ativos',value:'ativo'},{label:'Suspensos',value:'suspenso'}]">
     </po-select>
   </div>
 </po-modal>
 
 <!-- ── Modal Editar ── -->
-<po-modal #modalEditar p-title="Editar Cliente" p-size="md"
+<po-modal #modalEditar p-title="Editar Cliente" p-size="lg"
   [p-primary-action]="acaoSalvar" [p-secondary-action]="acaoCancelarEdit">
   <div class="po-row">
     <po-input  class="po-md-12" p-label="Nome"        [(ngModel)]="editando.nome"></po-input>
     <po-email  class="po-md-12" p-label="E-mail"      [(ngModel)]="editando.email"></po-email>
     <po-input  class="po-md-6"  p-label="Telefone"    [(ngModel)]="editando.telefone"></po-input>
-    <po-input  class="po-md-6"  p-label="CNPJ"        [(ngModel)]="editando.cnpj" p-mask="99.999.999/9999-99"></po-input>
+    <po-input  class="po-md-6"  p-label="CNPJ"
+      [(ngModel)]="editando.cnpj"
+      (p-change)="buscarCnpj(editando)"
+      p-mask="99.999.999/9999-99">
+    </po-input>
     <po-input  class="po-md-12" p-label="Razão Social" [(ngModel)]="editando.razaoSocial"></po-input>
     <po-divider class="po-md-12" p-label="Endereço"></po-divider>
-    <po-input class="po-md-4" p-label="CEP" [(ngModel)]="editando.cep" (p-change)="buscarCep(editando)" p-mask="99999-999"></po-input>
-    <po-input class="po-md-6" p-label="Logradouro" [(ngModel)]="editando.logradouro"></po-input>
-    <po-input class="po-md-2" p-label="Número" [(ngModel)]="editando.numero"></po-input>
-    <po-input class="po-md-4" p-label="Complemento" [(ngModel)]="editando.complemento"></po-input>
-    <po-input class="po-md-3" p-label="Bairro" [(ngModel)]="editando.bairro"></po-input>
-    <po-input class="po-md-3" p-label="Município" [(ngModel)]="editando.municipio"></po-input>
-    <po-input class="po-md-2" p-label="UF" [(ngModel)]="editando.uf"></po-input>
+    <po-input class="po-md-3" p-label="CEP"
+      [(ngModel)]="editando.cep"
+      (p-change)="buscarCep(editando)"
+      p-mask="99999-999">
+    </po-input>
+    <po-input class="po-md-7" p-label="Logradouro"  [(ngModel)]="editando.logradouro"></po-input>
+    <po-input class="po-md-2" p-label="Número"       [(ngModel)]="editando.numero"></po-input>
+    <po-input class="po-md-4" p-label="Complemento"  [(ngModel)]="editando.complemento"></po-input>
+    <po-input class="po-md-3" p-label="Bairro"       [(ngModel)]="editando.bairro"></po-input>
+    <po-input class="po-md-3" p-label="Município"    [(ngModel)]="editando.municipio"></po-input>
+    <po-input class="po-md-2" p-label="UF"           [(ngModel)]="editando.uf"></po-input>
   </div>
 </po-modal>
 
@@ -101,13 +121,15 @@
 <po-modal #modalDetalhe p-title="Detalhe do cliente" p-size="lg" [p-primary-action]="acaoVoltarDetalhe">
   <ng-container *ngIf="clienteSelecionado">
     <div class="po-row">
-      <po-info class="po-md-6" p-label="Nome"   [p-value]="clienteSelecionado.nome"></po-info>
-      <po-info class="po-md-6" p-label="E-mail" [p-value]="clienteSelecionado.email"></po-info>
-    </div>
-    <div class="po-row">
-      <po-info class="po-md-4" p-label="CNPJ"    [p-value]="clienteSelecionado.cnpj ?? '—'"></po-info>
-      <po-info class="po-md-4" p-label="Telefone" [p-value]="clienteSelecionado.telefone ?? '—'"></po-info>
-      <po-info class="po-md-4" p-label="Status"   [p-value]="clienteSelecionado.ativo ? 'Ativo' : 'Suspenso'"></po-info>
+      <po-info class="po-md-6" p-label="Nome"        [p-value]="clienteSelecionado.nome"></po-info>
+      <po-info class="po-md-6" p-label="E-mail"      [p-value]="clienteSelecionado.email"></po-info>
+      <po-info class="po-md-4" p-label="CNPJ"        [p-value]="clienteSelecionado.cnpj ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Razão Social" [p-value]="clienteSelecionado.razaoSocial ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Telefone"    [p-value]="clienteSelecionado.telefone ?? '—'"></po-info>
+      <po-info class="po-md-4" p-label="Status"      [p-value]="clienteSelecionado.ativo ? 'Ativo' : 'Suspenso'"></po-info>
+      <po-info class="po-md-4" p-label="Município/UF"
+        [p-value]="(clienteSelecionado.municipio || '—') + (clienteSelecionado.uf ? '/' + clienteSelecionado.uf : '')">
+      </po-info>
     </div>
     <po-divider p-label="Assinaturas"></po-divider>
     <po-table
@@ -128,7 +150,6 @@
     </po-table>
     <po-divider p-label="Token de API"></po-divider>
     <div *ngIf="planoAtivo(clienteSelecionado)?.token as tk; else semToken">
-      <po-info p-label="Token"     [p-value]="tk.token"></po-info>
       <po-info p-label="Plano API" [p-value]="tk.plano"></po-info>
       <po-info p-label="Ativo"     [p-value]="tk.ativo ? 'Sim' : 'Não'"></po-info>
     </div>
@@ -139,22 +160,16 @@
 </po-modal>
 
 <!-- ── Modal Excluir ── -->
-<po-modal #modalExcluir p-title="Excluir conta do cliente" p-size="lg"
+<po-modal #modalExcluir p-title="Excluir conta do cliente" p-size="md"
   [p-primary-action]="acaoConfirmarExcluir" [p-secondary-action]="acaoCancelarExcluir">
-  <div style="background:#f8d7da; border:1px solid #f5c6cb; border-radius:8px; padding:14px 16px; font-size:0.875rem; color:#721c24; line-height:1.5; margin-bottom: 16px;">
-    🗑️ Você está prestes a excluir permanentemente a conta de <strong>{{ clienteParaExcluir?.nome }}</strong>.<br>
+  <div style="background:#f8d7da; border:1px solid #f5c6cb; border-radius:8px; padding:14px 16px; font-size:0.875rem; color:#721c24; line-height:1.5; margin-bottom:16px;">
+    Você está prestes a excluir permanentemente a conta de <strong>{{ clienteParaExcluir?.nome }}</strong>.<br>
     Os dados serão anonimizados e esta ação não pode ser desfeita.
   </div>
-  
   <ng-container *ngIf="clienteParaExcluir">
     <div class="po-row">
       <po-info class="po-md-6" p-label="Nome"   [p-value]="clienteParaExcluir.nome"></po-info>
       <po-info class="po-md-6" p-label="E-mail" [p-value]="clienteParaExcluir.email"></po-info>
-    </div>
-    <div class="po-row">
-      <po-info class="po-md-4" p-label="CNPJ"    [p-value]="clienteParaExcluir.cnpj ?? '—'"></po-info>
-      <po-info class="po-md-4" p-label="Telefone" [p-value]="clienteParaExcluir.telefone ?? '—'"></po-info>
-      <po-info class="po-md-4" p-label="Status"   [p-value]="clienteParaExcluir.ativo ? 'Ativo' : 'Suspenso'"></po-info>
     </div>
   </ng-container>
 </po-modal>

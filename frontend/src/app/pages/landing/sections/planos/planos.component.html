@@ -1,10 +1,10 @@
 <section class="rfb-planos" id="planos">
   <div class="rfb-planos__container">
     <div class="rfb-section-header">
-      <h2>Planos e preços</h2>
+      <h2>Planos e precos</h2>
     </div>
 
-    <div class="rfb-planos__cycles" role="tablist" aria-label="Ciclo de cobrança">
+    <div class="rfb-planos__cycles" role="tablist" aria-label="Ciclo de cobranca">
       <button
         *ngFor="let ciclo of ciclos"
         type="button"
@@ -16,11 +16,16 @@
       </button>
     </div>
 
-    <div class="rfb-planos__grid">
-      <!-- Wrapper com altura fixa no topo para o selo — mesmo nos sem selo -->
-      <div class="rfb-planos__wrapper" *ngFor="let p of planos">
+    <div *ngIf="carregando" class="rfb-planos__estado">
+      Carregando planos...
+    </div>
 
-        <!-- Selo "Mais popular" — acima do card, centralizado -->
+    <div *ngIf="!carregando && erroCarregamento" class="rfb-planos__estado">
+      Nao foi possivel carregar os planos agora.
+    </div>
+
+    <div class="rfb-planos__grid">
+      <div class="rfb-planos__wrapper" *ngFor="let p of planos">
         <div class="rfb-planos__selo" [class.rfb-planos__selo--visivel]="!!p.seloDestaque">
           <span *ngIf="p.seloDestaque" class="an an-crown"></span>
           {{ p.seloDestaque }}
@@ -53,7 +58,7 @@
             [p-icon]="p.destaque ? 'an an-rocket-launch' : 'an an-arrow-right'"
             p-size="large"
             class="rfb-planos__cta"
-            (p-click)="irParaCadastro()">
+            (p-click)="irParaCadastro(p)">
           </po-button>
         </div>
       </div>

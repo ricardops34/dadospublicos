@@ -1,14 +1,14 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, Not, IsNull, Repository, ILike } from 'typeorm';
+import { LessThanOrEqual, Repository, ILike } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import * as nodemailer from 'nodemailer';
 import { Cron } from '@nestjs/schedule';
 import { ClienteApi } from '../../entities/cliente.entity';
 import { Assinatura } from '../../entities/assinatura.entity';
 import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, UpdateClienteDto } from './dto/create-cliente.dto';
 import { ParametrosService } from '../parametros/parametros.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class ClientesService {
@@ -16,16 +16,16 @@ export class ClientesService {
     @InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>,
     @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
     private params: ParametrosService,
+    private emailSvc: EmailService,
   ) {}
-
-  // --- Público ---
 
   async signup(dto: CreateClienteDto) {
     const existe = await this.clientes.findOne({ where: { email: dto.email } });
     if (existe) throw new ConflictException('E-mail já cadastrado.');
 
     const senhaHash = await bcrypt.hash(dto.senha, 10);
-    const tokenVerificacao = randomBytes(32).toString('hex');
+    const codigoVerificacao = Math.floor(100000 + Math.random() * 900000).toString();
+    const codigoVerificacaoExpira = new Date(Date.now() + 15 * 60 * 1000);
 
     const cliente = this.clientes.create({
       nome: dto.nome,
@@ -46,58 +46,23 @@ export class ClientesService {
       uf: dto.uf ?? null,
       inscricaoEstadual: dto.inscricaoEstadual ?? null,
       inscricaoMunicipal: dto.inscricaoMunicipal ?? null,
-      tokenVerificacao,
+      codigoVerificacao,
+      codigoVerificacaoExpira,
+      onboardingPendente: true,
     });
     await this.clientes.save(cliente);
 
-    // Enviar e-mail de verificação em background
-    this.enviarEmailVerificacao(cliente.email, cliente.nome, tokenVerificacao).catch((err) => {
-      console.error('Erro ao enviar email de verificação:', err);
+    this.emailSvc.enviarCodigoVerificacao(cliente.email, cliente.nome, codigoVerificacao).catch((err) => {
+      console.error('[Email] Erro ao enviar código de verificação:', err);
     });
 
-    return { mensagem: 'Cadastro realizado. Verifique seu e-mail para ativar a conta.', id: cliente.id };
+    return {
+      mensagem: 'Cadastro realizado. Digite o código enviado para seu e-mail.',
+      id: cliente.id,
+      email: cliente.email,
+    };
   }
 
-  private async enviarEmailVerificacao(email: string, nome: string, token: string) {
-    const host = await this.params.getValor('SMTP_HOST', '');
-    const port = parseInt(await this.params.getValor('SMTP_PORT', '587'), 10);
-    const user = await this.params.getValor('SMTP_USER', '');
-    const pass = await this.params.getValor('SMTP_PASS', '');
-    const secure = (await this.params.getValor('SMTP_SECURE', 'false')) === 'true';
-
-    if (!host || !user || !pass) {
-      console.warn('SMTP não configurado. Email de verificação ignorado.');
-      return;
-    }
-
-    const transporter = nodemailer.createTransport({
-      host, port, secure, auth: { user, pass }
-    });
-
-    const baseUrl = await this.params.getValor('APP_URL', 'http://localhost:4200');
-    const link = `${baseUrl}/verificar-email/${token}`;
-    
-    await transporter.sendMail({
-      from: `"BuscaDados" <${user}>`,
-      to: email,
-      subject: 'Ative sua conta no BuscaDados',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-          <h2 style="color: #0b2d66;">Olá, ${nome}!</h2>
-          <p>Obrigado por se cadastrar no <b>BuscaDados</b>.</p>
-          <p>Para ativar sua conta e liberar seu acesso ao painel, por favor confirme seu e-mail clicando no botão abaixo:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${link}" style="background-color: #0044ff; color: #ffffff; padding: 14px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
-              Verificar meu E-mail
-            </a>
-          </div>
-          <p style="color: #666; font-size: 14px;">Ou cole este link no seu navegador:<br> <a href="${link}">${link}</a></p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-          <p style="color: #999; font-size: 12px; text-align: center;">BuscaDados — CNPJ: 19.654.062/0001-45</p>
-        </div>
-      `
-    });
-  }
 
   async login(dto: LoginClienteDto) {
     const cliente = await this.clientes.findOne({ where: { email: dto.email, ativo: true } });
@@ -114,59 +79,36 @@ export class ClientesService {
 
   async solicitarResetSenha(email: string) {
     const cliente = await this.clientes.findOne({ where: { email, ativo: true } });
-    // Não revela se o e-mail existe ou não
-    if (!cliente) return { mensagem: 'Se esse e-mail estiver cadastrado, você receberá as instruções em breve.' };
-
-    const token = randomBytes(32).toString('hex');
-    const expira = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
-    cliente.resetToken = token;
-    cliente.resetTokenExpira = expira;
-    await this.clientes.save(cliente);
-
-    this.enviarEmailReset(cliente.email, cliente.nome, token).catch((err) => {
-      console.error('Erro ao enviar e-mail de reset:', err);
-    });
-
-    return { mensagem: 'Se esse e-mail estiver cadastrado, você receberá as instruções em breve.' };
-  }
-
-  private async enviarEmailReset(email: string, nome: string, token: string) {
-    const host = await this.params.getValor('SMTP_HOST', '');
-    const port = parseInt(await this.params.getValor('SMTP_PORT', '587'), 10);
-    const user = await this.params.getValor('SMTP_USER', '');
-    const pass = await this.params.getValor('SMTP_PASS', '');
-    const secure = (await this.params.getValor('SMTP_SECURE', 'false')) === 'true';
-    const baseUrl = await this.params.getValor('APP_URL', 'http://localhost:4200');
-
-    if (!host || !user || !pass) {
-      console.warn('SMTP não configurado. E-mail de reset ignorado.');
-      return;
+    if (!cliente) {
+      return { mensagem: 'Se esse e-mail estiver cadastrado, você receberá as instruções em breve.' };
     }
 
-    const transporter = nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
+    const token = randomBytes(32).toString('hex');
+    cliente.resetToken = token;
+    cliente.resetTokenExpira = new Date(Date.now() + 60 * 60 * 1000);
+    await this.clientes.save(cliente);
+
+    const baseUrl = await this.params.getValor('APP_URL', 'http://localhost:4200');
     const link = `${baseUrl}/redefinir-senha/${token}`;
 
-    await transporter.sendMail({
-      from: `"BuscaDados" <${user}>`,
-      to: email,
-      subject: 'Redefinição de senha — BuscaDados',
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:8px;">
-          <h2 style="color:#0f172a;">Olá, ${nome}!</h2>
-          <p>Recebemos uma solicitação para redefinir a senha da sua conta no <b>BuscaDados</b>.</p>
-          <p>Clique no botão abaixo para criar uma nova senha. O link é válido por <b>1 hora</b>.</p>
-          <div style="text-align:center;margin:32px 0;">
-            <a href="${link}" style="background:#7c3aed;color:#fff;padding:14px 28px;text-decoration:none;border-radius:8px;font-weight:700;display:inline-block;">
-              Redefinir minha senha
-            </a>
-          </div>
-          <p style="color:#6b7280;font-size:13px;">Se você não solicitou a redefinição, ignore este e-mail — sua senha permanece a mesma.</p>
-          <p style="color:#6b7280;font-size:13px;">Ou cole este link no navegador:<br><a href="${link}">${link}</a></p>
-          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
-          <p style="color:#9ca3af;font-size:11px;text-align:center;">BuscaDados · CNPJ 19.654.062/0001-45</p>
+    this.emailSvc.enviar(
+      email,
+      'Redefinição de senha - BuscaDados',
+      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px;border:1px solid #e5e7eb;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <span style="font-size:1.4rem;font-weight:800;color:#111827;">Busca<span style="color:#7c3aed;">Dados</span></span>
         </div>
-      `,
-    });
+        <h2 style="color:#111827;">Olá, ${cliente.nome}!</h2>
+        <p style="color:#6b7280;">Recebemos uma solicitação para redefinir sua senha.</p>
+        <div style="text-align:center;margin:32px 0;">
+          <a href="${link}" style="background:#7c3aed;color:#fff;padding:14px 28px;text-decoration:none;border-radius:8px;font-weight:700;display:inline-block;">Redefinir minha senha</a>
+        </div>
+        <p style="color:#9ca3af;font-size:0.8rem;">Este link expira em 1 hora. Se não solicitou, ignore.</p>
+        <p style="color:#d1d5db;font-size:0.75rem;text-align:center;">BuscaDados · CNPJ 19.654.062/0001-45</p>
+      </div>`,
+    ).catch((err) => console.error('[Email] Erro ao enviar reset:', err));
+
+    return { mensagem: 'Se esse e-mail estiver cadastrado, você receberá as instruções em breve.' };
   }
 
   async verificarEmail(token: string) {
@@ -178,38 +120,289 @@ export class ClientesService {
     return { mensagem: 'E-mail verificado com sucesso.' };
   }
 
+  async verificarEmailCodigo(email: string, codigo: string) {
+    const cliente = await this.clientes.findOne({ where: { email } });
+    if (!cliente) throw new NotFoundException('Conta não encontrada.');
+    if (cliente.emailVerificado) return { mensagem: 'E-mail já verificado.' };
+
+    if (!cliente.codigoVerificacao || !cliente.codigoVerificacaoExpira) {
+      throw new BadRequestException('CODIGO_NAO_ENCONTRADO');
+    }
+
+    if (new Date() > cliente.codigoVerificacaoExpira) {
+      throw new BadRequestException('CODIGO_EXPIRADO');
+    }
+
+    if (cliente.codigoVerificacao !== codigo) {
+      throw new BadRequestException('CODIGO_INVALIDO');
+    }
+
+    cliente.emailVerificado = true;
+    cliente.codigoVerificacao = null;
+    cliente.codigoVerificacaoExpira = null;
+    await this.clientes.save(cliente);
+    return { mensagem: 'E-mail verificado com sucesso. Faça login para continuar.' };
+  }
+
+  async reenviarCodigoVerificacao(email: string) {
+    const cliente = await this.clientes.findOne({ where: { email, ativo: true } });
+    if (!cliente || cliente.emailVerificado) {
+      return { mensagem: 'Se o e-mail estiver pendente de verificação, o código foi reenviado.' };
+    }
+
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+    cliente.codigoVerificacao = codigo;
+    cliente.codigoVerificacaoExpira = new Date(Date.now() + 15 * 60 * 1000);
+    await this.clientes.save(cliente);
+    this.emailSvc.enviarCodigoVerificacao(cliente.email, cliente.nome, codigo).catch((err) =>
+      console.error('[Email] Erro ao reenviar código:', err),
+    );
+    return { mensagem: 'Se o e-mail estiver pendente de verificação, o código foi reenviado.' };
+  }
+
+  async verificarCodigoReset(email: string, codigo: string) {
+    const cliente = await this.clientes.findOne({ where: { email, ativo: true } });
+    if (!cliente || !cliente.resetToken || !cliente.resetTokenExpira) {
+      throw new BadRequestException('CODIGO_INVALIDO');
+    }
+
+    if (new Date() > cliente.resetTokenExpira) {
+      throw new BadRequestException('CODIGO_EXPIRADO');
+    }
+
+    if (cliente.resetToken.slice(0, 6) !== codigo) {
+      throw new BadRequestException('CODIGO_INVALIDO');
+    }
+
+    return { mensagem: 'Código válido.' };
+  }
+
+  async redefinirSenhaComCodigo(email: string, codigo: string, novaSenha: string) {
+    await this.verificarCodigoReset(email, codigo);
+    const cliente = await this.clientes.findOne({ where: { email, ativo: true } });
+    if (!cliente) throw new NotFoundException('Conta não encontrada.');
+
+    cliente.senhaHash = await bcrypt.hash(novaSenha, 10);
+    cliente.resetToken = null;
+    cliente.resetTokenExpira = null;
+    await this.clientes.save(cliente);
+
+    return { mensagem: 'Senha redefinida com sucesso.' };
+  }
+
   async meuPerfil(clienteId: string) {
     const cliente = await this.clientes.findOne({
       where: { id: clienteId },
       relations: ['assinaturas', 'assinaturas.plano', 'assinaturas.token'],
     });
     if (!cliente) throw new NotFoundException('Cliente não encontrado.');
-    const { senhaHash, tokenVerificacao, resetToken, ...safe } = cliente;
-    return safe;
+
+    const onboardingPendente = this.isOnboardingPendente(cliente);
+    if (cliente.onboardingPendente !== onboardingPendente) {
+      cliente.onboardingPendente = onboardingPendente;
+      await this.clientes.save(cliente);
+    }
+
+    return { ...this.sanitizeAdminResponse(cliente), onboardingPendente };
+  }
+
+  isOnboardingPendente(cliente: Partial<ClienteApi> & { assinaturas?: Array<{ status?: string | null }> }) {
+    const tipoPessoa = cliente.tipoPessoa;
+    const temDadosBasicos = !!cliente.nome && !!cliente.email && !!cliente.telefone;
+    const temDocumento =
+      tipoPessoa === 'F'
+        ? !!cliente.cpf && !!cliente.dataNascimento
+        : !!cliente.cnpj && !!cliente.razaoSocial;
+    const temEndereco =
+      !!cliente.cep &&
+      !!cliente.logradouro &&
+      !!cliente.numero &&
+      !!cliente.bairro &&
+      !!cliente.municipio &&
+      !!cliente.uf;
+    const temPlanoAtivo = !!cliente.assinaturas?.some((assinatura) => ['ativa', 'trial'].includes(assinatura.status ?? ''));
+
+    return !(temDadosBasicos && temDocumento && temEndereco && temPlanoAtivo);
   }
 
   async atualizar(clienteId: string, dto: UpdateClienteDto) {
-    const cliente = await this.clientes.findOne({ where: { id: clienteId } });
+    const cliente = await this.clientes.findOne({
+      where: { id: clienteId },
+      relations: ['assinaturas', 'assinaturas.plano'],
+    });
     if (!cliente) throw new NotFoundException('Cliente não encontrado.');
-    Object.assign(cliente, dto);
-    return this.clientes.save(cliente);
+
+    if (dto.email && dto.email !== cliente.email) {
+      const existe = await this.clientes.findOne({ where: { email: dto.email } });
+      if (existe && existe.id !== clienteId) {
+        throw new ConflictException('E-mail já em uso.');
+      }
+      cliente.email = dto.email;
+    }
+
+    if (dto.senha) {
+      cliente.senhaHash = await bcrypt.hash(dto.senha, 10);
+    }
+
+    const { email, senha, dataNascimento, ...rest } = dto;
+    Object.assign(cliente, rest);
+
+    if (dataNascimento !== undefined) {
+      cliente.dataNascimento = dataNascimento ? new Date(dataNascimento) : null;
+    }
+
+    cliente.onboardingPendente = this.isOnboardingPendente(cliente);
+
+    await this.clientes.save(cliente);
+    return this.sanitizeAdminResponse(cliente);
   }
 
-  // --- Admin ---
+  async agendarExclusao(clienteId: string, dto: AgendarExclusaoDto) {
+    return this.solicitarExclusao(clienteId, dto);
+  }
 
-  findAll(pagina = 1, limite = 50, busca?: string, filtros?: any) {
+  async agendarExclusaoAdmin(clienteId: string, dto: AgendarExclusaoDto) {
+    return this.solicitarExclusao(clienteId, dto);
+  }
+
+  async cancelarExclusao(clienteId: string) {
+    return this.cancelarExclusaoInterna(clienteId);
+  }
+
+  async cancelarExclusaoAdmin(clienteId: string) {
+    return this.cancelarExclusaoInterna(clienteId);
+  }
+
+  private async solicitarExclusao(clienteId: string, dto: AgendarExclusaoDto) {
+    const cliente = await this.carregarClienteParaExclusao(clienteId);
+    if (!this.temPlanoPagoAtivo(cliente)) {
+      await this.excluirConta(clienteId);
+      return {
+        mensagem: 'Conta excluída e dados anonimizados.',
+        tipoFluxo: 'exclusao-imediata' as const,
+        agendarExclusaoEm: null,
+      };
+    }
+
+    const agendarExclusaoEm = await this.definirDataExclusaoAgendada(cliente, dto);
+    cliente.agendarExclusaoEm = agendarExclusaoEm;
+    await this.clientes.save(cliente);
+
+    return {
+      mensagem: `Anonimização agendada para ${agendarExclusaoEm.toLocaleDateString('pt-BR')}.`,
+      tipoFluxo: 'anonimizacao-agendada' as const,
+      agendarExclusaoEm,
+    };
+  }
+
+  private async cancelarExclusaoInterna(clienteId: string) {
+    const cliente = await this.clientes.findOne({ where: { id: clienteId } });
+    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
+    if (!cliente.agendarExclusaoEm) {
+      throw new BadRequestException('Nenhuma exclusão agendada para esta conta.');
+    }
+
+    cliente.agendarExclusaoEm = null;
+    await this.clientes.save(cliente);
+
+    return {
+      mensagem: 'Solicitação de exclusão cancelada com sucesso.',
+      agendarExclusaoEm: null,
+    };
+  }
+
+  private async carregarClienteParaExclusao(clienteId: string) {
+    const cliente = await this.clientes.findOne({
+      where: { id: clienteId },
+      relations: ['assinaturas', 'assinaturas.plano'],
+    });
+    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
+    return cliente;
+  }
+
+  private temPlanoPagoAtivo(cliente: Partial<ClienteApi> & { assinaturas?: Array<{ status?: string | null; plano?: { precoMensal?: number | string | null } | null }> }) {
+    return !!cliente.assinaturas?.some((assinatura) => {
+      const precoMensal = Number(assinatura.plano?.precoMensal ?? 0);
+      return assinatura.status === 'ativa' && precoMensal > 0;
+    });
+  }
+
+  private async definirDataExclusaoAgendada(cliente: ClienteApi & { assinaturas?: Array<{ status?: string | null; proximoVencimento?: string | null; plano?: { precoMensal?: number | string | null } | null }> }, dto: AgendarExclusaoDto) {
+    const diasRetencao = parseInt(await this.params.getValor('DIAS_RETENCAO_CONTA', '30'), 10);
+    const assinaturaPagaAtiva = cliente.assinaturas?.find((assinatura) => assinatura.status === 'ativa' && Number(assinatura.plano?.precoMensal ?? 0) > 0);
+
+    if (dto.agendarPara === 'fim-plano' && assinaturaPagaAtiva?.proximoVencimento) {
+      return new Date(`${assinaturaPagaAtiva.proximoVencimento}T00:00:00`);
+    }
+
+    return new Date(Date.now() + diasRetencao * 24 * 60 * 60 * 1000);
+  }
+
+  async excluirConta(clienteId: string) {
+    const cliente = await this.clientes.findOne({ where: { id: clienteId } });
+    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
+
+    const ts = Date.now();
+    Object.assign(cliente, {
+      nome: `Excluido ${ts}`,
+      email: `excluido_${ts}@anonimizado.invalid`,
+      senhaHash: '',
+      tipoPessoa: 'J',
+      cpf: null,
+      dataNascimento: null,
+      cnpj: null,
+      razaoSocial: null,
+      telefone: null,
+      cep: null,
+      logradouro: null,
+      numero: null,
+      complemento: null,
+      bairro: null,
+      municipio: null,
+      uf: null,
+      inscricaoEstadual: null,
+      inscricaoMunicipal: null,
+      tokenVerificacao: null,
+      codigoVerificacao: null,
+      codigoVerificacaoExpira: null,
+      resetToken: null,
+      resetTokenExpira: null,
+      agendarExclusaoEm: null,
+      ativo: false,
+      onboardingPendente: false,
+    });
+
+    const assinaturasAtivas = await this.assinaturas.find({ where: [{ clienteId, status: 'ativa' }, { clienteId, status: 'trial' }] });
+    for (const assinatura of assinaturasAtivas) {
+      assinatura.status = 'cancelada';
+      assinatura.canceladoEm = new Date();
+      assinatura.motivoCancelamento = 'Conta excluida';
+      await this.assinaturas.save(assinatura);
+    }
+
+    await this.clientes.save(cliente);
+    return { mensagem: 'Conta excluída e dados anonimizados.' };
+  }
+
+  async findAll(pagina = 1, limite = 20, busca?: string, filtros?: any) {
     const baseWhere: any = {};
-    
-    // Filtros de status (PO-UI pode mandar como array ou string)
+
     if (filtros?.ativoStatus) {
       const status = Array.isArray(filtros.ativoStatus) ? filtros.ativoStatus[0] : filtros.ativoStatus;
-      if (status === 'ativo') baseWhere.ativo = true;
-      else if (status === 'suspenso') baseWhere.ativo = false;
+      if (status === 'ativo' || status === 1 || status === '1') baseWhere.ativo = true;
+      else if (status === 'suspenso' || status === 0 || status === '0') baseWhere.ativo = false;
+    } else if (typeof filtros === 'string') {
+      baseWhere.ativo = filtros === 'ativo';
     }
 
     if (filtros?.nome) baseWhere.nome = ILike(`%${filtros.nome}%`);
     if (filtros?.email) baseWhere.email = ILike(`%${filtros.email}%`);
     if (filtros?.cnpj) baseWhere.cnpj = ILike(`%${filtros.cnpj}%`);
+    if (filtros?.cpf) baseWhere.cpf = ILike(`%${filtros.cpf}%`);
+    if (filtros?.tipoPessoa) baseWhere.tipoPessoa = filtros.tipoPessoa;
+    if (filtros?.emailVerificado !== undefined && filtros.emailVerificado !== '') {
+      baseWhere.emailVerificado = Number(filtros.emailVerificado) === 1;
+    }
 
     let where: any = baseWhere;
     if (busca) {
@@ -239,99 +432,11 @@ export class ClientesService {
   }
 
   async ativar(id: string, ativo: boolean) {
-    const cliente = await this.findOne(id);
+    const cliente = await this.clientes.findOne({ where: { id } });
+    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
     cliente.ativo = ativo;
-    return this.clientes.save(cliente);
-  }
-
-  // Anonimiza imediatamente (chamado pelo admin ou pelo cron)
-  async excluirConta(clienteId: string) {
-    const cliente = await this.clientes.findOne({ where: { id: clienteId } });
-    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
-    await this.anonimizarCliente(cliente);
-    return { mensagem: 'Conta excluída com sucesso.' };
-  }
-
-  // Solicita exclusão imediata ou agendada para o fim do plano
-  async agendarExclusao(clienteId: string, dto: AgendarExclusaoDto) {
-    const cliente = await this.clientes.findOne({
-      where: { id: clienteId },
-      relations: ['assinaturas'],
-    });
-    if (!cliente) throw new NotFoundException('Cliente não encontrado.');
-    if (cliente.agendarExclusaoEm) {
-      return { mensagem: 'Exclusão já agendada.', agendarExclusaoEm: cliente.agendarExclusaoEm };
-    }
-
-    const diasRetencao = parseInt(await this.params.getValor('DIAS_RETENCAO_CONTA', '30'), 10);
-
-    let dataExclusao: Date;
-
-    if (dto.agendarPara === 'fim-plano') {
-      const assinaturaAtiva = cliente.assinaturas?.find(
-        (a) => a.status === 'ativa' && a.proximoVencimento,
-      );
-      if (!assinaturaAtiva?.proximoVencimento) {
-        throw new BadRequestException('Nenhum plano ativo com data de vencimento encontrado.');
-      }
-      const fimPlano = new Date(assinaturaAtiva.proximoVencimento);
-      dataExclusao = new Date(fimPlano.getTime() + diasRetencao * 86_400_000);
-    } else {
-      dataExclusao = new Date(Date.now() + diasRetencao * 86_400_000);
-      cliente.ativo = false; // inativa imediatamente no caso "agora"
-    }
-
-    cliente.agendarExclusaoEm = dataExclusao;
     await this.clientes.save(cliente);
-
-    return {
-      mensagem: dto.agendarPara === 'agora'
-        ? `Conta desativada. Dados serão removidos em ${diasRetencao} dias.`
-        : `Exclusão agendada. Seus dados serão removidos após o fim do plano.`,
-      agendarExclusaoEm: dataExclusao,
-    };
-  }
-
-  // Roda todo dia às 03:00 — anonimiza contas com prazo vencido
-  @Cron('0 3 * * *')
-  async processarExclusoesAgendadas() {
-    const contas = await this.clientes.find({
-      where: {
-        ativo: false,
-        agendarExclusaoEm: LessThanOrEqual(new Date()),
-      },
-    });
-    if (!contas.length) return;
-
-    for (const c of contas) {
-      await this.anonimizarCliente(c);
-    }
-    console.log(`[Cron] ${contas.length} conta(s) anonimizada(s).`);
-  }
-
-  private async anonimizarCliente(cliente: ClienteApi) {
-    const ts = Date.now();
-    cliente.ativo = false;
-    cliente.nome = `Excluído-${ts}`;
-    cliente.email = `excluido-${ts}@removido.invalid`;
-    cliente.senhaHash = '';
-    cliente.tipoPessoa = 'J';
-    cliente.cpf = null;
-    cliente.dataNascimento = null;
-    cliente.cnpj = null;
-    cliente.razaoSocial = null;
-    cliente.telefone = null;
-    cliente.cep = null;
-    cliente.logradouro = null;
-    cliente.numero = null;
-    cliente.complemento = null;
-    cliente.bairro = null;
-    cliente.municipio = null;
-    cliente.uf = null;
-    cliente.tokenVerificacao = null;
-    cliente.resetToken = null;
-    cliente.agendarExclusaoEm = null;
-    await this.clientes.save(cliente);
+    return { mensagem: ativo ? 'Cliente reativado.' : 'Cliente suspenso.' };
   }
 
   async confirmarEmail(id: string) {
@@ -339,13 +444,38 @@ export class ClientesService {
     if (!cliente) throw new NotFoundException('Cliente não encontrado.');
     cliente.emailVerificado = true;
     cliente.tokenVerificacao = null;
+    cliente.codigoVerificacao = null;
+    cliente.codigoVerificacaoExpira = null;
     await this.clientes.save(cliente);
-    return { mensagem: 'E-mail confirmado com sucesso.' };
+    return { mensagem: 'E-mail confirmado pelo admin.' };
+  }
+
+  sanitizeAdminResponse<T extends Record<string, any>>(cliente: T) {
+    const { senhaHash, tokenVerificacao, codigoVerificacao, codigoVerificacaoExpira, resetToken, resetTokenExpira, ...safe } = cliente as any;
+    return safe;
   }
 
   async enviarResetPorAdmin(id: string) {
     const cliente = await this.clientes.findOne({ where: { id } });
     if (!cliente) throw new NotFoundException('Cliente não encontrado.');
     return this.solicitarResetSenha(cliente.email);
+  }
+
+  @Cron('0 3 * * *')
+  async processarExclusoesAgendadas() {
+    const agora = new Date();
+    const pendentes = await this.clientes.find({
+      where: {
+        agendarExclusaoEm: LessThanOrEqual(agora),
+      },
+    });
+
+    for (const cliente of pendentes) {
+      await this.excluirConta(cliente.id);
+    }
+
+    if (pendentes.length) {
+      console.log(`[Cron] ${pendentes.length} conta(s) anonimizadas por agendamento.`);
+    }
   }
 }

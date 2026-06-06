@@ -1,5 +1,5 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { PlanoMinimo } from '../auth/plano.decorator';
 import { GeocodeService } from './geocode.service';
@@ -14,12 +14,31 @@ export class GeocodeController {
   constructor(private readonly service: GeocodeService) {}
 
   @Get('cep/:cep')
-  @PlanoMinimo('gratuito')
+  @PlanoMinimo('free')
   @ApiSecurity('token')
-  @ApiOperation({ summary: 'Converte CEP em lat/lng (cache permanente)' })
-  @ApiParam({ name: 'cep', example: '01310100' })
+  @ApiOperation({ summary: 'Retorna dados de endereço e coordenadas de um CEP (cache permanente)' })
+  @ApiParam({ name: 'cep', description: 'CEP sem formatação', example: '01310100' })
   buscarCep(@Param('cep') cep: string) {
     return this.service.buscarCep(cep);
+  }
+
+  @Get('ufs')
+  @PlanoMinimo('free')
+  @ApiSecurity('token')
+  @ApiOperation({ summary: 'Lista todas as Unidades Federativas (UFs) do Brasil' })
+  @ApiQuery({ name: 'filter', required: false, description: 'Filtro por nome ou sigla da UF', example: 'São Paulo' })
+  getUfs(@Query('filter') filter?: string) {
+    return this.service.getUfs(filter);
+  }
+
+  @Get('municipios/:uf')
+  @PlanoMinimo('free')
+  @ApiSecurity('token')
+  @ApiOperation({ summary: 'Lista municípios de uma UF' })
+  @ApiParam({ name: 'uf', description: 'Sigla da UF', example: 'SP' })
+  @ApiQuery({ name: 'filter', required: false, description: 'Filtro por nome do município', example: 'Campinas' })
+  getMunicipios(@Param('uf') uf: string, @Query('filter') filter?: string) {
+    return this.service.getMunicipios(uf, filter);
   }
 
   @Post('admin/ibge/sync')

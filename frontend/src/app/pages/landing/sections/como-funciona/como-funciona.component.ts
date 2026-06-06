@@ -8,15 +8,15 @@ import { Component } from '@angular/core';
 })
 export class ComoFuncionaComponent {
   passos = [
-    { icone: 'an an-user-plus', titulo: 'Crie sua conta', descricao: 'Cadastro gratuito em menos de 1 minuto. Sem cartão de crédito.' },
-    { icone: 'an an-key', titulo: 'Receba seu token', descricao: 'Após assinar um plano, seu token de API é gerado automaticamente.' },
-    { icone: 'an an-code', titulo: 'Integre à sua aplicação', descricao: 'Faça requisições REST em qualquer linguagem. Resposta em JSON.' },
-    { icone: 'an an-chart-line', titulo: 'Monitore o consumo', descricao: 'Acompanhe suas requisições mensais no painel do cliente.' },
+    { icone: 'an an-user-plus', titulo: 'Crie sua conta', descricao: 'Cadastro gratuito em menos de 1 minuto. Sem cartao de credito.' },
+    { icone: 'an an-key', titulo: 'Ative seu token', descricao: 'Conclua o primeiro acesso e gere o token no plano Free ou em um plano pago.' },
+    { icone: 'an an-code', titulo: 'Integre a sua aplicacao', descricao: 'Faca requisicoes REST em qualquer linguagem. Resposta em JSON.' },
+    { icone: 'an an-chart-line', titulo: 'Acompanhe a evolucao', descricao: 'Comece com CEP e CNPJ no plano Free e avance conforme o seu volume.' },
   ];
 
   fontes = [
-    { icone: 'an an-buildings', nome: 'Receita Federal', descricao: 'Dados cadastrais, sócios, CNAE e situação cadastral' },
-    { icone: 'an an-receipt', nome: 'Simples Nacional', descricao: 'Opção pelo Simples Nacional e MEI' },
-    { icone: 'an an-map-pin', nome: 'ViaCEP + OSM', descricao: 'Geocodificação de endereços' },
+    { icone: 'an an-buildings', nome: 'Receita Federal', descricao: 'Dados cadastrais, socios, CNAE e situacao cadastral' },
+    { icone: 'an an-receipt', nome: 'Simples Nacional', descricao: 'Opcao pelo Simples Nacional e MEI' },
+    { icone: 'an an-map-pin', nome: 'ViaCEP + OSM', descricao: 'Geocodificacao de enderecos' },
   ];
 }

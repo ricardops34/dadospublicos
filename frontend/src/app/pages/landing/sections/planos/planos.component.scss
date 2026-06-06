@@ -55,6 +55,12 @@
     @media (max-width: 600px)  { grid-template-columns: 1fr; }
   }
 
+  &__estado {
+    margin: 24px 0 8px;
+    color: var(--rfb-gray);
+    font-size: 0.95rem;
+  }
+
   // Wrapper reserva espaço fixo no topo (32px) para o selo em TODOS os cards
   &__wrapper {
     display: flex;

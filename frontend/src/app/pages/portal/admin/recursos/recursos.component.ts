@@ -1,5 +1,5 @@
 import { NotifService } from '../../../../services/notif.service';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { PoModalComponent, PoModalAction, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
 import { AdminService } from '../admin.service';
 
@@ -40,7 +40,7 @@ export class PortalRecursosComponent implements OnInit {
   };
   acaoCancelar: PoModalAction = { label: 'Cancelar', action: () => this.modal.close() };
 
-  constructor(private svc: AdminService, private notif: NotifService) {}
+  constructor(private svc: AdminService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.carregar(); }
 
@@ -50,8 +50,9 @@ export class PortalRecursosComponent implements OnInit {
       next: (r) => {
         this.recursos = r.map((rc: any) => ({ ...rc, ativo: rc.ativo ? 1 : 0 }));
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
   }
 

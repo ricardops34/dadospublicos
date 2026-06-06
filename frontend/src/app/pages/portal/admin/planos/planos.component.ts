@@ -1,5 +1,5 @@
 import { NotifService } from '../../../../services/notif.service';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import {
   PoModalComponent, PoModalAction,
   PoTableAction, PoTableColumn,
@@ -22,6 +22,7 @@ interface PlanoForm {
   acessoGeocode: boolean;
   acessoSuframa: boolean;
   acessoMapa: boolean;
+  exibirNaLp: boolean;
   maisPopular: boolean;
   seloDestaque: string;
   ordem: number;
@@ -33,6 +34,7 @@ const FORM_VAZIO: PlanoForm = {
   limiteMensal: null, rateLimitPorMinuto: 60,
   acessoCnpj: true, acessoCnpjRaiz: false, acessoPesquisa: false,
   acessoGeocode: false, acessoSuframa: false, acessoMapa: false,
+  exibirNaLp: true,
   maisPopular: false, seloDestaque: '', ordem: 0,
 };
 
@@ -58,6 +60,7 @@ export class PortalPlanosComponent implements OnInit {
     { property: 'precoAnual',     label: 'Anual (R$)',     type: 'currency', format: 'BRL', width: '10%' },
     { property: 'limiteMensal',   label: 'Limite/mês',     type: 'number',   width: '10%' },
     { property: 'rateLimitPorMinuto', label: 'Rate/min',   type: 'number',   width: '8%' },
+    { property: 'exibirNaLp', label: 'LP', type: 'boolean', width: '6%' },
     { property: 'maisPopular', label: 'Destaque', type: 'boolean', width: '9%' },
     {
       property: 'ativoStatus', label: 'Status', type: 'label', width: '9%',
@@ -85,7 +88,7 @@ export class PortalPlanosComponent implements OnInit {
     action: () => this.modalPlano.close(),
   };
 
-  constructor(private svc: AdminService, private notif: NotifService) {}
+  constructor(private svc: AdminService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.carregar(); }
 
@@ -98,8 +101,9 @@ export class PortalPlanosComponent implements OnInit {
           ativoStatus: plano.ativo ? 1 : 0,
         }));
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
   }
 
@@ -118,6 +122,7 @@ export class PortalPlanosComponent implements OnInit {
       limiteMensal: row.limiteMensal, rateLimitPorMinuto: row.rateLimitPorMinuto,
       acessoCnpj: row.acessoCnpj, acessoCnpjRaiz: row.acessoCnpjRaiz, acessoPesquisa: row.acessoPesquisa,
       acessoGeocode: row.acessoGeocode, acessoSuframa: row.acessoSuframa, acessoMapa: row.acessoMapa,
+      exibirNaLp: row.exibirNaLp ?? true,
       maisPopular: row.maisPopular, seloDestaque: row.seloDestaque ?? '', ordem: row.ordem,
     };
     this.modalPlano.open();
@@ -165,4 +170,5 @@ export class PortalPlanosComponent implements OnInit {
       error: (err: any) => this.notif.error(err.error?.message ?? 'Erro ao criar planos.'),
     });
   }
+
 }

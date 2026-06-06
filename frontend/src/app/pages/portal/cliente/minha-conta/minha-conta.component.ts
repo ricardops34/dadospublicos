@@ -1,9 +1,11 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { PoModalAction, PoModalComponent } from '@po-ui/ng-components';
+import { PoComboFilterMode, PoModalAction, PoModalComponent } from '@po-ui/ng-components';
 import { NotifService } from '../../../../services/notif.service';
 import { AuthService } from '../../../../services/auth.service';
-import { ClientePortalService } from '../cliente.service';
+import { ClienteExclusaoResponse, ClientePortalService } from '../cliente.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-minha-conta',
@@ -17,12 +19,10 @@ export class MinhaContaComponent implements OnInit {
   carregando = true;
   salvando = false;
   editando = false;
-
-  // Exclusão
-  excluindo = false;
-  temPlanoAtivo = false;
+  exclusaoEmAndamento = false;
+  temPlanoPagoAtivo = false;
   dataFimPlano: string | null = null;
-  agendarExclusaoEm: Date | null = null;
+  agendarExclusaoEm: Date | string | null = null;
   opcaoExclusao: 'agora' | 'fim-plano' = 'agora';
 
   acaoConfirmarExclusao: PoModalAction = {
@@ -31,6 +31,7 @@ export class MinhaContaComponent implements OnInit {
     loading: false,
     danger: true,
   };
+
   acaoCancelarExclusao: PoModalAction = {
     label: 'Cancelar',
     action: () => this.modalExclusao.close(),
@@ -38,10 +39,26 @@ export class MinhaContaComponent implements OnInit {
 
   opcoesExclusao: any[] = [];
 
+  readonly PoComboFilterMode = PoComboFilterMode;
+
+  ufOptions: any[] = [];
+  municipioFilterService = '';
+  municipioDisabled = true;
+
   form = {
-    nome: '', telefone: '', cnpj: '', razaoSocial: '',
-    cep: '', logradouro: '', numero: '', complemento: '', bairro: '',
-    municipio: '', uf: '', inscricaoEstadual: '', inscricaoMunicipal: ''
+    nome: '',
+    telefone: '',
+    cnpj: '',
+    razaoSocial: '',
+    cep: '',
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    municipio: '',
+    uf: '',
+    inscricaoEstadual: '',
+    inscricaoMunicipal: '',
   };
 
   constructor(
@@ -49,89 +66,205 @@ export class MinhaContaComponent implements OnInit {
     private notif: NotifService,
     private auth: AuthService,
     private router: Router,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
+    this.http.get<any>(`${environment.apiUrl}/geocode/ufs`).subscribe({
+      next: (r) => (this.ufOptions = r.items ?? []),
+    });
+
     this.svc.meuPerfil().subscribe({
-      next: (p) => {
-        this.perfil = p;
+      next: (perfil) => {
+        this.perfil = perfil;
         this.form = {
-          nome: p.nome ?? '', telefone: p.telefone ?? '', cnpj: p.cnpj ?? '',
-          razaoSocial: p.razaoSocial ?? '', cep: p.cep ?? '', logradouro: p.logradouro ?? '',
-          numero: p.numero ?? '', complemento: p.complemento ?? '', bairro: p.bairro ?? '',
-          municipio: p.municipio ?? '', uf: p.uf ?? '',
-          inscricaoEstadual: p.inscricaoEstadual ?? '', inscricaoMunicipal: p.inscricaoMunicipal ?? ''
+          nome: perfil.nome ?? '',
+          telefone: perfil.telefone ?? '',
+          cnpj: perfil.cnpj ?? '',
+          razaoSocial: perfil.razaoSocial ?? '',
+          cep: perfil.cep ?? '',
+          logradouro: perfil.logradouro ?? '',
+          numero: perfil.numero ?? '',
+          complemento: perfil.complemento ?? '',
+          bairro: perfil.bairro ?? '',
+          municipio: perfil.municipio ?? '',
+          uf: perfil.uf ?? '',
+          inscricaoEstadual: perfil.inscricaoEstadual ?? '',
+          inscricaoMunicipal: perfil.inscricaoMunicipal ?? '',
         };
 
-        const assinaturaAtiva = p.assinaturas?.find(
-          (a: any) => a.status === 'ativa' && a.proximoVencimento,
-        );
-        this.temPlanoAtivo = !!assinaturaAtiva;
-        this.dataFimPlano = assinaturaAtiva?.proximoVencimento ?? null;
-        this.agendarExclusaoEm = p.agendarExclusaoEm ?? null;
+        if (perfil.uf) {
+          this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${perfil.uf}`;
+          this.municipioDisabled = false;
+        }
+
+        const assinaturaPagaAtiva = perfil.assinaturas?.find((assinatura: any) => this.svc.assinaturaEhPaga(assinatura));
+        this.temPlanoPagoAtivo = !!assinaturaPagaAtiva;
+        this.dataFimPlano = assinaturaPagaAtiva?.proximoVencimento ?? null;
+        this.agendarExclusaoEm = perfil.agendarExclusaoEm ?? null;
 
         this.opcaoExclusao = 'agora';
-        this.opcoesExclusao = this.temPlanoAtivo
+        this.opcoesExclusao = this.temPlanoPagoAtivo
           ? [
-              { label: 'Excluir agora (perde o acesso imediatamente)', value: 'agora' },
+              { label: 'Agendar anonimização para o prazo padrão', value: 'agora' },
               { label: `Agendar para o fim do plano (${this.formatarData(this.dataFimPlano)})`, value: 'fim-plano' },
             ]
-          : [{ label: 'Excluir minha conta permanentemente', value: 'agora' }];
+          : [{ label: 'Excluir minha conta definitivamente', value: 'agora' }];
 
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.carregando = false; },
+      error: () => {
+        this.carregando = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
-  iniciarEdicao() { this.editando = true; }
+  iniciarEdicao() {
+    this.editando = true;
+  }
 
   cancelarEdicao() {
     this.editando = false;
     this.form = {
-      nome: this.perfil.nome ?? '', telefone: this.perfil.telefone ?? '', cnpj: this.perfil.cnpj ?? '',
-      razaoSocial: this.perfil.razaoSocial ?? '', cep: this.perfil.cep ?? '',
-      logradouro: this.perfil.logradouro ?? '', numero: this.perfil.numero ?? '',
-      complemento: this.perfil.complemento ?? '', bairro: this.perfil.bairro ?? '',
-      municipio: this.perfil.municipio ?? '', uf: this.perfil.uf ?? '',
+      nome: this.perfil.nome ?? '',
+      telefone: this.perfil.telefone ?? '',
+      cnpj: this.perfil.cnpj ?? '',
+      razaoSocial: this.perfil.razaoSocial ?? '',
+      cep: this.perfil.cep ?? '',
+      logradouro: this.perfil.logradouro ?? '',
+      numero: this.perfil.numero ?? '',
+      complemento: this.perfil.complemento ?? '',
+      bairro: this.perfil.bairro ?? '',
+      municipio: this.perfil.municipio ?? '',
+      uf: this.perfil.uf ?? '',
       inscricaoEstadual: this.perfil.inscricaoEstadual ?? '',
-      inscricaoMunicipal: this.perfil.inscricaoMunicipal ?? ''
+      inscricaoMunicipal: this.perfil.inscricaoMunicipal ?? '',
     };
+    if (this.perfil.uf) {
+      this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${this.perfil.uf}`;
+      this.municipioDisabled = false;
+    } else {
+      this.municipioFilterService = '';
+      this.municipioDisabled = true;
+    }
+  }
+
+  buscarCnpj() {
+    const cnpj = (this.form.cnpj ?? '').replace(/\D/g, '');
+    if (cnpj.length !== 14) return;
+    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cnpj/${cnpj}`).subscribe({
+      next: (d) => {
+        if (!d) return;
+        if (!this.form.razaoSocial) this.form.razaoSocial = d.razaoSocial ?? '';
+        if (!this.form.cep)         this.form.cep         = d.cep         ?? '';
+        if (!this.form.logradouro)  this.form.logradouro  = d.logradouro  ?? '';
+        if (!this.form.numero)      this.form.numero      = d.numero      ?? '';
+        if (!this.form.complemento) this.form.complemento = d.complemento ?? '';
+        if (!this.form.bairro)      this.form.bairro      = d.bairro      ?? '';
+        if (!this.form.municipio)   this.form.municipio   = d.municipio   ?? '';
+        if (!this.form.uf && d.uf) {
+          this.form.uf = d.uf;
+          this.onUfChange(d.uf);
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
+  }
+
+  buscarCep() {
+    const cep = (this.form.cep ?? '').replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cep/${cep}`).subscribe({
+      next: (d) => {
+        if (!this.form.logradouro)  this.form.logradouro  = d.logradouro  ?? '';
+        if (!this.form.complemento) this.form.complemento = d.complemento ?? '';
+        if (!this.form.bairro)      this.form.bairro      = d.bairro      ?? '';
+        if (!this.form.municipio)   this.form.municipio   = d.municipio   ?? '';
+        if (!this.form.uf && d.ufSigla) {
+          this.form.uf = d.ufSigla;
+          this.onUfChange(d.ufSigla);
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
+  }
+
+  onUfChange(uf: string) {
+    this.form.municipio = '';
+    if (uf) {
+      this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${uf}`;
+      this.municipioDisabled = false;
+    } else {
+      this.municipioFilterService = '';
+      this.municipioDisabled = true;
+    }
   }
 
   salvar() {
     this.salvando = true;
     this.svc.atualizarPerfil(this.form).subscribe({
-      next: (p) => { this.perfil = { ...this.perfil, ...p }; this.editando = false; this.salvando = false; this.notif.success('Dados atualizados.'); },
-      error: () => { this.notif.error('Erro ao salvar.'); this.salvando = false; },
+      next: (perfilAtualizado) => {
+        this.perfil = { ...this.perfil, ...perfilAtualizado };
+        this.editando = false;
+        this.salvando = false;
+        this.notif.success('Dados atualizados.');
+      },
+      error: () => {
+        this.notif.error('Erro ao salvar.');
+        this.salvando = false;
+      },
     });
   }
 
   solicitarExclusao() {
-    if (this.agendarExclusaoEm) return;
     this.modalExclusao.open();
   }
 
   confirmarExclusao() {
     this.acaoConfirmarExclusao = { ...this.acaoConfirmarExclusao, loading: true };
     this.svc.agendarExclusao(this.opcaoExclusao).subscribe({
-      next: (res) => {
+      next: (response) => {
         this.acaoConfirmarExclusao = { ...this.acaoConfirmarExclusao, loading: false };
         this.modalExclusao.close();
-        if (this.opcaoExclusao === 'agora') {
-          this.notif.success('Conta desativada. Seus dados serão removidos em breve.');
-          this.auth.logout();
-          setTimeout(() => this.router.navigate(['/']), 1500);
-        } else {
-          this.agendarExclusaoEm = res.agendarExclusaoEm;
-          this.notif.success('Exclusão agendada para o fim do seu plano.');
-        }
+        this.aplicarResultadoExclusao(response);
       },
       error: () => {
         this.acaoConfirmarExclusao = { ...this.acaoConfirmarExclusao, loading: false };
         this.notif.error('Erro ao solicitar exclusão.');
       },
     });
+  }
+
+  desistirExclusao() {
+    this.exclusaoEmAndamento = true;
+    this.svc.cancelarExclusao().subscribe({
+      next: () => {
+        this.exclusaoEmAndamento = false;
+        this.agendarExclusaoEm = null;
+        this.notif.success('Solicitação de exclusão cancelada.');
+      },
+      error: () => {
+        this.exclusaoEmAndamento = false;
+        this.notif.error('Erro ao cancelar exclusão.');
+      },
+    });
+  }
+
+  private aplicarResultadoExclusao(response: ClienteExclusaoResponse) {
+    if (response.tipoFluxo === 'exclusao-imediata') {
+      this.notif.success(response.mensagem || 'Conta excluída com sucesso.');
+      this.auth.logout();
+      setTimeout(() => this.router.navigate(['/']), 1200);
+      return;
+    }
+
+    this.agendarExclusaoEm = response.agendarExclusaoEm;
+    this.notif.success(response.mensagem || 'Anonimização agendada com sucesso.');
   }
 
   get dataExclusaoFormatada(): string {

@@ -9,17 +9,16 @@
       <li><a href="#como-funciona" (click)="$event.preventDefault(); irParaAncora('como-funciona')">Como funciona</a></li>
       <li><a href="#planos" (click)="$event.preventDefault(); irParaAncora('planos')">Planos</a></li>
       <li><a href="#exemplos" (click)="$event.preventDefault(); irParaAncora('exemplos')">Exemplos</a></li>
-      <li><a [href]="docsUrl">Documentação</a></li>
+      <li><a [href]="docsUrl" (click)="registrarCliqueDocumentacao()">Documentacao</a></li>
     </ul>
 
     <div class="rfb-navbar__actions">
-      <!-- Seletor de tema -->
       <button class="rfb-tema-toggle" (click)="theme.alternar()" [title]="theme.isEscuro ? 'Mudar para tema claro' : 'Mudar para tema escuro'">
         <span class="an" [class.an-sun]="theme.isEscuro" [class.an-moon]="!theme.isEscuro"></span>
       </button>
 
       <po-button p-label="Entrar" p-kind="secondary" p-icon="an an-sign-in" (p-click)="irParaLogin()"></po-button>
-      <po-button p-label="Começar grátis" p-kind="primary" p-icon="an an-rocket-launch" (p-click)="irParaCadastro()"></po-button>
+      <po-button p-label="Criar conta gratis" p-kind="primary" p-icon="an an-rocket-launch" (p-click)="irParaCadastro()"></po-button>
     </div>
   </div>
 </nav>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { PoChartSerie, PoChartType } from '@po-ui/ng-components';
@@ -26,13 +26,13 @@ export class DashboardComponent implements OnInit {
   chartConsumo: PoChartSerie[] = [];
   chartCategories: string[] = [];
 
-  constructor(private auth: AuthService, private clienteSvc: ClientePortalService) {}
+  constructor(private auth: AuthService, private clienteSvc: ClientePortalService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.nome = this.auth.getNome();
     this.isAdmin = this.auth.isAdmin();
 
-    if (this.isAdmin) { this.carregando = false; return; }
+    if (this.isAdmin) { this.carregando = false; this.cdr.detectChanges(); return; }
 
     forkJoin({
       perfil:    this.clienteSvc.meuPerfil().pipe(catchError(() => of(null))),
@@ -63,6 +63,7 @@ export class DashboardComponent implements OnInit {
       }));
 
       this.carregando = false;
+      this.cdr.detectChanges();
     });
   }
 

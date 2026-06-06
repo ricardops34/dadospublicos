@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { EtlService } from './etl.service';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
@@ -14,20 +14,26 @@ export class EtlController {
   constructor(private readonly service: EtlService) {}
 
   @Get('status')
-  @ApiOperation({ summary: '[Admin] Status atual e histórico de execuções ETL' })
-  status() {
-    return this.service.status();
+  @ApiOperation({ summary: '[Admin] Status atual e historico de execucoes ETL' })
+  status(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.service.status(Number(page), Number(pageSize));
   }
 
   @Get('arquivos')
-  @ApiOperation({ summary: '[Admin] Lista arquivos RFB no servidor (ZIP e CSV extraído)' })
+  @ApiOperation({ summary: '[Admin] Lista arquivos RFB no servidor (ZIP e CSV extraido)' })
   arquivos() {
     return this.service.listarArquivos();
   }
 
   @Post('executar')
-  @ApiOperation({ summary: '[Admin] Inicia ETL — fase: completo | download | extracao | carga' })
-  executar(@Body('fase') fase: EtlFase = 'completo') {
-    return this.service.executar(fase);
+  @ApiOperation({ summary: '[Admin] Inicia ETL - fase: completo | download | extracao | carga; competencia: YYYY-MM (padrao: mes atual)' })
+  executar(@Body('fase') fase: EtlFase = 'completo', @Body('competencia') competencia?: string) {
+    return this.service.executar(fase, competencia);
+  }
+
+  @Delete('logs')
+  @ApiOperation({ summary: '[Admin] Limpa o historico de execucoes do ETL' })
+  limparLogs() {
+    return this.service.limparLogs();
   }
 }

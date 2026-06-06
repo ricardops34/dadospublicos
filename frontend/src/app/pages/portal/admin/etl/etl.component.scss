@@ -1,95 +1,68 @@
 .etl-progresso {
   margin-bottom: 24px;
-  padding: 20px 24px;
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    font-size: 0.95rem;
-  }
-
-  &__icon {
-    font-size: 1.2rem;
-    color: #1a56db;
-    animation: spin 1s linear infinite;
-  }
-
-  &__label {
-    color: #6b7280;
-    font-size: 0.85rem;
-  }
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-.etl-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-
-  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
-}
-
-.etl-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px 24px;
-  display: flex;
+.etl-progresso__header {
   align-items: center;
-  gap: 16px;
-
-  strong { display: block; font-size: 1.5rem; font-weight: 800; color: #111827; }
-  small  { font-size: 0.8rem; color: #6b7280; }
-
-  &__icon {
-    font-size: 2rem;
-    color: #9ca3af;
-    &--blue  { color: #1a56db; }
-    &--green { color: #16a34a; }
-    &--red   { color: #dc2626; }
-  }
-}
-
-.etl-acoes {
   display: flex;
-  flex-direction: column;
   gap: 12px;
+  margin-bottom: 12px;
+}
+
+.etl-progresso__label {
+  color: var(--color-neutral-mid-60);
+  font-size: 0.875rem;
+}
+
+.etl-indicadores {
   margin-bottom: 24px;
 }
 
-.etl-acao {
+.etl-tab-content {
+  padding-top: 16px;
+}
+
+.etl-grid-item {
+  margin-bottom: 16px;
+}
+
+.etl-grid-item p {
+  margin: 0 0 16px;
+}
+
+.etl-toolbar {
+  align-items: end;
   display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.etl-paginacao {
   align-items: center;
-  gap: 20px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px 24px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-top: 16px;
+}
 
-  &__icon {
-    font-size: 2rem;
-    color: #9ca3af;
-    flex-shrink: 0;
-    &--orange  { color: #d97706; }
-    &--green   { color: #16a34a; }
-    &--primary { color: #1a56db; }
-  }
+.etl-paginacao__acoes {
+  display: flex;
+  gap: 8px;
+}
 
-  div {
-    flex: 1;
-    strong { display: block; font-weight: 700; margin-bottom: 4px; }
-    p { font-size: 0.85rem; color: #6b7280; margin: 0; }
-  }
+.etl-erro-pre {
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
-  &--destaque {
-    border-color: #1a56db;
-    background: #eff6ff;
+@media (max-width: 768px) {
+  .etl-toolbar,
+  .etl-paginacao {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

@@ -1,15 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as https from 'https';
 import * as yauzl from 'yauzl';
 import * as readline from 'readline';
+import axios from 'axios';
 import { EtlLog, EtlFase } from '../../entities/etl-log.entity';
+import { ParametrosService } from '../parametros/parametros.service';
+import { competenciaPadraoRfb } from './etl-competencia.util';
 
-const RFB_BASE_URL = 'https://dadosabertos.rfb.gov.br/CNPJ/';
+const RFB_DEFAULT_URL = 'https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9';
 
 interface ArquivoRfb {
   grupo: 'lookup' | 'dados';
@@ -52,6 +54,7 @@ export class EtlService {
   constructor(
     @InjectRepository(EtlLog) private logs: Repository<EtlLog>,
     private dataSource: DataSource,
+    private params: ParametrosService,
   ) {}
 
   // Cron: 1º dia do mês às 03:00
@@ -63,25 +66,45 @@ export class EtlService {
 
   // ─── Métodos públicos ──────────────────────────────────────────────────────
 
-  async executar(fase: EtlFase = 'completo'): Promise<{ mensagem: string }> {
+  async executar(fase: EtlFase = 'completo', competencia?: string): Promise<{ mensagem: string }> {
     if (this.rodando) return { mensagem: 'ETL já está em execução.' };
     this.rodando = true;
 
+    const competenciaFinal = competencia ?? this.competenciaPadrao();
     const log = await this.logs.save(
-      this.logs.create({ status: 'iniciado', fase, competencia: this.competenciaAtual() }),
+      this.logs.create({ status: 'iniciado', fase, competencia: competenciaFinal }),
     );
 
     this.runAsync(log, fase).catch(() => {});
     return { mensagem: `ETL [${fase}] iniciado em background. Acompanhe em GET /etl/status.` };
   }
 
-  async status() {
-    const logs = await this.logs.find({ order: { iniciadoEm: 'DESC' }, take: 10 });
+  async status(page = 1, pageSize = 10) {
+    const pageSafe = Math.max(1, Number(page) || 1);
+    const pageSizeSafe = Math.max(1, Math.min(100, Number(pageSize) || 10));
+    const [logs, total] = await this.logs.findAndCount({
+      order: { iniciadoEm: 'DESC' },
+      take: pageSizeSafe,
+      skip: (pageSafe - 1) * pageSizeSafe,
+    });
+
     return {
       rodando: this.rodando,
       progresso: this.rodando ? this.progresso : null,
       historico: logs,
+      page: pageSafe,
+      pageSize: pageSizeSafe,
+      total,
     };
+  }
+
+  async limparLogs() {
+    if (this.rodando) {
+      throw new ConflictException('Nao e possivel limpar os logs enquanto o ETL estiver em execucao.');
+    }
+
+    const result = await this.logs.delete({});
+    return { removidos: result.affected ?? 0 };
   }
 
   async listarArquivos() {
@@ -149,10 +172,12 @@ export class EtlService {
     this.progresso.total = ARQUIVOS_RFB.length;
     this.progresso.feitos = 0;
 
+    const competencia = log.competencia ?? this.competenciaPadrao();
+
     for (const arq of ARQUIVOS_RFB) {
       this.progresso.arquivoAtual = arq.nome;
       this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
-      await this.download(arq.nome);
+      await this.download(arq.nome, competencia);
       this.progresso.feitos++;
     }
   }
@@ -203,24 +228,59 @@ export class EtlService {
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
-  private download(arquivo: string): Promise<void> {
+  private async download(arquivo: string, competencia: string): Promise<void> {
     const destPath = path.join(this.downloadDir, arquivo);
     if (fs.existsSync(destPath)) {
       this.logger.log(`  Já existe: ${arquivo}`);
-      return Promise.resolve();
+      return;
     }
-    return new Promise((resolve, reject) => {
-      this.logger.log(`  Baixando: ${arquivo}`);
-      const file = fs.createWriteStream(destPath);
-      https.get(`${RFB_BASE_URL}${arquivo}`, (res) => {
-        if (res.statusCode !== 200) {
-          reject(new Error(`HTTP ${res.statusCode} para ${arquivo}`));
-          return;
-        }
-        res.pipe(file);
-        file.on('finish', () => { file.close(); resolve(); });
-      }).on('error', (err) => { fs.unlink(destPath, () => {}); reject(err); });
+
+    const baseUrl = await this.params.getValor('RFB_DOWNLOAD_BASE_URL', RFB_DEFAULT_URL);
+    const { url, headers } = this.buildDownloadConfig(baseUrl, arquivo, competencia);
+    this.logger.log(`  Baixando: ${arquivo} (${competencia}) → ${url}`);
+
+    const response = await axios.get(url, {
+      responseType: 'stream',
+      maxRedirects: 5,
+      timeout: 0,
+      headers: { 'User-Agent': 'BuscaDados-ETL/1.0', ...headers },
     });
+
+    await new Promise<void>((resolve, reject) => {
+      const file = fs.createWriteStream(destPath);
+      response.data.pipe(file);
+      file.on('finish', () => { file.close(); resolve(); });
+      file.on('error', (err) => { fs.unlink(destPath, () => {}); reject(err); });
+      response.data.on('error', (err: Error) => { fs.unlink(destPath, () => {}); reject(err); });
+    });
+  }
+
+  /**
+   * Nextcloud (SERPRO) usa WebDAV com Basic auth (token da share : senha vazia).
+   * URL: https://host/public.php/dav/files/{token}/{competencia}/{arquivo}
+   * Auth: Basic base64("{token}:")
+   *
+   * URL direta (padrão antigo): {baseUrl}/{competencia}/{arquivo}
+   */
+  private buildDownloadConfig(baseUrl: string, arquivo: string, competencia: string): {
+    url: string;
+    headers: Record<string, string>;
+  } {
+    const clean = baseUrl.replace(/\/+$/, '');
+
+    if (clean.includes('/index.php/s/')) {
+      // Extrai token da URL: https://host/index.php/s/{token}
+      const token = clean.split('/index.php/s/')[1]?.split('/')[0] ?? '';
+      const host  = clean.split('/index.php/s/')[0];
+
+      const url = `${host}/public.php/dav/files/${token}/${competencia}/${encodeURIComponent(arquivo)}`;
+      const auth = Buffer.from(`${token}:`).toString('base64');
+
+      return { url, headers: { Authorization: `Basic ${auth}` } };
+    }
+
+    // URL direta — concatena pasta de competência e arquivo
+    return { url: `${clean}/${competencia}/${arquivo}`, headers: {} };
   }
 
   private extrair(zipPath: string): Promise<void> {
@@ -322,9 +382,8 @@ export class EtlService {
     };
   }
 
-  private competenciaAtual(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  private competenciaPadrao(): string {
+    return competenciaPadraoRfb();
   }
 
   private colunasEmpresas() {

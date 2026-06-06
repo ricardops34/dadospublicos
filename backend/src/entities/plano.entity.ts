@@ -31,6 +31,9 @@ export class Plano {
   @Column({ name: 'rate_limit_por_minuto', type: 'integer', default: 3 })
   rateLimitPorMinuto: number;
 
+  @Column({ name: 'rate_limit_por_hora', type: 'integer', nullable: true })
+  rateLimitPorHora: number | null;
+
   @Column({ name: 'acesso_cnpj', default: true })
   acessoCnpj: boolean;
 
@@ -48,6 +51,9 @@ export class Plano {
 
   @Column({ name: 'acesso_mapa', default: false })
   acessoMapa: boolean;
+
+  @Column({ name: 'exibir_na_lp', default: true })
+  exibirNaLp: boolean;
 
   @Column({ default: true })
   ativo: boolean;

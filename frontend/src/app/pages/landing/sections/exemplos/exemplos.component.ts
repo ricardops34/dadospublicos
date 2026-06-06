@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { LpAnalyticsService } from '../../../../services/lp-analytics.service';
 
 interface Exemplo {
   linguagem: string;
@@ -16,16 +17,14 @@ interface Exemplo {
 export class ExemplosComponent {
   abaAtiva = 0;
   docsUrl = '/docs';
-
-  constructor(private router: Router) {}
-
-  irParaCadastro() { this.router.navigateByUrl('/cliente/cadastro'); }
+  copiado = false;
 
   exemplos: Exemplo[] = [
     {
       linguagem: 'cURL',
       icone: 'an an-terminal',
-      codigo: `curl https://api.buscadados.bjsoft.com.br/cnpj/27865757000102`,
+      codigo: `curl https://api.buscadados.bjsoft.com.br/cnpj/27865757000102 \\
+  -H "x_api_token: SEU_TOKEN"`,
     },
     {
       linguagem: 'Node.js',
@@ -69,11 +68,23 @@ oHttp:setPath("/cnpj/27865757000102")
 oHttp:addHeader("x_api_token", "SEU_TOKEN")
 oHttp:Get("")
 Local cResp := oHttp:GetResult()
-// cResp contém o JSON com todos os dados da empresa`,
+// cResp contem o JSON com todos os dados da empresa`,
     },
   ];
 
-  copiado = false;
+  constructor(
+    private router: Router,
+    private analytics: LpAnalyticsService,
+  ) {}
+
+  irParaCadastro() {
+    this.analytics.registrarClique('exemplos', 'cadastro');
+    this.router.navigateByUrl('/cliente/cadastro');
+  }
+
+  registrarCliqueDocumentacao() {
+    this.analytics.registrarClique('exemplos', 'documentacao');
+  }
 
   selecionarAba(index: number) {
     this.abaAtiva = index;

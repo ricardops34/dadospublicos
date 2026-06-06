@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { PoChartType, PoChartSerie } from '@po-ui/ng-components';
@@ -41,7 +41,7 @@ export class PortalAnalyticsComponent implements OnInit {
     { label: '90 dias', value: 90 },
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.carregar();
@@ -55,8 +55,9 @@ export class PortalAnalyticsComponent implements OnInit {
           this.relatorio = r;
           this.montarGraficos(r);
           this.carregando = false;
+          this.cdr.detectChanges();
         },
-        error: () => { this.carregando = false; },
+        error: () => { this.carregando = false; this.cdr.detectChanges(); },
       });
   }
 

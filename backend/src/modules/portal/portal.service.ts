@@ -4,13 +4,18 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { ClienteApi } from '../../entities/cliente.entity';
+import { Assinatura } from '../../entities/assinatura.entity';
+import { Token } from '../../entities/token.entity';
 import { LoginPortalDto } from './dto/login-portal.dto';
 
 @Injectable()
 export class PortalService {
   constructor(
     @InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>,
+    @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
+    @InjectRepository(Token, 'buscadados') private tokens: Repository<Token>,
     private jwtService: JwtService,
     private config: ConfigService,
   ) {}
@@ -36,19 +41,62 @@ export class PortalService {
       perfil: cliente.perfil,
     };
 
-    const token = this.jwtService.sign(payload, {
+    const jwt = this.jwtService.sign(payload, {
       secret: this.config.get('JWT_SECRET', 'rfb-portal-secret'),
       expiresIn: '8h',
     });
 
-    return { token, perfil: cliente.perfil, nome: cliente.nome };
+    const apiToken = await this.resolverApiToken(cliente);
+
+    return { token: jwt, perfil: cliente.perfil, nome: cliente.nome, apiToken };
   }
+
+  // ─── Token de API ──────────────────────────────────────────────────────────
+
+  private async resolverApiToken(cliente: ClienteApi): Promise<string | null> {
+    if (cliente.perfil === 'admin') {
+      return this.resolverTokenAdmin(cliente);
+    }
+    return this.resolverTokenCliente(cliente.id);
+  }
+
+  private async resolverTokenAdmin(cliente: ClienteApi): Promise<string> {
+    // Admin tem token próprio identificado pelo e-mail
+    const existente = await this.tokens.findOne({
+      where: { email: cliente.email, ativo: true },
+    });
+    if (existente) return existente.token;
+
+    // Cria token premium para o admin
+    const novoToken = this.tokens.create({
+      token:        randomBytes(32).toString('hex'),
+      nome:         `Admin — ${cliente.nome}`,
+      email:        cliente.email,
+      plano:        'premium',
+      limiteMensal: null,
+      ativo:        true,
+    });
+    const salvo = await this.tokens.save(novoToken);
+    return salvo.token;
+  }
+
+  private async resolverTokenCliente(clienteId: string): Promise<string | null> {
+    const assinatura = await this.assinaturas.findOne({
+      where: { clienteId, status: 'ativa' },
+      relations: ['token'],
+      order: { criadoEm: 'DESC' },
+    });
+    return assinatura?.token?.token ?? null;
+  }
+
+  // ─── Seed admin ────────────────────────────────────────────────────────────
 
   async seedAdmin(email: string, senha: string, nome: string) {
     const existe = await this.clientes.findOne({ where: { email } });
     if (existe) {
       if (existe.perfil === 'admin') throw new ConflictException('Admin já existe.');
       existe.perfil = 'admin';
+      existe.onboardingPendente = false;
       existe.senhaHash = await bcrypt.hash(senha, 10);
       await this.clientes.save(existe);
       return { mensagem: 'Usuário promovido a admin.', id: existe.id };
@@ -62,6 +110,7 @@ export class PortalService {
       perfil: 'admin',
       ativo: true,
       emailVerificado: true,
+      onboardingPendente: false,
     });
     await this.clientes.save(admin);
     return { mensagem: 'Admin criado com sucesso.', id: admin.id };

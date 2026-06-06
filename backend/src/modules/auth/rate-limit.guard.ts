@@ -17,35 +17,35 @@ export class ApiRateLimitGuard extends ThrottlerGuard {
     
     // Extrai o Token (Header ou Query)
     const token = req.headers['x_api_token'] || req.query['token'];
+    const tokenInfo = (req as any)['tokenInfo'];
 
     if (!token) {
-      // REGRA GRATUITA: 3 requisições por minuto por IP
+      // Token obrigatório — AuthGuard rejeitará com 401, mas limitamos por IP como proteção extra
       const ip = req.ip || req.connection.remoteAddress;
-      const key = `free_tier:${ip}`;
-      
+      const key = `no_token:${ip}`;
       const { totalHits } = await this.storageService.increment(key, 60000);
-      
+      if (totalHits > 10) {
+        throw new HttpException({ status: 429, titulo: 'Rate limit excedido', detalhes: 'Muitas requisições sem token.', validacao: [] }, HttpStatus.TOO_MANY_REQUESTS);
+      }
+      return true;
+    }
+
+    if (tokenInfo?.plano === 'free') {
+      const tokenKey = `free_cnpj:${token}`;
+      const { totalHits } = await this.storageService.increment(tokenKey, 3600000);
+
       if (totalHits > 3) {
         throw new HttpException({
           status: 429,
           titulo: 'Rate limit excedido',
-          detalhes: 'Limite de 3 requisições por minuto atingido no plano gratuito.',
+          detalhes: 'Limite de 3 requisições por hora para o plano Free atingido.',
           validacao: []
         }, HttpStatus.TOO_MANY_REQUESTS);
       }
-      
+
       return true;
     }
 
-    // --- REGRA PAGA (TOKEN) ---
-    // 1. O Token será validado aqui.
-    // 2. Iremos verificar o plano e a cota mensal.
-    // 3. Incrementaremos o ConsumoService.
-    
-    // Para fins do Goal atual, deixamos o gateway de IP ativo,
-    // e criamos o bypass básico para tokens (a lógica profunda do token 
-    // dependerá da unificação do Cliente com Token e do ConsumoService)
-    
     const tokenKey = `token_tier:${token}`;
     
     // Aplicando a regra provisória de "4 requisições por minuto" se o plano exceder,

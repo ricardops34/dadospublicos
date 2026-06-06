@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Painel360Service } from '../painel-360/painel-360.service';
 import {
@@ -12,20 +13,60 @@ import {
 
 const API = environment.apiUrl;
 
+export interface ClienteExclusaoResponse {
+  mensagem: string;
+  tipoFluxo?: 'exclusao-imediata' | 'anonimizacao-agendada';
+  agendarExclusaoEm: Date | string | null;
+}
+
+export interface ClientePerfil {
+  id: string;
+  nome: string;
+  email: string;
+  tipoPessoa?: 'F' | 'J' | null;
+  telefone?: string | null;
+  cpf?: string | null;
+  dataNascimento?: string | null;
+  cnpj?: string | null;
+  razaoSocial?: string | null;
+  cep?: string | null;
+  logradouro?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  municipio?: string | null;
+  uf?: string | null;
+  inscricaoEstadual?: string | null;
+  inscricaoMunicipal?: string | null;
+  agendarExclusaoEm?: Date | string | null;
+  onboardingPendente?: boolean;
+  assinaturas?: any[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClientePortalService {
+  private _perfilCache: ClientePerfil | null = null;
+
   constructor(
     private http: HttpClient,
     private painel360Service: Painel360Service,
   ) {}
 
-  // ─── Perfil ───────────────────────────────────────────────────────────────
-  meuPerfil() {
-    return this.http.get<any>(`${API}/clientes/me`);
+  meuPerfil(): Observable<ClientePerfil> {
+    if (this._perfilCache) return of(this._perfilCache);
+    return this.http.get<ClientePerfil>(`${API}/clientes/me`).pipe(
+      tap(p => (this._perfilCache = p)),
+    );
   }
 
-  atualizarPerfil(dto: { nome?: string; telefone?: string; cnpj?: string; razaoSocial?: string }) {
-    return this.http.patch<any>(`${API}/clientes/me`, dto);
+  invalidarPerfilCache() {
+    this._perfilCache = null;
+  }
+
+  atualizarPerfil(dto: Partial<ClientePerfil> & { senha?: string }) {
+    return this.http.patch<ClientePerfil>(`${API}/clientes/me`, dto).pipe(
+      tap(() => this.invalidarPerfilCache()),
+    );
   }
 
   upgradePreview(planoSlug: string) {
@@ -37,10 +78,13 @@ export class ClientePortalService {
   }
 
   agendarExclusao(agendarPara: 'agora' | 'fim-plano') {
-    return this.http.post<{ mensagem: string; agendarExclusaoEm: Date }>(`${API}/clientes/me/agendar-exclusao`, { agendarPara });
+    return this.http.post<ClienteExclusaoResponse>(`${API}/clientes/me/agendar-exclusao`, { agendarPara });
   }
 
-  // ─── Assinatura ───────────────────────────────────────────────────────────
+  cancelarExclusao() {
+    return this.http.post<ClienteExclusaoResponse>(`${API}/clientes/me/cancelar-exclusao`, {});
+  }
+
   minhaAssinatura() {
     return this.http.get<any>(`${API}/assinaturas/minha`);
   }
@@ -57,17 +101,22 @@ export class ClientePortalService {
     return this.http.post<any>(`${API}/assinaturas/regerar-token`, {});
   }
 
-  // ─── Planos públicos ──────────────────────────────────────────────────────
   listarPlanos() {
     return this.http.get<any[]>(`${API}/planos`);
   }
 
-  // ─── Consumo ──────────────────────────────────────────────────────────────
+  temOnboardingPendente(perfil: ClientePerfil | null | undefined): boolean {
+    return !!perfil?.onboardingPendente;
+  }
+
+  assinaturaEhPaga(assinatura: any): boolean {
+    return assinatura?.status === 'ativa' && Number(assinatura?.plano?.precoMensal ?? 0) > 0;
+  }
+
   meuConsumo() {
     return this.http.get<any[]>(`${API}/consumo/portal`);
   }
 
-  // ─── Faturas ──────────────────────────────────────────────────────────────
   minhasFaturas() {
     return this.http.get<any[]>(`${API}/faturas/minhas`);
   }

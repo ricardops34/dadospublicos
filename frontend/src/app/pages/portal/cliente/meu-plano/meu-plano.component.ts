@@ -1,5 +1,5 @@
 import { NotifService } from '../../../../services/notif.service';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { PoModalComponent, PoModalAction } from '@po-ui/ng-components';
 import { ClientePortalService } from '../cliente.service';
 
@@ -49,7 +49,7 @@ export class MeuPlanoComponent implements OnInit {
   };
   acaoFecharUpgrade: PoModalAction = { label: 'Cancelar', action: () => this.modalUpgrade.close() };
 
-  constructor(private svc: ClientePortalService, private notif: NotifService) {}
+  constructor(private svc: ClientePortalService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.minhaAssinatura().subscribe({
@@ -57,8 +57,9 @@ export class MeuPlanoComponent implements OnInit {
         this.assinatura = a;
         this.cancelamentoAgendado = a?.agendarCancelamentoEm ?? null;
         this.carregando = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.assinatura = null; this.carregando = false; this.carregarPlanos(); },
+      error: () => { this.assinatura = null; this.carregando = false; this.cdr.detectChanges(); this.carregarPlanos(); },
     });
     this.carregarPlanos();
   }
