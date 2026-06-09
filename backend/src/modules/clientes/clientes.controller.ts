@@ -83,9 +83,19 @@ export class ClientesController {
   @Patch('me')
   @UseGuards(JwtPortalGuard)
   @ApiSecurity('bearer')
-  @ApiOperation({ summary: 'Atualiza dados do perfil' })
+  @ApiOperation({ summary: 'Atualiza dados pessoais do usuário logado' })
   atualizar(@Req() req: any, @Body() dto: UpdateClienteDto) {
     return this.service.atualizar(req['usuario'].sub, dto);
+  }
+
+  @Patch('me/conta')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Atualiza dados da empresa/conta do usuário logado' })
+  atualizarConta(@Req() req: any, @Body() dto: any) {
+    const contaId = req['usuario'].contaId;
+    if (!contaId) return { mensagem: 'Sem conta vinculada.' };
+    return this.service.atualizarConta(contaId, dto);
   }
 
   @Post('me/agendar-exclusao')

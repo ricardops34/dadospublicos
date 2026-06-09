@@ -16,9 +16,12 @@ export class MinhaContaComponent implements OnInit {
   @ViewChild('modalExclusao') modalExclusao!: PoModalComponent;
 
   perfil: any = null;
+  conta: any = null;
   carregando = true;
   salvando = false;
+  salvandoConta = false;
   editando = false;
+  editandoConta = false;
   exclusaoEmAndamento = false;
   temPlanoPagoAtivo = false;
   dataFimPlano: string | null = null;
@@ -49,11 +52,17 @@ export class MinhaContaComponent implements OnInit {
   salvandoSenha = false;
   formSenha = { senhaAtual: '', novaSenha: '', confirmarSenha: '' };
 
+  // Formulário dados pessoais
   form = {
     nome: '',
     telefone: '',
+  };
+
+  // Formulário dados da empresa/conta
+  formConta = {
     cnpj: '',
     razaoSocial: '',
+    telefone: '',
     cep: '',
     logradouro: '',
     numero: '',
@@ -87,33 +96,41 @@ export class MinhaContaComponent implements OnInit {
     });
 
     this.svc.meuPerfil().subscribe({
-      next: (perfil) => {
-        this.perfil = perfil;
+      next: (perfilData) => {
+        this.perfil = perfilData;
+        this.conta = perfilData.conta ?? null;
+
         this.form = {
-          nome: perfil.nome ?? '',
-          telefone: perfil.telefone ?? '',
-          cnpj: perfil.cnpj ?? '',
-          razaoSocial: perfil.razaoSocial ?? '',
-          cep: perfil.cep ?? '',
-          logradouro: perfil.logradouro ?? '',
-          numero: perfil.numero ?? '',
-          complemento: perfil.complemento ?? '',
-          bairro: perfil.bairro ?? '',
-          municipio: perfil.municipio ?? '',
-          uf: perfil.uf ?? '',
-          inscricaoEstadual: perfil.inscricaoEstadual ?? '',
-          inscricaoMunicipal: perfil.inscricaoMunicipal ?? '',
+          nome: perfilData.nome ?? '',
+          telefone: perfilData.telefone ?? '',
         };
 
-        if (perfil.uf) {
-          this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${perfil.uf}`;
-          this.municipioDisabled = false;
+        if (this.conta) {
+          this.formConta = {
+            cnpj: this.conta.cnpj ?? '',
+            razaoSocial: this.conta.razaoSocial ?? '',
+            telefone: this.conta.telefone ?? '',
+            cep: this.conta.cep ?? '',
+            logradouro: this.conta.logradouro ?? '',
+            numero: this.conta.numero ?? '',
+            complemento: this.conta.complemento ?? '',
+            bairro: this.conta.bairro ?? '',
+            municipio: this.conta.municipio ?? '',
+            uf: this.conta.uf ?? '',
+            inscricaoEstadual: this.conta.inscricaoEstadual ?? '',
+            inscricaoMunicipal: this.conta.inscricaoMunicipal ?? '',
+          };
+
+          if (this.conta.uf) {
+            this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${this.conta.uf}`;
+            this.municipioDisabled = false;
+          }
         }
 
-        const assinaturaPagaAtiva = perfil.assinaturas?.find((assinatura: any) => this.svc.assinaturaEhPaga(assinatura));
+        const assinaturaPagaAtiva = perfilData.assinaturas?.find((a: any) => this.svc.assinaturaEhPaga(a));
         this.temPlanoPagoAtivo = !!assinaturaPagaAtiva;
         this.dataFimPlano = assinaturaPagaAtiva?.proximoVencimento ?? null;
-        this.agendarExclusaoEm = perfil.agendarExclusaoEm ?? null;
+        this.agendarExclusaoEm = perfilData.agendarExclusaoEm ?? null;
 
         this.opcaoExclusao = 'agora';
         this.opcoesExclusao = this.temPlanoPagoAtivo
@@ -133,6 +150,8 @@ export class MinhaContaComponent implements OnInit {
     });
   }
 
+  // ─── Edição dados pessoais ─────────────────────────────────────────────────
+
   iniciarEdicao() {
     this.editando = true;
   }
@@ -142,78 +161,7 @@ export class MinhaContaComponent implements OnInit {
     this.form = {
       nome: this.perfil.nome ?? '',
       telefone: this.perfil.telefone ?? '',
-      cnpj: this.perfil.cnpj ?? '',
-      razaoSocial: this.perfil.razaoSocial ?? '',
-      cep: this.perfil.cep ?? '',
-      logradouro: this.perfil.logradouro ?? '',
-      numero: this.perfil.numero ?? '',
-      complemento: this.perfil.complemento ?? '',
-      bairro: this.perfil.bairro ?? '',
-      municipio: this.perfil.municipio ?? '',
-      uf: this.perfil.uf ?? '',
-      inscricaoEstadual: this.perfil.inscricaoEstadual ?? '',
-      inscricaoMunicipal: this.perfil.inscricaoMunicipal ?? '',
     };
-    if (this.perfil.uf) {
-      this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${this.perfil.uf}`;
-      this.municipioDisabled = false;
-    } else {
-      this.municipioFilterService = '';
-      this.municipioDisabled = true;
-    }
-  }
-
-  buscarCnpj() {
-    const cnpj = (this.form.cnpj ?? '').replace(/\D/g, '');
-    if (cnpj.length !== 14) return;
-    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cnpj/${cnpj}`).subscribe({
-      next: (d) => {
-        if (!d) return;
-        if (!this.form.razaoSocial) this.form.razaoSocial = d.razaoSocial ?? '';
-        if (!this.form.cep)         this.form.cep         = d.cep         ?? '';
-        if (!this.form.logradouro)  this.form.logradouro  = d.logradouro  ?? '';
-        if (!this.form.numero)      this.form.numero      = d.numero      ?? '';
-        if (!this.form.complemento) this.form.complemento = d.complemento ?? '';
-        if (!this.form.bairro)      this.form.bairro      = d.bairro      ?? '';
-        if (!this.form.municipio)   this.form.municipio   = d.municipio   ?? '';
-        if (!this.form.uf && d.uf) {
-          this.form.uf = d.uf;
-          this.onUfChange(d.uf);
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => {},
-    });
-  }
-
-  buscarCep() {
-    const cep = (this.form.cep ?? '').replace(/\D/g, '');
-    if (cep.length !== 8) return;
-    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cep/${cep}`).subscribe({
-      next: (d) => {
-        if (!this.form.logradouro)  this.form.logradouro  = d.logradouro  ?? '';
-        if (!this.form.complemento) this.form.complemento = d.complemento ?? '';
-        if (!this.form.bairro)      this.form.bairro      = d.bairro      ?? '';
-        if (!this.form.municipio)   this.form.municipio   = d.municipio   ?? '';
-        if (!this.form.uf && d.ufSigla) {
-          this.form.uf = d.ufSigla;
-          this.onUfChange(d.ufSigla);
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => {},
-    });
-  }
-
-  onUfChange(uf: string) {
-    this.form.municipio = '';
-    if (uf) {
-      this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${uf}`;
-      this.municipioDisabled = false;
-    } else {
-      this.municipioFilterService = '';
-      this.municipioDisabled = true;
-    }
   }
 
   salvar() {
@@ -223,7 +171,7 @@ export class MinhaContaComponent implements OnInit {
         this.perfil = { ...this.perfil, ...perfilAtualizado };
         this.editando = false;
         this.salvando = false;
-        this.notif.success('Dados atualizados.');
+        this.notif.success('Dados pessoais atualizados.');
       },
       error: () => {
         this.notif.error('Erro ao salvar.');
@@ -231,6 +179,103 @@ export class MinhaContaComponent implements OnInit {
       },
     });
   }
+
+  // ─── Edição dados da empresa/conta ────────────────────────────────────────
+
+  iniciarEdicaoConta() {
+    this.editandoConta = true;
+  }
+
+  cancelarEdicaoConta() {
+    this.editandoConta = false;
+    if (this.conta) {
+      this.formConta = {
+        cnpj: this.conta.cnpj ?? '',
+        razaoSocial: this.conta.razaoSocial ?? '',
+        telefone: this.conta.telefone ?? '',
+        cep: this.conta.cep ?? '',
+        logradouro: this.conta.logradouro ?? '',
+        numero: this.conta.numero ?? '',
+        complemento: this.conta.complemento ?? '',
+        bairro: this.conta.bairro ?? '',
+        municipio: this.conta.municipio ?? '',
+        uf: this.conta.uf ?? '',
+        inscricaoEstadual: this.conta.inscricaoEstadual ?? '',
+        inscricaoMunicipal: this.conta.inscricaoMunicipal ?? '',
+      };
+    }
+  }
+
+  salvarConta() {
+    this.salvandoConta = true;
+    this.http.patch(`${environment.apiUrl}/clientes/me/conta`, this.formConta).subscribe({
+      next: (contaAtualizada) => {
+        this.conta = { ...this.conta, ...contaAtualizada };
+        this.editandoConta = false;
+        this.salvandoConta = false;
+        this.notif.success('Dados da empresa atualizados.');
+      },
+      error: () => {
+        this.notif.error('Erro ao salvar dados da empresa.');
+        this.salvandoConta = false;
+      },
+    });
+  }
+
+  buscarCnpj() {
+    const cnpj = (this.formConta.cnpj ?? '').replace(/\D/g, '');
+    if (cnpj.length !== 14) return;
+    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cnpj/${cnpj}`).subscribe({
+      next: (d) => {
+        if (!d) return;
+        if (!this.formConta.razaoSocial) this.formConta.razaoSocial = d.razaoSocial ?? '';
+        if (!this.formConta.cep)         this.formConta.cep         = d.cep         ?? '';
+        if (!this.formConta.logradouro)  this.formConta.logradouro  = d.logradouro  ?? '';
+        if (!this.formConta.numero)      this.formConta.numero      = d.numero      ?? '';
+        if (!this.formConta.complemento) this.formConta.complemento = d.complemento ?? '';
+        if (!this.formConta.bairro)      this.formConta.bairro      = d.bairro      ?? '';
+        if (!this.formConta.municipio)   this.formConta.municipio   = d.municipio   ?? '';
+        if (!this.formConta.uf && d.uf) {
+          this.formConta.uf = d.uf;
+          this.onUfChange(d.uf);
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
+  }
+
+  buscarCep() {
+    const cep = (this.formConta.cep ?? '').replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cep/${cep}`).subscribe({
+      next: (d) => {
+        if (!this.formConta.logradouro)  this.formConta.logradouro  = d.logradouro  ?? '';
+        if (!this.formConta.complemento) this.formConta.complemento = d.complemento ?? '';
+        if (!this.formConta.bairro)      this.formConta.bairro      = d.bairro      ?? '';
+        if (!this.formConta.municipio)   this.formConta.municipio   = d.municipio   ?? '';
+        if (!this.formConta.uf && d.ufSigla) {
+          this.formConta.uf = d.ufSigla;
+          this.onUfChange(d.ufSigla);
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
+  }
+
+  onUfChange(uf: string) {
+    this.formConta.municipio = '';
+    if (uf) {
+      this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${uf}`;
+      this.municipioDisabled = false;
+    } else {
+      this.municipioFilterService = '';
+      this.municipioDisabled = true;
+    }
+  }
+
+  // ─── Troca de senha ────────────────────────────────────────────────────────
 
   iniciarTrocarSenha() {
     this.editandoSenha = true;
@@ -271,6 +316,8 @@ export class MinhaContaComponent implements OnInit {
       },
     });
   }
+
+  // ─── Exclusão ──────────────────────────────────────────────────────────────
 
   solicitarExclusao() {
     this.modalExclusao.open();
@@ -313,7 +360,6 @@ export class MinhaContaComponent implements OnInit {
       setTimeout(() => this.router.navigate(['/']), 1200);
       return;
     }
-
     this.agendarExclusaoEm = response.agendarExclusaoEm;
     this.notif.success(response.mensagem || 'Anonimização agendada com sucesso.');
   }

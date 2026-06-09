@@ -36,6 +36,7 @@ export class PortalService {
 
     const payload = {
       sub: cliente.id,
+      contaId: cliente.contaId ?? null,
       nome: cliente.nome,
       email: cliente.email,
       perfil: cliente.perfil,

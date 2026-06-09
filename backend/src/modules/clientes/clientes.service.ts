@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto';
 import { Cron } from '@nestjs/schedule';
 import { ClienteApi } from '../../entities/cliente.entity';
 import { Assinatura } from '../../entities/assinatura.entity';
+import { Conta } from '../../entities/conta.entity';
 import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, UpdateClienteDto } from './dto/create-cliente.dto';
 import { ParametrosService } from '../parametros/parametros.service';
 import { EmailService } from '../email/email.service';
@@ -15,6 +16,7 @@ export class ClientesService {
   constructor(
     @InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>,
     @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
+    @InjectRepository(Conta, 'buscadados') private contas: Repository<Conta>,
     private params: ParametrosService,
     private emailSvc: EmailService,
   ) {}
@@ -32,6 +34,7 @@ export class ClientesService {
     const codigoVerificacao = Math.floor(100000 + Math.random() * 900000).toString();
     const codigoVerificacaoExpira = new Date(Date.now() + 15 * 60 * 1000);
 
+    // 1. Cria o usuário (dados pessoais)
     const cliente = this.clientes.create({
       nome: dto.nome,
       email: dto.email,
@@ -39,6 +42,17 @@ export class ClientesService {
       tipoPessoa: dto.tipoPessoa || 'J',
       cpf: dto.cpf ?? null,
       dataNascimento: dto.dataNascimento ? new Date(dto.dataNascimento) : null,
+      telefone: dto.telefone ?? null,
+      codigoVerificacao,
+      codigoVerificacaoExpira,
+      onboardingPendente: true,
+    });
+    await this.clientes.save(cliente);
+
+    // 2. Cria a conta/tenant (dados da empresa)
+    const conta = this.contas.create({
+      proprietarioId: cliente.id,
+      tipoPessoa: dto.tipoPessoa || 'J',
       cnpj: dto.cnpj ?? null,
       razaoSocial: dto.razaoSocial ?? null,
       telefone: dto.telefone ?? null,
@@ -51,10 +65,12 @@ export class ClientesService {
       uf: dto.uf ?? null,
       inscricaoEstadual: dto.inscricaoEstadual ?? null,
       inscricaoMunicipal: dto.inscricaoMunicipal ?? null,
-      codigoVerificacao,
-      codigoVerificacaoExpira,
       onboardingPendente: true,
     });
+    await this.contas.save(conta);
+
+    // 3. Vincula a conta ao usuário
+    cliente.contaId = conta.id;
     await this.clientes.save(cliente);
 
     this.emailSvc.enviarCodigoVerificacao(cliente.email, cliente.nome, codigoVerificacao).catch((err) => {
@@ -75,6 +91,7 @@ export class ClientesService {
     const senhaHash = await bcrypt.hash(dto.senha, 10);
     const perfil = dto.perfil ?? 'cliente';
 
+    // Usuário (dados pessoais)
     const cliente = this.clientes.create({
       nome: dto.nome,
       email: dto.email,
@@ -83,22 +100,36 @@ export class ClientesService {
       tipoPessoa: dto.tipoPessoa || 'J',
       cpf: dto.cpf ?? null,
       dataNascimento: dto.dataNascimento ? new Date(dto.dataNascimento) : null,
-      cnpj: dto.cnpj ?? null,
-      razaoSocial: dto.razaoSocial ?? null,
       telefone: dto.telefone ?? null,
-      cep: dto.cep ?? null,
-      logradouro: dto.logradouro ?? null,
-      numero: dto.numero ?? null,
-      complemento: dto.complemento ?? null,
-      bairro: dto.bairro ?? null,
-      municipio: dto.municipio ?? null,
-      uf: dto.uf ?? null,
-      inscricaoEstadual: dto.inscricaoEstadual ?? null,
-      inscricaoMunicipal: dto.inscricaoMunicipal ?? null,
       emailVerificado: true,
       onboardingPendente: perfil === 'cliente',
     });
     await this.clientes.save(cliente);
+
+    // Conta/tenant (apenas para clientes, não para admin)
+    if (perfil === 'cliente') {
+      const conta = this.contas.create({
+        proprietarioId: cliente.id,
+        tipoPessoa: dto.tipoPessoa || 'J',
+        cnpj: dto.cnpj ?? null,
+        razaoSocial: dto.razaoSocial ?? null,
+        telefone: dto.telefone ?? null,
+        cep: dto.cep ?? null,
+        logradouro: dto.logradouro ?? null,
+        numero: dto.numero ?? null,
+        complemento: dto.complemento ?? null,
+        bairro: dto.bairro ?? null,
+        municipio: dto.municipio ?? null,
+        uf: dto.uf ?? null,
+        inscricaoEstadual: dto.inscricaoEstadual ?? null,
+        inscricaoMunicipal: dto.inscricaoMunicipal ?? null,
+        onboardingPendente: true,
+      });
+      await this.contas.save(conta);
+      cliente.contaId = conta.id;
+      await this.clientes.save(cliente);
+    }
+
     return { mensagem: 'Usuário criado pelo admin.', id: cliente.id, email: cliente.email };
   }
 
@@ -235,29 +266,66 @@ export class ClientesService {
     });
     if (!cliente) throw new NotFoundException('Cliente não encontrado.');
 
-    const onboardingPendente = this.isOnboardingPendente(cliente);
+    // Carrega os dados da conta/tenant se existir
+    let conta: Conta | null = null;
+    if (cliente.contaId) {
+      conta = await this.contas.findOne({ where: { id: cliente.contaId } });
+    }
+
+    const onboardingPendente = this.isOnboardingPendente(cliente, conta);
     if (cliente.onboardingPendente !== onboardingPendente) {
       cliente.onboardingPendente = onboardingPendente;
       await this.clientes.save(cliente);
     }
 
-    return { ...this.sanitizeAdminResponse(cliente), onboardingPendente };
+    const dadosPessoais = this.sanitizeAdminResponse(cliente);
+    return {
+      ...dadosPessoais,
+      onboardingPendente,
+      // Dados da empresa/tenant (separados dos dados pessoais)
+      conta: conta ? {
+        id: conta.id,
+        tipoPessoa: conta.tipoPessoa,
+        cnpj: conta.cnpj,
+        razaoSocial: conta.razaoSocial,
+        telefone: conta.telefone,
+        cep: conta.cep,
+        logradouro: conta.logradouro,
+        numero: conta.numero,
+        complemento: conta.complemento,
+        bairro: conta.bairro,
+        municipio: conta.municipio,
+        uf: conta.uf,
+        inscricaoEstadual: conta.inscricaoEstadual,
+        inscricaoMunicipal: conta.inscricaoMunicipal,
+      } : null,
+    };
   }
 
-  isOnboardingPendente(cliente: Partial<ClienteApi> & { assinaturas?: Array<{ status?: string | null }> }) {
-    const tipoPessoa = cliente.tipoPessoa;
+  async atualizarConta(contaId: string, dto: Partial<Conta>) {
+    const conta = await this.contas.findOne({ where: { id: contaId } });
+    if (!conta) throw new NotFoundException('Conta não encontrada.');
+    Object.assign(conta, dto);
+    return this.contas.save(conta);
+  }
+
+  isOnboardingPendente(
+    cliente: Partial<ClienteApi> & { assinaturas?: Array<{ status?: string | null }> },
+    conta?: Conta | null,
+  ) {
+    const tipoPessoa = conta?.tipoPessoa ?? cliente.tipoPessoa;
     const temDadosBasicos = !!cliente.nome && !!cliente.email && !!cliente.telefone;
     const temDocumento =
       tipoPessoa === 'F'
         ? !!cliente.cpf && !!cliente.dataNascimento
-        : !!cliente.cnpj && !!cliente.razaoSocial;
+        : !!(conta?.cnpj ?? cliente.cnpj) && !!(conta?.razaoSocial ?? cliente.razaoSocial);
     const temEndereco =
-      !!cliente.cep &&
-      !!cliente.logradouro &&
-      !!cliente.numero &&
-      !!cliente.bairro &&
-      !!cliente.municipio &&
-      !!cliente.uf;
+      !!(conta?.cep ?? cliente.cep) &&
+      !!(conta?.logradouro ?? cliente.logradouro) &&
+      !!(conta?.numero ?? cliente.numero) &&
+      !!(conta?.bairro ?? cliente.bairro) &&
+      !!(conta?.municipio ?? cliente.municipio) &&
+      !!(conta?.uf ?? cliente.uf);
     const temPlanoAtivo = !!cliente.assinaturas?.some((assinatura) => ['ativa', 'trial'].includes(assinatura.status ?? ''));
 
     return !(temDadosBasicos && temDocumento && temEndereco && temPlanoAtivo);

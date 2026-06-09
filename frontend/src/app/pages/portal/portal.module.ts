@@ -31,6 +31,9 @@ const routes: Routes = [
       { path: 'parametros',      canActivate: [adminGuard], loadChildren: () => import('./parametros/parametros.module').then((m) => m.ParametrosModule) },
       { path: 'config-email',    canActivate: [adminGuard], loadChildren: () => import('./admin/config-email/config-email.module').then((m) => m.ConfigEmailModule) },
       { path: 'painel-360-admin', canActivate: [adminGuard], loadChildren: () => import('./admin/painel-360-admin/painel-360-admin.module').then((m) => m.Painel360AdminModule) },
+      { path: 'perfis',   canActivate: [adminGuard], loadChildren: () => import('./admin/perfis/perfis.module').then((m) => m.PortalPerfisModule) },
+      { path: 'modulos',  canActivate: [adminGuard], loadChildren: () => import('./admin/modulos/modulos.module').then((m) => m.PortalModulosModule) },
+      { path: 'rotinas',  canActivate: [adminGuard], loadChildren: () => import('./admin/rotinas/rotinas.module').then((m) => m.PortalRotinasModule) },
 
       // Área Cliente (lazy)
       {

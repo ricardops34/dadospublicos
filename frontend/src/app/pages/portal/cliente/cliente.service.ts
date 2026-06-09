@@ -41,6 +41,23 @@ export interface ClientePerfil {
   agendarExclusaoEm?: Date | string | null;
   onboardingPendente?: boolean;
   assinaturas?: any[];
+  /** Dados da empresa/tenant separados dos dados pessoais */
+  conta?: {
+    id: string;
+    tipoPessoa?: 'F' | 'J';
+    cnpj?: string | null;
+    razaoSocial?: string | null;
+    telefone?: string | null;
+    cep?: string | null;
+    logradouro?: string | null;
+    numero?: string | null;
+    complemento?: string | null;
+    bairro?: string | null;
+    municipio?: string | null;
+    uf?: string | null;
+    inscricaoEstadual?: string | null;
+    inscricaoMunicipal?: string | null;
+  } | null;
 }
 
 @Injectable({ providedIn: 'root' })

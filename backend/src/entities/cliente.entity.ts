@@ -1,10 +1,19 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Assinatura } from './assinatura.entity';
+import { Conta } from './conta.entity';
 
 @Entity('clientes_api')
 export class ClienteApi {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /** FK para a conta/tenant à qual este usuário pertence (null para admin) */
+  @Column({ name: 'conta_id', type: 'uuid', nullable: true })
+  contaId: string | null;
+
+  @ManyToOne(() => Conta, { nullable: true })
+  @JoinColumn({ name: 'conta_id' })
+  conta: Conta | null;
 
   @Column({ type: 'varchar', length: 150 })
   nome: string;

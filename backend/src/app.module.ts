@@ -30,6 +30,7 @@ import { ParametrosService } from './modules/parametros/parametros.service';
 import { InterPixModule } from './modules/inter-pix/inter-pix.module';
 import { Painel360Module } from './modules/painel-360/painel-360.module';
 import { NotificacoesModule } from './modules/notificacoes/notificacoes.module';
+import { MenuModule } from './modules/menu/menu.module';
 
 @Module({
   imports: [
@@ -122,6 +123,7 @@ import { NotificacoesModule } from './modules/notificacoes/notificacoes.module';
     FaturasModule,
     Painel360Module,
     NotificacoesModule,
+    MenuModule,
   ],
 })
 export class AppModule implements NestModule {

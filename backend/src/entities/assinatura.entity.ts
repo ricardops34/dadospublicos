@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { ClienteApi } from './cliente.entity';
+import { Conta } from './conta.entity';
 import { Plano } from './plano.entity';
 import { Token } from './token.entity';
 import { Fatura } from './fatura.entity';
@@ -13,6 +14,14 @@ export class Assinatura {
 
   @Column({ name: 'cliente_id', type: 'uuid' })
   clienteId: string;
+
+  /** Tenant/conta a qual esta assinatura pertence */
+  @Column({ name: 'conta_id', type: 'uuid', nullable: true })
+  contaId: string | null;
+
+  @ManyToOne(() => Conta, (c) => c.assinaturas, { nullable: true })
+  @JoinColumn({ name: 'conta_id' })
+  conta: Conta | null;
 
   @Column({ name: 'plano_id', type: 'uuid' })
   planoId: string;
