@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-rfb_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rfb_pass}
+      POSTGRES_DB: ${DB_NAME:-dados_rfb}
+    volumes:
+      - rfb_pgdata:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-rfb_user} -d ${DB_NAME:-dados_rfb}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - rfb_redis_data:/data
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: bjsoftware/rfb-api:latest
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-rfb_user}
+      DB_PASSWORD: ${DB_PASSWORD:-rfb_pass}
+      DB_NAME: ${DB_NAME:-dados_rfb}
+      DB_SISTEMA_NAME: ${DB_SISTEMA_NAME:-buscadados}
+      DB_VIACEP_NAME: ${DB_VIACEP_NAME:-dados_viacep}
+      ADMIN_KEY: ${ADMIN_KEY}
+      JWT_SECRET: ${JWT_SECRET:-rfb-portal-secret}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ETL_DOWNLOAD_DIR: /app/etl-data/downloads
+      ETL_EXTRACT_DIR: /app/etl-data/extraidos
+    volumes:
+      - ${ETL_DATA_DIR:-/opt/rfb/etl-data}/downloads:/app/etl-data/downloads
+      - ${ETL_DATA_DIR:-/opt/rfb/etl-data}/extraidos:/app/etl-data/extraidos
+    ports:
+      - '3001:3001'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3001/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  frontend:
+    image: bjsoftware/rfb-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '4200:4200'
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@bjsoft.com.br}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin123}
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+      PGADMIN_CONFIG_LOGIN_BANNER: '"RFB Data Service"'
+    volumes:
+      - rfb_pgadmin:/var/lib/pgadmin
+    ports:
+      - '5050:80'
+
+volumes:
+  rfb_pgdata:
+  rfb_pgadmin:
+  rfb_redis_data:
