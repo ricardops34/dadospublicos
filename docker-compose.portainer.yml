@@ -29,11 +29,13 @@ services:
         delay: 10s
         max_attempts: 5
       labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.rfb-api.rule=Host(`api.buscadados.bjsoft.com.br`)"
-        - "traefik.http.routers.rfb-api.entrypoints=websecure"
-        - "traefik.http.routers.rfb-api.tls.certresolver=letsencrypt"
-        - "traefik.http.services.rfb-api.loadbalancer.server.port=3001"
+        - traefik.enable=true
+        - traefik.swarm.network=network_public
+        - traefik.http.routers.rfb-api.rule=Host(`api.buscadados.bjsoft.com.br`)
+        - traefik.http.routers.rfb-api.entrypoints=websecure
+        - traefik.http.routers.rfb-api.tls=true
+        - traefik.http.routers.rfb-api.tls.certresolver=letsencryptresolver
+        - traefik.http.services.rfb-api.loadbalancer.server.port=3001
 
   frontend:
     image: bjsoftware/rfb-frontend:latest
@@ -46,11 +48,13 @@ services:
         delay: 5s
         max_attempts: 5
       labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.rfb-frontend.rule=Host(`buscadados.bjsoft.com.br`)"
-        - "traefik.http.routers.rfb-frontend.entrypoints=websecure"
-        - "traefik.http.routers.rfb-frontend.tls.certresolver=letsencrypt"
-        - "traefik.http.services.rfb-frontend.loadbalancer.server.port=80"
+        - traefik.enable=true
+        - traefik.swarm.network=network_public
+        - traefik.http.routers.rfb-frontend.rule=Host(`buscadados.bjsoft.com.br`)
+        - traefik.http.routers.rfb-frontend.entrypoints=websecure
+        - traefik.http.routers.rfb-frontend.tls=true
+        - traefik.http.routers.rfb-frontend.tls.certresolver=letsencryptresolver
+        - traefik.http.services.rfb-frontend.loadbalancer.server.port=80
 
 networks:
   network_db:
