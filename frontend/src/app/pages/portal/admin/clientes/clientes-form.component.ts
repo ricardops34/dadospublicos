@@ -215,3 +215,4 @@ export class ClientesFormComponent {
     { property: 'complemento', label: 'Complemento', gridColumns: 4 },
   ];
 }
+

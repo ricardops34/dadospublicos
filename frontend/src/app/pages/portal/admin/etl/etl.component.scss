@@ -18,6 +18,59 @@
   margin-bottom: 24px;
 }
 
+.etl-indicadores__item {
+  margin-bottom: 16px;
+}
+
+.etl-indicador-card {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  min-height: 88px;
+}
+
+.etl-indicador-card__icon {
+  color: var(--color-neutral-mid-60);
+  flex-shrink: 0;
+  font-size: 2rem;
+}
+
+.etl-indicador-card__icon--blue {
+  color: var(--color-brand-01-base);
+}
+
+.etl-indicador-card__icon--green {
+  color: var(--color-success-base);
+}
+
+.etl-indicador-card__icon--orange {
+  color: var(--color-warning-base);
+}
+
+.etl-indicador-card__icon--red {
+  color: var(--color-danger-base);
+}
+
+.etl-indicador-card__content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.etl-indicador-card__content strong {
+  color: var(--color-neutral-dark-90);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  text-transform: capitalize;
+}
+
+.etl-indicador-card__content small {
+  color: var(--color-neutral-mid-60);
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
 .etl-tab-content {
   padding-top: 16px;
 }
@@ -38,19 +91,6 @@
   margin-bottom: 16px;
 }
 
-.etl-paginacao {
-  align-items: center;
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
-  margin-top: 16px;
-}
-
-.etl-paginacao__acoes {
-  display: flex;
-  gap: 8px;
-}
-
 .etl-erro-pre {
   margin: 0;
   max-height: 400px;
@@ -60,8 +100,7 @@
 }
 
 @media (max-width: 768px) {
-  .etl-toolbar,
-  .etl-paginacao {
+  .etl-toolbar {
     align-items: stretch;
     flex-direction: column;
   }

@@ -234,7 +234,10 @@ export class ClientesPoUiController {
         },
       };
     } catch {
-      return { value: {} };
+      return {
+        value: { cnpj },
+        fields: [{ property: 'cnpj', message: 'CNPJ inválido ou não encontrado na base' }],
+      };
     }
   }
 }

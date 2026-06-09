@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yauzl from 'yauzl';
 import * as readline from 'readline';
+import * as tar from 'tar';
 import axios from 'axios';
 import { EtlLog, EtlFase } from '../../entities/etl-log.entity';
 import { ParametrosService } from '../parametros/parametros.service';
@@ -103,8 +104,9 @@ export class EtlService {
       throw new ConflictException('Nao e possivel limpar os logs enquanto o ETL estiver em execucao.');
     }
 
-    const result = await this.logs.delete({});
-    return { removidos: result.affected ?? 0 };
+    const totalAntes = await this.logs.count();
+    await this.logs.clear();
+    return { removidos: totalAntes };
   }
 
   async listarArquivos() {
@@ -178,6 +180,21 @@ export class EtlService {
       this.progresso.arquivoAtual = arq.nome;
       this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
       await this.download(arq.nome, competencia);
+
+      // Para arquivos de dados particionados, baixa partes adicionais (0, 1, 2...)
+      if (arq.tipo && arq.nome.endsWith('0.zip')) {
+        const prefixo = arq.nome.replace('0.zip', '');
+        let parte = 1;
+        while (true) {
+          const nomeParte = `${prefixo}${parte}.zip`;
+          const destPath = path.join(this.downloadDir, nomeParte);
+          if (fs.existsSync(destPath)) { parte++; continue; }
+          const baixou = await this.downloadSemErro(nomeParte, competencia);
+          if (!baixou) break;
+          parte++;
+        }
+      }
+
       this.progresso.feitos++;
     }
   }
@@ -253,6 +270,35 @@ export class EtlService {
       file.on('error', (err) => { fs.unlink(destPath, () => {}); reject(err); });
       response.data.on('error', (err: Error) => { fs.unlink(destPath, () => {}); reject(err); });
     });
+  }
+
+  /** Tenta baixar um arquivo; retorna false silenciosamente se não existir (404/403). */
+  private async downloadSemErro(arquivo: string, competencia: string): Promise<boolean> {
+    try {
+      await this.download(arquivo, competencia);
+      return true;
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 404 || status === 403) return false;
+      throw err;
+    }
+  }
+
+  /**
+   * Extrai um cnpj.tar.gz (ou qualquer .tar.gz) colocado no downloadDir.
+   * Os arquivos são extraídos diretamente no extrairDir.
+   * Útil para carregar o dump consolidado sem precisar baixar parte a parte.
+   */
+  async extrairTarGz(nomeArquivo = 'cnpj.tar.gz'): Promise<{ mensagem: string }> {
+    const tarPath = path.join(this.downloadDir, nomeArquivo);
+    if (!fs.existsSync(tarPath)) {
+      throw new Error(`Arquivo não encontrado: ${tarPath}. Coloque o .tar.gz em ${this.downloadDir}.`);
+    }
+    fs.mkdirSync(this.extrairDir, { recursive: true });
+    this.logger.log(`Extraindo ${nomeArquivo} para ${this.extrairDir}...`);
+    await tar.x({ file: tarPath, cwd: this.extrairDir, strip: 1 });
+    this.logger.log(`Extração de ${nomeArquivo} concluída.`);
+    return { mensagem: `${nomeArquivo} extraído. Execute fase=carga para carregar no banco.` };
   }
 
   /**

@@ -9,6 +9,7 @@ function createService(logsInDb: Partial<EtlLog>[] = []) {
   const repo = {
     create: (data: Partial<EtlLog>) => data,
     save: async (data: Partial<EtlLog>) => data,
+    count: async () => currentLogs.length,
     findAndCount: async ({ order, take, skip }: any) => {
       const sorted = [...currentLogs].sort((a, b) => {
         const aDate = new Date(a.iniciadoEm ?? 0).getTime();
@@ -18,7 +19,7 @@ function createService(logsInDb: Partial<EtlLog>[] = []) {
 
       return [sorted.slice(skip, skip + take), currentLogs.length];
     },
-    delete: async () => {
+    clear: async () => {
       const affected = currentLogs.length;
       currentLogs = [];
       return { affected };

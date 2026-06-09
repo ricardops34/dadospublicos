@@ -12,21 +12,60 @@
   </po-container>
 
   <div class="po-row etl-indicadores">
-    <po-widget class="po-xl-3 po-md-6 po-sm-12" p-title="Arquivos esperados">
-      <po-info p-label="Total" [p-value]="arquivos.length.toString()"></po-info>
-    </po-widget>
+    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
+      <po-widget p-title="Arquivos esperados">
+        <div class="etl-indicador-card">
+          <span class="an an-hard-drives etl-indicador-card__icon"></span>
+          <div class="etl-indicador-card__content">
+            <strong>{{ arquivos.length }}</strong>
+            <small>Total esperado</small>
+          </div>
+        </div>
+      </po-widget>
+    </div>
 
-    <po-widget class="po-xl-3 po-md-6 po-sm-12" p-title="Baixados">
-      <po-info p-label="Arquivos" [p-value]="arquivosBaixados().toString()"></po-info>
-    </po-widget>
+    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
+      <po-widget p-title="Baixados">
+        <div class="etl-indicador-card">
+          <span class="an an-download-simple etl-indicador-card__icon etl-indicador-card__icon--blue"></span>
+          <div class="etl-indicador-card__content">
+            <strong>{{ arquivosBaixados() }}</strong>
+            <small>Arquivos baixados</small>
+          </div>
+        </div>
+      </po-widget>
+    </div>
 
-    <po-widget class="po-xl-3 po-md-6 po-sm-12" p-title="Extraidos">
-      <po-info p-label="Arquivos" [p-value]="arquivosExtraidos().toString()"></po-info>
-    </po-widget>
+    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
+      <po-widget p-title="Extraidos">
+        <div class="etl-indicador-card">
+          <span class="an an-file-zip etl-indicador-card__icon etl-indicador-card__icon--green"></span>
+          <div class="etl-indicador-card__content">
+            <strong>{{ arquivosExtraidos() }}</strong>
+            <small>Arquivos extraidos</small>
+          </div>
+        </div>
+      </po-widget>
+    </div>
 
-    <po-widget class="po-xl-3 po-md-6 po-sm-12" p-title="Ultima execucao">
-      <po-info p-label="Status" [p-value]="status.historico[0]?.status || '-'"></po-info>
-    </po-widget>
+    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
+      <po-widget p-title="Ultima execucao">
+        <div class="etl-indicador-card">
+          <span
+            class="an etl-indicador-card__icon"
+            [ngClass]="{
+              'an-check-circle etl-indicador-card__icon--green': status.historico[0]?.status === 'concluido',
+              'an-warning-circle etl-indicador-card__icon--red': status.historico[0]?.status === 'erro',
+              'an-clock-countdown etl-indicador-card__icon--orange': status.historico[0]?.status !== 'concluido' && status.historico[0]?.status !== 'erro'
+            }">
+          </span>
+          <div class="etl-indicador-card__content">
+            <strong>{{ status.historico[0]?.status || '-' }}</strong>
+            <small>Status da ultima carga</small>
+          </div>
+        </div>
+      </po-widget>
+    </div>
   </div>
 
   <po-tabs p-size="medium">
@@ -132,33 +171,16 @@
 
           <po-table
             [p-columns]="colunasHistorico"
-            [p-items]="status.historico"
+            [p-items]="historicoItens"
             [p-actions]="acoesHistorico"
             [p-loading]="carregandoHistorico"
+            [p-loading-show-more]="carregandoMaisHistorico"
+            [p-show-more-disabled]="showMoreHistoricoDisabled"
             [p-hide-table-search]="true"
             [p-hide-columns-manager]="true"
-            [p-striped]="true">
+            [p-striped]="true"
+            (p-show-more)="carregarMaisHistorico()">
           </po-table>
-
-          <div class="etl-paginacao">
-            <span>Pagina {{ historicoPage }} de {{ totalPaginasHistorico }}</span>
-            <div class="etl-paginacao__acoes">
-              <po-button
-                p-label="Anterior"
-                p-kind="tertiary"
-                p-icon="an an-caret-left"
-                [p-disabled]="historicoPage <= 1 || carregandoHistorico"
-                (p-click)="paginaAnteriorHistorico()">
-              </po-button>
-              <po-button
-                p-label="Proxima"
-                p-kind="tertiary"
-                p-icon="an an-caret-right"
-                [p-disabled]="!temProximaPaginaHistorico || carregandoHistorico"
-                (p-click)="paginaProximaHistorico()">
-              </po-button>
-            </div>
-          </div>
         </po-container>
       </div>
     </po-tab>

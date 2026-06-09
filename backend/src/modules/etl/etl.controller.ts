@@ -31,6 +31,12 @@ export class EtlController {
     return this.service.executar(fase, competencia);
   }
 
+  @Post('extrair-tar')
+  @ApiOperation({ summary: '[Admin] Extrai cnpj.tar.gz (ou outro .tar.gz) do downloadDir para o extrairDir. Após isso, execute fase=carga.' })
+  extrairTar(@Body('arquivo') arquivo?: string) {
+    return this.service.extrairTarGz(arquivo);
+  }
+
   @Delete('logs')
   @ApiOperation({ summary: '[Admin] Limpa o historico de execucoes do ETL' })
   limparLogs() {

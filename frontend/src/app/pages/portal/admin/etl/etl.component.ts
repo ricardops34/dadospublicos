@@ -41,8 +41,10 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
 
   status: EtlStatus = { rodando: false, progresso: null, historico: [], page: 1, pageSize: 10, total: 0 };
   arquivos: ArquivoRfb[] = [];
+  historicoItens: any[] = [];
   carregando = true;
   carregandoHistorico = false;
+  carregandoMaisHistorico = false;
   limpandoLogs = false;
   erroDetalhe = '';
   competencia = this.competenciaAtualPadrao();
@@ -116,8 +118,15 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   }
 
   competenciaAtualPadrao(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const dataBase = new Date();
+    const ano = dataBase.getFullYear();
+    const mes = dataBase.getMonth();
+
+    if (mes === 0) {
+      return `${ano - 1}-12`;
+    }
+
+    return `${ano}-${String(mes).padStart(2, '0')}`;
   }
 
   executar(fase: 'completo' | 'download' | 'extracao' | 'carga') {
@@ -128,7 +137,12 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
       carga: 'Carga no banco iniciada.',
     };
 
-    this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/executar`, { fase, competencia: this.competencia })
+    const payload: { fase: string; competencia?: string } = { fase };
+    if (/^\d{4}-\d{2}$/.test(this.competencia.trim())) {
+      payload.competencia = this.competencia.trim();
+    }
+
+    this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/executar`, payload)
       .subscribe({
         next: () => {
           this.notif.information(labels[fase]);
@@ -142,7 +156,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
 
   carregar() {
     this.carregando = true;
-    this.carregarStatus(this.historicoPage, true);
+    this.carregarStatus(true, false, false);
     this.carregarArquivos();
   }
 
@@ -155,7 +169,8 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.notif.success(`Logs removidos: ${res.removidos}`);
         this.historicoPage = 1;
-        this.carregarStatus(1);
+        this.historicoItens = [];
+        this.carregarStatus(true, false, false);
       },
       error: (err) => {
         this.limpandoLogs = false;
@@ -164,14 +179,10 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     });
   }
 
-  paginaAnteriorHistorico() {
-    if (this.historicoPage <= 1 || this.carregandoHistorico) return;
-    this.carregarStatus(this.historicoPage - 1);
-  }
-
-  paginaProximaHistorico() {
-    if (!this.temProximaPaginaHistorico || this.carregandoHistorico) return;
-    this.carregarStatus(this.historicoPage + 1);
+  carregarMaisHistorico() {
+    if (this.showMoreHistoricoDisabled || this.carregandoMaisHistorico) return;
+    this.historicoPage += 1;
+    this.carregarStatus(false, true, false);
   }
 
   verErro(row: any) {
@@ -190,12 +201,8 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     return `${p.fase} - ${p.arquivoAtual} (${p.feitos}/${p.total})`;
   }
 
-  get totalPaginasHistorico(): number {
-    return Math.max(1, Math.ceil((this.status.total || 0) / this.historicoPageSize));
-  }
-
-  get temProximaPaginaHistorico(): boolean {
-    return this.historicoPage < this.totalPaginasHistorico;
+  get showMoreHistoricoDisabled(): boolean {
+    return this.historicoItens.length >= this.status.total;
   }
 
   arquivosBaixados(): number {
@@ -209,7 +216,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   private iniciarPolling() {
     if (this.intervalo) return;
     this.intervalo = setInterval(() => {
-      this.carregarStatus(this.historicoPage, false, true);
+      this.carregarStatus(this.historicoItens.length === 0, false, true);
     }, 3000);
   }
 
@@ -220,17 +227,32 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     }
   }
 
-  private carregarStatus(page = this.historicoPage, atualizarTela = false, origemPolling = false) {
-    this.carregandoHistorico = true;
+  private carregarStatus(resetHistorico: boolean, appendHistorico: boolean, origemPolling: boolean) {
+    const page = appendHistorico ? this.historicoPage : 1;
+
+    if (appendHistorico) {
+      this.carregandoMaisHistorico = true;
+    } else {
+      this.carregandoHistorico = true;
+    }
+
     this.http.get<EtlStatus>(`${environment.apiUrl}/etl/status?page=${page}&pageSize=${this.historicoPageSize}`).subscribe({
       next: (s) => {
         const estavaRodando = this.status.rodando;
         this.status = s;
-        this.historicoPage = s.page;
+
+        if (resetHistorico) {
+          this.historicoPage = 1;
+          this.historicoItens = s.historico;
+        } else if (appendHistorico) {
+          this.historicoItens = [...this.historicoItens, ...s.historico];
+        }
+
         this.carregando = false;
         this.carregandoHistorico = false;
+        this.carregandoMaisHistorico = false;
         this.limpandoLogs = false;
-        if (atualizarTela) this.cdr.detectChanges();
+        this.cdr.detectChanges();
 
         if (s.rodando) {
           this.iniciarPolling();
@@ -240,14 +262,17 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
         if (origemPolling && estavaRodando) {
           this.pararPolling();
           this.notif.success('ETL concluido.');
+          this.historicoPage = 1;
+          this.historicoItens = s.historico;
           this.carregarArquivos();
         }
       },
       error: () => {
         this.carregando = false;
         this.carregandoHistorico = false;
+        this.carregandoMaisHistorico = false;
         this.limpandoLogs = false;
-        if (atualizarTela) this.cdr.detectChanges();
+        this.cdr.detectChanges();
       },
     });
   }
