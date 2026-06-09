@@ -7,7 +7,7 @@ docker build -t "$Registry/rfb-api:$Tag" ./backend
 if (-not $?) { exit 1 }
 
 Write-Host "==> Build rfb-frontend:$Tag"
-docker build -t "$Registry/rfb-frontend:$Tag" ./frontend
+docker build -f ./frontend/Dockerfile.prod -t "$Registry/rfb-frontend:$Tag" ./frontend
 if (-not $?) { exit 1 }
 
 Write-Host "==> Push rfb-api:$Tag"

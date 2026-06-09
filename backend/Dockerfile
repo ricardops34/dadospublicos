@@ -11,5 +11,6 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev --legacy-peer-deps
 COPY --from=builder /app/dist ./dist
+COPY seed.js ./
 EXPOSE 3001
 CMD ["node", "dist/main"]
