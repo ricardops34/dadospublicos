@@ -4,6 +4,8 @@ import { environment } from '../../../../environments/environment';
 import { PoModalAction, PoModalComponent, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
 import { NotifService } from '../../../services/notif.service';
 
+const PAGE_SIZE = 10;
+
 @Component({
   selector: 'app-parametros',
   standalone: false,
@@ -13,17 +15,19 @@ export class ParametrosComponent implements OnInit {
   @ViewChild('modalEdit', { static: true }) modalEdit!: PoModalComponent;
 
   parametros: any[] = [];
+  parametrosVisiveis: any[] = [];
   loading = false;
+  loadingMore = false;
 
   columns: PoTableColumn[] = [
-    { property: 'chave', label: 'Chave' },
-    { property: 'valor', label: 'Valor' },
-    { property: 'descricao', label: 'Descrição' }
+    { property: 'chave',    label: 'Chave',     width: '25%' },
+    { property: 'valor',    label: 'Valor',     width: '35%' },
+    { property: 'descricao', label: 'Descrição', width: '40%' },
   ];
 
   actions: PoTableAction[] = [
-    { action: this.edit.bind(this), icon: 'po-icon-edit', label: 'Editar' },
-    { action: this.delete.bind(this), icon: 'po-icon-delete', label: 'Excluir', type: 'danger' }
+    { action: this.edit.bind(this),   icon: 'an an-pencil', label: 'Editar' },
+    { action: this.delete.bind(this), icon: 'an an-trash',  label: 'Excluir', type: 'danger' },
   ];
 
   isEditing = false;
@@ -31,12 +35,12 @@ export class ParametrosComponent implements OnInit {
 
   modalPrimaryAction: PoModalAction = {
     action: () => this.save(),
-    label: 'Salvar'
+    label: 'Salvar',
   };
 
   modalSecondaryAction: PoModalAction = {
     action: () => this.modalEdit.close(),
-    label: 'Cancelar'
+    label: 'Cancelar',
   };
 
   constructor(private http: HttpClient, private notif: NotifService) {}
@@ -45,11 +49,23 @@ export class ParametrosComponent implements OnInit {
     this.loadData();
   }
 
+  get showMoreDisabled(): boolean {
+    return this.parametrosVisiveis.length >= this.parametros.length;
+  }
+
+  onShowMore() {
+    this.loadingMore = true;
+    setTimeout(() => {
+      const next = this.parametros.slice(0, this.parametrosVisiveis.length + PAGE_SIZE);
+      this.parametrosVisiveis = next;
+      this.loadingMore = false;
+    }, 0);
+  }
+
   loadData() {
     this.loading = true;
     this.http.get<any[]>(`${environment.apiUrl}/admin/parametros`).subscribe({
       next: (res) => {
-        // Ocultar a senha da exibição
         this.parametros = res.map(p => {
           if (p.chave === 'SMTP_PASS' && p.valor) {
             p._valorOriginal = p.valor;
@@ -57,6 +73,7 @@ export class ParametrosComponent implements OnInit {
           }
           return p;
         });
+        this.parametrosVisiveis = this.parametros.slice(0, PAGE_SIZE);
         this.loading = false;
       },
       error: () => {
@@ -85,14 +102,13 @@ export class ParametrosComponent implements OnInit {
     if (!this.currentItem.chave) {
       return this.notif.warning('A chave é obrigatória');
     }
-    
     this.http.post(`${environment.apiUrl}/admin/parametros/${this.currentItem.chave}`, this.currentItem).subscribe({
       next: () => {
         this.notif.success('Parâmetro salvo com sucesso!');
         this.modalEdit.close();
         this.loadData();
       },
-      error: () => this.notif.error('Erro ao salvar o parâmetro')
+      error: () => this.notif.error('Erro ao salvar o parâmetro'),
     });
   }
 
@@ -103,7 +119,7 @@ export class ParametrosComponent implements OnInit {
           this.notif.success('Parâmetro excluído!');
           this.loadData();
         },
-        error: () => this.notif.error('Erro ao excluir parâmetro')
+        error: () => this.notif.error('Erro ao excluir parâmetro'),
       });
     }
   }

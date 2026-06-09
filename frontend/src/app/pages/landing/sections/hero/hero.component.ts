@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { LpAnalyticsService } from '../../../../services/lp-analytics.service';
+import { LpRegistroService } from '../../../../services/lp-registro.service';
 
 @Component({
   selector: 'app-hero',
@@ -8,7 +9,8 @@ import { LpAnalyticsService } from '../../../../services/lp-analytics.service';
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.scss',
 })
-export class HeroComponent {
+export class HeroComponent implements OnInit {
+  registrosHabilitados = false;
   cnpjExemplo = '27865757000102';
   docsUrl = '/docs';
   respostaExemplo = JSON.stringify(
@@ -27,7 +29,12 @@ export class HeroComponent {
   constructor(
     private router: Router,
     private analytics: LpAnalyticsService,
+    private registroSvc: LpRegistroService,
   ) {}
+
+  ngOnInit() {
+    this.registroSvc.registrosHabilitados().subscribe((h) => (this.registrosHabilitados = h));
+  }
 
   irParaCadastro() {
     this.analytics.registrarClique('hero', 'cadastro');

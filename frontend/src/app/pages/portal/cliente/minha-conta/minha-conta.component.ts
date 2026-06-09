@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PoComboFilterMode, PoModalAction, PoModalComponent } from '@po-ui/ng-components';
 import { NotifService } from '../../../../services/notif.service';
 import { AuthService } from '../../../../services/auth.service';
@@ -45,6 +45,10 @@ export class MinhaContaComponent implements OnInit {
   municipioFilterService = '';
   municipioDisabled = true;
 
+  editandoSenha = false;
+  salvandoSenha = false;
+  formSenha = { senhaAtual: '', novaSenha: '', confirmarSenha: '' };
+
   form = {
     nome: '',
     telefone: '',
@@ -66,11 +70,18 @@ export class MinhaContaComponent implements OnInit {
     private notif: NotifService,
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
+    this.route.queryParams.subscribe((params) => {
+      if (params['acao'] === 'trocar-senha') {
+        this.editandoSenha = true;
+      }
+    });
+
     this.http.get<any>(`${environment.apiUrl}/geocode/ufs`).subscribe({
       next: (r) => (this.ufOptions = r.items ?? []),
     });
@@ -217,6 +228,46 @@ export class MinhaContaComponent implements OnInit {
       error: () => {
         this.notif.error('Erro ao salvar.');
         this.salvando = false;
+      },
+    });
+  }
+
+  iniciarTrocarSenha() {
+    this.editandoSenha = true;
+    this.formSenha = { senhaAtual: '', novaSenha: '', confirmarSenha: '' };
+  }
+
+  cancelarTrocarSenha() {
+    this.editandoSenha = false;
+    this.formSenha = { senhaAtual: '', novaSenha: '', confirmarSenha: '' };
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
+  }
+
+  salvarSenha() {
+    if (this.formSenha.novaSenha !== this.formSenha.confirmarSenha) {
+      this.notif.error('A nova senha e a confirmação não coincidem.');
+      return;
+    }
+    if (this.formSenha.novaSenha.length < 8) {
+      this.notif.error('A nova senha deve ter pelo menos 8 caracteres.');
+      return;
+    }
+    this.salvandoSenha = true;
+    this.http.patch(`${environment.apiUrl}/portal/me/senha`, {
+      senhaAtual: this.formSenha.senhaAtual,
+      novaSenha: this.formSenha.novaSenha,
+    }).subscribe({
+      next: () => {
+        this.salvandoSenha = false;
+        this.editandoSenha = false;
+        this.formSenha = { senhaAtual: '', novaSenha: '', confirmarSenha: '' };
+        this.router.navigate([], { queryParams: {}, replaceUrl: true });
+        this.notif.success('Senha alterada com sucesso.');
+      },
+      error: (err) => {
+        this.salvandoSenha = false;
+        const msg = err?.error?.message ?? 'Erro ao alterar senha.';
+        this.notif.error(msg);
       },
     });
   }

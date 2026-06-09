@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
 import { LpAnalyticsService } from '../../../../services/lp-analytics.service';
+import { LpRegistroService } from '../../../../services/lp-registro.service';
 
 type CicloCobranca = 'mensal' | 'semestral' | 'anual';
 
@@ -16,6 +17,7 @@ export class PlanosComponent implements OnInit {
   planos: any[] = [];
   carregando = false;
   erroCarregamento = false;
+  registrosHabilitados = false;
   cicloSelecionado: CicloCobranca = 'mensal';
 
   ciclos: Array<{ id: CicloCobranca; label: string; icone: string }> = [
@@ -29,10 +31,12 @@ export class PlanosComponent implements OnInit {
     private router: Router,
     private analytics: LpAnalyticsService,
     private cdr: ChangeDetectorRef,
+    private registroSvc: LpRegistroService,
   ) {}
 
   ngOnInit() {
     this.carregarPlanos();
+    this.registroSvc.registrosHabilitados().subscribe((h) => (this.registrosHabilitados = h));
   }
 
   irParaCadastro(plano?: any) {

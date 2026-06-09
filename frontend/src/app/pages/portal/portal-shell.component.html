@@ -9,6 +9,37 @@
     [p-filter]="true">
   </po-menu>
 
-
   <router-outlet></router-outlet>
 </div>
+
+<ng-template #notifPopover>
+  <div class="notif-popover">
+    <div class="notif-popover__header">
+      <strong>Notificações</strong>
+      <button *ngIf="notificacoes.length > 0" class="notif-popover__marcar" (click)="marcarNotificacoesLidas()">
+        Marcar todas como lidas
+      </button>
+    </div>
+
+    <div *ngIf="carregandoNotif" class="notif-popover__vazio">Carregando...</div>
+
+    <div *ngIf="!carregandoNotif && notificacoes.length === 0" class="notif-popover__vazio">
+      <span class="an an-bell-slash" style="font-size: 1.8rem; color: #9ca3af;"></span>
+      <p>Sem notificações no momento</p>
+    </div>
+
+    <ul *ngIf="!carregandoNotif && notificacoes.length > 0" class="notif-popover__lista">
+      <li
+        *ngFor="let n of notificacoes"
+        class="notif-popover__item"
+        [class.notif-popover__item--nao-lida]="!n.lida">
+        <span class="notif-popover__tipo-icon" [ngClass]="notifIcone(n.tipo)"></span>
+        <div class="notif-popover__conteudo">
+          <strong>{{ n.titulo }}</strong>
+          <p>{{ n.mensagem }}</p>
+          <time>{{ n.criadoEm | date:'dd/MM/yyyy HH:mm' }}</time>
+        </div>
+      </li>
+    </ul>
+  </div>
+</ng-template>

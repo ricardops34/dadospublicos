@@ -10,6 +10,7 @@
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
+    "test": "node -r ts-node/register/transpile-only --test .\\test\\*.spec.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\""
   },

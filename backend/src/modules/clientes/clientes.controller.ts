@@ -3,11 +3,22 @@ import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ClientesService } from './clientes.service';
 import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, RecuperarSenhaDto, UpdateClienteDto, VerificarEmailCodigoDto } from './dto/create-cliente.dto';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
+import { ParametrosService } from '../parametros/parametros.service';
 
 @ApiTags('Clientes')
 @Controller('clientes')
 export class ClientesController {
-  constructor(private readonly service: ClientesService) {}
+  constructor(
+    private readonly service: ClientesService,
+    private readonly params: ParametrosService,
+  ) {}
+
+  @Get('status-registro')
+  @ApiOperation({ summary: 'Retorna se novos cadastros estão habilitados (público)' })
+  async statusRegistro() {
+    const valor = await this.params.getValor('REGISTROS_HABILITADOS', 'false');
+    return { habilitado: valor === 'true' };
+  }
 
   @Post('signup')
   @ApiOperation({ summary: 'Cadastro de novo cliente (público)' })

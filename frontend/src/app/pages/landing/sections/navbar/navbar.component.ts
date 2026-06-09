@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { LpAnalyticsService } from '../../../../services/lp-analytics.service';
 import { ThemeService } from '../../../../services/theme.service';
+import { LpRegistroService } from '../../../../services/lp-registro.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,6 +13,7 @@ import { ThemeService } from '../../../../services/theme.service';
 export class NavbarComponent implements OnInit {
   menuAberto = false;
   docsUrl = '/docs';
+  registrosHabilitados = false;
   private readonly navbarOffset = 76;
   private readonly maxScrollTentativas = 20;
 
@@ -19,10 +21,12 @@ export class NavbarComponent implements OnInit {
     private router: Router,
     private analytics: LpAnalyticsService,
     public theme: ThemeService,
+    private registroSvc: LpRegistroService,
   ) {}
 
   ngOnInit() {
     this.theme.inicializar();
+    this.registroSvc.registrosHabilitados().subscribe((h) => (this.registrosHabilitados = h));
   }
 
   irParaLogin() {

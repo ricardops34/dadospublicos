@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -87,6 +87,20 @@ export class PortalService {
       order: { criadoEm: 'DESC' },
     });
     return assinatura?.token?.token ?? null;
+  }
+
+  // ─── Trocar senha ──────────────────────────────────────────────────────────
+
+  async trocarSenha(clienteId: string, senhaAtual: string, novaSenha: string) {
+    const cliente = await this.clientes.findOne({ where: { id: clienteId } });
+    if (!cliente) throw new UnauthorizedException('Usuário não encontrado.');
+
+    const ok = await bcrypt.compare(senhaAtual, cliente.senhaHash);
+    if (!ok) throw new BadRequestException('Senha atual incorreta.');
+
+    cliente.senhaHash = await bcrypt.hash(novaSenha, 10);
+    await this.clientes.save(cliente);
+    return { mensagem: 'Senha alterada com sucesso.' };
   }
 
   // ─── Seed admin ────────────────────────────────────────────────────────────

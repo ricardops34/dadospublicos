@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { LpAnalyticsService } from '../../../../services/lp-analytics.service';
+import { LpRegistroService } from '../../../../services/lp-registro.service';
 
 interface Exemplo {
   linguagem: string;
@@ -14,10 +15,11 @@ interface Exemplo {
   templateUrl: './exemplos.component.html',
   styleUrl: './exemplos.component.scss',
 })
-export class ExemplosComponent {
+export class ExemplosComponent implements OnInit {
   abaAtiva = 0;
   docsUrl = '/docs';
   copiado = false;
+  registrosHabilitados = false;
 
   exemplos: Exemplo[] = [
     {
@@ -75,7 +77,12 @@ Local cResp := oHttp:GetResult()
   constructor(
     private router: Router,
     private analytics: LpAnalyticsService,
+    private registroSvc: LpRegistroService,
   ) {}
+
+  ngOnInit() {
+    this.registroSvc.registrosHabilitados().subscribe((h) => (this.registrosHabilitados = h));
+  }
 
   irParaCadastro() {
     this.analytics.registrarClique('exemplos', 'cadastro');

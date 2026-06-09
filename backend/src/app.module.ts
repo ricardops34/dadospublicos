@@ -29,6 +29,7 @@ import { EmailModule } from './modules/email/email.module';
 import { ParametrosService } from './modules/parametros/parametros.service';
 import { InterPixModule } from './modules/inter-pix/inter-pix.module';
 import { Painel360Module } from './modules/painel-360/painel-360.module';
+import { NotificacoesModule } from './modules/notificacoes/notificacoes.module';
 
 @Module({
   imports: [
@@ -120,6 +121,7 @@ import { Painel360Module } from './modules/painel-360/painel-360.module';
     AssinaturasModule,
     FaturasModule,
     Painel360Module,
+    NotificacoesModule,
   ],
 })
 export class AppModule implements NestModule {

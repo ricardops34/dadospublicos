@@ -100,6 +100,35 @@
       </div>
     </ng-container>
 
+    <po-divider p-label="Segurança"></po-divider>
+
+    <ng-container *ngIf="!editandoSenha">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <strong style="font-size: 0.9rem;">Senha de acesso</strong>
+          <p style="margin: 2px 0 0; color: #6b7280; font-size: 0.82rem;">Altere sua senha de acesso ao sistema.</p>
+        </div>
+        <po-button
+          p-label="Trocar senha"
+          p-kind="secondary"
+          p-icon="an an-lock-key"
+          (p-click)="iniciarTrocarSenha()">
+        </po-button>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="editandoSenha">
+      <div class="po-row">
+        <po-password class="po-md-4" p-label="Senha atual *" [(ngModel)]="formSenha.senhaAtual"></po-password>
+        <po-password class="po-md-4" p-label="Nova senha *" [(ngModel)]="formSenha.novaSenha"></po-password>
+        <po-password class="po-md-4" p-label="Confirmar nova senha *" [(ngModel)]="formSenha.confirmarSenha"></po-password>
+      </div>
+      <div class="po-row" style="justify-content: flex-end; gap: 8px; margin-top: 8px;">
+        <po-button p-label="Cancelar" p-kind="tertiary" (p-click)="cancelarTrocarSenha()"></po-button>
+        <po-button p-label="Salvar senha" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="salvandoSenha" (p-click)="salvarSenha()"></po-button>
+      </div>
+    </ng-container>
+
     <po-divider p-label="Informações da conta"></po-divider>
     <div class="po-row">
       <po-info class="po-md-4" p-label="Membro desde" [p-value]="(perfil.criadoEm | date:'dd/MM/yyyy') ?? ''"></po-info>

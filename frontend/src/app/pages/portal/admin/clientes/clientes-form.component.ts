@@ -205,6 +205,17 @@ export class ClientesFormComponent {
     { property: 'email', label: 'E-mail', required: true, gridColumns: 6 },
     { property: 'telefone', label: 'Telefone', required: true, gridColumns: 6 },
     { property: 'whatsapp', label: 'WhatsApp', type: 'boolean', booleanTrue: 'Sim', booleanFalse: 'Não', gridColumns: 6 },
+    {
+      property: 'perfil',
+      label: 'Perfil de acesso',
+      required: true,
+      gridColumns: 6,
+      divider: 'Acesso',
+      options: [
+        { label: 'Cliente',        value: 'cliente' },
+        { label: 'Administrador',  value: 'admin' },
+      ],
+    },
     { property: 'senha', label: 'Senha', secret: true, minLength: 8, gridColumns: 6, help: 'Preencha apenas se quiser alterar a senha' },
     { property: 'cep', label: 'CEP', required: true, mask: '99999-999', divider: 'Endereço', gridColumns: 3, validate: this.validarCep.bind(this) },
     { property: 'logradouro', label: 'Rua', required: true, gridColumns: 5 },

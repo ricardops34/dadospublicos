@@ -20,6 +20,11 @@ export class ClientesService {
   ) {}
 
   async signup(dto: CreateClienteDto) {
+    const habilitado = await this.params.getValor('REGISTROS_HABILITADOS', 'false');
+    if (habilitado !== 'true') {
+      throw new BadRequestException('Novos cadastros estão temporariamente desabilitados. Em breve abriremos novas vagas!');
+    }
+
     const existe = await this.clientes.findOne({ where: { email: dto.email } });
     if (existe) throw new ConflictException('E-mail já cadastrado.');
 
@@ -63,6 +68,39 @@ export class ClientesService {
     };
   }
 
+  async adminCreate(dto: CreateClienteDto) {
+    const existe = await this.clientes.findOne({ where: { email: dto.email } });
+    if (existe) throw new ConflictException('E-mail já cadastrado.');
+
+    const senhaHash = await bcrypt.hash(dto.senha, 10);
+    const perfil = dto.perfil ?? 'cliente';
+
+    const cliente = this.clientes.create({
+      nome: dto.nome,
+      email: dto.email,
+      senhaHash,
+      perfil,
+      tipoPessoa: dto.tipoPessoa || 'J',
+      cpf: dto.cpf ?? null,
+      dataNascimento: dto.dataNascimento ? new Date(dto.dataNascimento) : null,
+      cnpj: dto.cnpj ?? null,
+      razaoSocial: dto.razaoSocial ?? null,
+      telefone: dto.telefone ?? null,
+      cep: dto.cep ?? null,
+      logradouro: dto.logradouro ?? null,
+      numero: dto.numero ?? null,
+      complemento: dto.complemento ?? null,
+      bairro: dto.bairro ?? null,
+      municipio: dto.municipio ?? null,
+      uf: dto.uf ?? null,
+      inscricaoEstadual: dto.inscricaoEstadual ?? null,
+      inscricaoMunicipal: dto.inscricaoMunicipal ?? null,
+      emailVerificado: true,
+      onboardingPendente: perfil === 'cliente',
+    });
+    await this.clientes.save(cliente);
+    return { mensagem: 'Usuário criado pelo admin.', id: cliente.id, email: cliente.email };
+  }
 
   async login(dto: LoginClienteDto) {
     const cliente = await this.clientes.findOne({ where: { email: dto.email, ativo: true } });

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateClienteDto {
   @ApiProperty({ example: 'João Silva' }) @IsString() nome: string;
@@ -21,6 +21,7 @@ export class CreateClienteDto {
   @ApiPropertyOptional() @IsOptional() @IsString() uf?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoEstadual?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoMunicipal?: string;
+  @ApiPropertyOptional({ enum: ['admin', 'cliente'] }) @IsOptional() @IsIn(['admin', 'cliente']) perfil?: 'admin' | 'cliente';
 }
 
 export class LoginClienteDto {
@@ -64,4 +65,5 @@ export class UpdateClienteDto {
   @ApiPropertyOptional() @IsOptional() @IsString() uf?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoEstadual?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoMunicipal?: string;
+  @ApiPropertyOptional({ enum: ['admin', 'cliente'] }) @IsOptional() @IsIn(['admin', 'cliente']) perfil?: 'admin' | 'cliente';
 }

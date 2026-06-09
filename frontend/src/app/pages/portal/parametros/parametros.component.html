@@ -1,15 +1,21 @@
 <po-page-default p-title="Parâmetros do Sistema">
-  
-  <po-button p-label="Novo Parâmetro" p-icon="po-icon-plus" (p-click)="create()" class="po-mb-2">
+
+  <po-button
+    p-label="Novo Parâmetro"
+    p-icon="an an-plus"
+    (p-click)="create()">
   </po-button>
 
   <po-table
-    [p-items]="parametros"
+    [p-items]="parametrosVisiveis"
     [p-columns]="columns"
     [p-actions]="actions"
     [p-loading]="loading"
-    p-striped="true"
-    p-hide-columns-manager="true">
+    [p-striped]="true"
+    [p-hide-columns-manager]="true"
+    [p-show-more-disabled]="showMoreDisabled"
+    [p-loading-show-more]="loadingMore"
+    (p-show-more)="onShowMore()">
   </po-table>
 
 </po-page-default>
@@ -19,7 +25,7 @@
   [p-title]="isEditing ? 'Editar Parâmetro' : 'Novo Parâmetro'"
   [p-primary-action]="modalPrimaryAction"
   [p-secondary-action]="modalSecondaryAction">
-  
+
   <form>
     <po-input
       name="chave"

@@ -129,12 +129,24 @@ npm install && npm run start:dev
 
 ## Documentação
 
+### Base para recriar o projeto
+
+- [Guia de recriação completa](docs/recriacao-completa.md)
+- [Arquitetura do projeto](docs/arquitetura.md)
+- [Mapa de módulos](docs/modulos.md)
+
+### Referência técnica
+
 - [Banco de dados](docs/database.md)
 - [API — endpoints detalhados](docs/api.md)
+- [Frontend](docs/frontend.md)
 - [ETL — pipeline de carga RFB](docs/etl.md)
 - [Planos e rate limiting](docs/planos.md)
+- [CEP e geolocalização](docs/cep.md)
+- [PIX Inter](docs/pix-inter.md)
 - [Mapa de prospecção](docs/mapa-prospeccao.md)
 - [Integração com o CRM](docs/integracao.md)
+- [Setup de VPS](docs/vps-setup.md)
 
 ---
 

@@ -87,7 +87,7 @@ export class ClientesPoUiController {
 
   @Post()
   async create(@Body() createClienteDto: CreateClienteDto) {
-    const res = await this.clientesService.signup(createClienteDto);
+    const res = await this.clientesService.adminCreate(createClienteDto);
     const cliente = await this.clientesService.findOne(res.id);
     return this.clientesService.sanitizeAdminResponse(cliente);
   }

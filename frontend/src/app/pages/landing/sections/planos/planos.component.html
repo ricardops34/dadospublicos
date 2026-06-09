@@ -53,12 +53,22 @@
           </ul>
 
           <po-button
+            *ngIf="registrosHabilitados"
             p-label="Assinar agora"
             [p-kind]="p.destaque ? 'primary' : 'secondary'"
             [p-icon]="p.destaque ? 'an an-rocket-launch' : 'an an-arrow-right'"
             p-size="large"
             class="rfb-planos__cta"
             (p-click)="irParaCadastro(p)">
+          </po-button>
+          <po-button
+            *ngIf="!registrosHabilitados"
+            p-label="Em breve"
+            p-kind="secondary"
+            p-icon="an an-clock"
+            p-size="large"
+            [p-disabled]="true"
+            class="rfb-planos__cta">
           </po-button>
         </div>
       </div>

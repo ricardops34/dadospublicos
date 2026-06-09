@@ -26,6 +26,7 @@ export class ParametrosService implements OnModuleInit {
       { chave: 'SMTP_SECURE', valor: 'false',                  descricao: 'TLS direto (false = STARTTLS na porta 587)' },
       { chave: 'APP_URL',              valor: 'https://app.bjsoft.com.br', descricao: 'URL base da aplicação (usada nos e-mails)' },
       { chave: 'DIAS_RETENCAO_CONTA', valor: '30',                        descricao: 'Dias de retenção após solicitação de exclusão de conta (LGPD)' },
+      { chave: 'REGISTROS_HABILITADOS', valor: 'false',                   descricao: 'Habilita ou desabilita novos cadastros pela Landing Page (true/false)' },
     ];
 
     for (const p of defaultParams) {

@@ -44,10 +44,18 @@
         </po-button>
       </a>
       <po-button
+        *ngIf="registrosHabilitados"
         p-label="Criar conta gratis"
         p-kind="primary"
         p-icon="an an-rocket-launch"
         (p-click)="irParaCadastro()">
+      </po-button>
+      <po-button
+        *ngIf="!registrosHabilitados"
+        p-label="Em breve"
+        p-kind="secondary"
+        p-icon="an an-clock"
+        [p-disabled]="true">
       </po-button>
     </div>
   </div>
