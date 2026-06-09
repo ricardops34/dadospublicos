@@ -2,7 +2,7 @@ import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { PoHeaderActionTool, PoHeaderBrand, PoHeaderUser, PoMenuItem } from '@po-ui/ng-components';
 import { AuthService } from '../../services/auth.service';
-import { ClientePortalService } from './cliente/cliente.service';
+import { UsuarioPortalService } from './cliente/usuario.service';
 import { Notificacao, NotificacoesService } from '../../services/notificacoes.service';
 import { MenuService } from '../../services/menu.service';
 
@@ -54,7 +54,7 @@ export class PortalShellComponent implements OnInit {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private clienteService: ClientePortalService,
+    private clienteService: UsuarioPortalService,
     private notifSvc: NotificacoesService,
     private menuService: MenuService,
   ) {}

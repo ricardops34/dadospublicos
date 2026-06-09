@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { PoComboFilterMode } from '@po-ui/ng-components';
-import { ClientePerfil, ClientePortalService } from '../cliente.service';
+import { UsuarioPerfil, UsuarioPortalService } from '../usuario.service';
 import { NotifService } from '../../../../services/notif.service';
 import { environment } from '../../../../../environments/environment';
 
@@ -273,7 +273,7 @@ export class PrimeiroAcessoComponent implements OnInit {
   salvando = false;
   erro = '';
   stepAtual = 1;
-  perfil: ClientePerfil | null = null;
+  perfil: UsuarioPerfil | null = null;
   planoSelecionado: any = null;
   planoAtualSlug: string | null = null;
   planos: any[] = [];
@@ -318,7 +318,7 @@ export class PrimeiroAcessoComponent implements OnInit {
   };
 
   constructor(
-    private clienteService: ClientePortalService,
+    private clienteService: UsuarioPortalService,
     private notif: NotifService,
     private router: Router,
     private http: HttpClient,

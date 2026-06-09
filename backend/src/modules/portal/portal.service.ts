@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { ClienteApi } from '../../entities/cliente.entity';
+import { Usuario } from '../../entities/usuario.entity';
 import { Assinatura } from '../../entities/assinatura.entity';
 import { Token } from '../../entities/token.entity';
 import { LoginPortalDto } from './dto/login-portal.dto';
@@ -13,7 +13,7 @@ import { LoginPortalDto } from './dto/login-portal.dto';
 @Injectable()
 export class PortalService {
   constructor(
-    @InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>,
+    @InjectRepository(Usuario, 'buscadados') private clientes: Repository<Usuario>,
     @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
     @InjectRepository(Token, 'buscadados') private tokens: Repository<Token>,
     private jwtService: JwtService,
@@ -54,14 +54,14 @@ export class PortalService {
 
   // ─── Token de API ──────────────────────────────────────────────────────────
 
-  private async resolverApiToken(cliente: ClienteApi): Promise<string | null> {
+  private async resolverApiToken(cliente: Usuario): Promise<string | null> {
     if (cliente.perfil === 'admin') {
       return this.resolverTokenAdmin(cliente);
     }
     return this.resolverTokenCliente(cliente.id);
   }
 
-  private async resolverTokenAdmin(cliente: ClienteApi): Promise<string> {
+  private async resolverTokenAdmin(cliente: Usuario): Promise<string> {
     // Admin tem token próprio identificado pelo e-mail
     const existente = await this.tokens.findOne({
       where: { email: cliente.email, ativo: true },

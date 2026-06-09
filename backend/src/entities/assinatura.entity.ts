@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { ClienteApi } from './cliente.entity';
+import { Usuario } from './usuario.entity';
 import { Conta } from './conta.entity';
 import { Plano } from './plano.entity';
 import { Token } from './token.entity';
@@ -56,9 +56,9 @@ export class Assinatura {
   @UpdateDateColumn({ name: 'atualizado_em' })
   atualizadoEm: Date;
 
-  @ManyToOne(() => ClienteApi, (c) => c.assinaturas)
+  @ManyToOne(() => Usuario, (c) => c.assinaturas)
   @JoinColumn({ name: 'cliente_id' })
-  cliente: ClienteApi;
+  cliente: Usuario;
 
   @ManyToOne(() => Plano, (p) => p.assinaturas)
   @JoinColumn({ name: 'plano_id' })

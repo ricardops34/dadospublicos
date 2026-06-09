@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 
-export class CreateClienteDto {
+export class CreateUsuarioDto {
   @ApiProperty({ example: 'João Silva' }) @IsString() nome: string;
   @ApiProperty({ example: 'joao@empresa.com' }) @IsEmail() email: string;
   @ApiProperty({ example: 'Senha@123', minLength: 8 }) @IsString() @MinLength(8) senha: string;
@@ -24,7 +24,7 @@ export class CreateClienteDto {
   @ApiPropertyOptional({ enum: ['admin', 'cliente'] }) @IsOptional() @IsIn(['admin', 'cliente']) perfil?: 'admin' | 'cliente';
 }
 
-export class LoginClienteDto {
+export class LoginUsuarioDto {
   @ApiProperty() @IsEmail() email: string;
   @ApiProperty() @IsString() senha: string;
 }
@@ -44,7 +44,7 @@ export class VerificarEmailCodigoDto {
   @ApiProperty({ example: '123456' }) @IsString() codigo: string;
 }
 
-export class UpdateClienteDto {
+export class UpdateUsuarioDto {
   @ApiPropertyOptional() @IsOptional() nome?: string;
   @ApiPropertyOptional() @IsOptional() onboardingPendente?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsEmail() email?: string;

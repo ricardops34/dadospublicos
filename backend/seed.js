@@ -34,7 +34,7 @@ async function main() {
   const ds       = app.get(getDataSourceToken('buscadados'));
   const dsViacep = app.get(getDataSourceToken('viacep'));
   await ds.query(`
-    INSERT INTO clientes_api (nome, email, senha_hash, perfil, ativo, email_verificado, onboarding_pendente, tipo_pessoa)
+    INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo, email_verificado, onboarding_pendente, tipo_pessoa)
     VALUES ($1, $2, $3, 'admin', true, true, false, 'J')
     ON CONFLICT (email) DO UPDATE
     SET nome = EXCLUDED.nome, senha_hash = EXCLUDED.senha_hash,
@@ -47,7 +47,7 @@ async function main() {
   const { AssinaturasService } = require('./dist/modules/assinaturas/assinaturas.service');
   const assinaturasService = app.get(AssinaturasService);
 
-  const [adminRow] = await ds.query(`SELECT id FROM clientes_api WHERE email = $1 LIMIT 1`, [ADMIN_EMAIL]);
+  const [adminRow] = await ds.query(`SELECT id FROM usuarios WHERE email = $1 LIMIT 1`, [ADMIN_EMAIL]);
   if (!adminRow) throw new Error('Admin não encontrado após insert.');
 
   const [activePlan] = await ds.query(`
@@ -102,15 +102,15 @@ async function main() {
       inscricao_estadual, inscricao_municipal,
       ativo, onboarding_pendente, agendar_exclusao_em,
       criado_em, atualizado_em
-    FROM clientes_api
+    FROM usuarios
     WHERE perfil = 'cliente'
       AND conta_id IS NULL
       AND id NOT IN (SELECT proprietario_id FROM contas)
   `);
 
-  // Vincula conta_id em clientes_api
+  // Vincula conta_id em usuarios
   await ds.query(`
-    UPDATE clientes_api u
+    UPDATE usuarios u
     SET conta_id = c.id
     FROM contas c
     WHERE c.proprietario_id = u.id
@@ -121,7 +121,7 @@ async function main() {
   await ds.query(`
     UPDATE assinaturas a
     SET conta_id = u.conta_id
-    FROM clientes_api u
+    FROM usuarios u
     WHERE a.cliente_id = u.id
       AND u.conta_id IS NOT NULL
       AND a.conta_id IS NULL
@@ -185,6 +185,9 @@ async function main() {
     { id: 'c1000000-0000-0000-0000-000000000011', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Parâmetros',       shortLabel: 'Params',   icone: 'an an-sliders',           rota: '/portal/parametros',      tipo: 'link', ordem: 1 },
     { id: 'c1000000-0000-0000-0000-000000000012', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Config. E-mail',   shortLabel: 'E-mail',   icone: 'an an-envelope',          rota: '/portal/config-email',    tipo: 'link', ordem: 2 },
     { id: 'c1000000-0000-0000-0000-000000000013', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'ETL / Sistema',    shortLabel: 'ETL',      icone: 'an an-database',          rota: '/portal/etl',             tipo: 'link', ordem: 3 },
+    { id: 'c1000000-0000-0000-0000-000000000020', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Perfis',           shortLabel: 'Perfis',   icone: 'an an-identification-badge', rota: '/portal/perfis',       tipo: 'link', ordem: 4 },
+    { id: 'c1000000-0000-0000-0000-000000000021', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Módulos',          shortLabel: 'Módulos',  icone: 'an an-squares-four',      rota: '/portal/modulos',         tipo: 'link', ordem: 5 },
+    { id: 'c1000000-0000-0000-0000-000000000022', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Manutenção Menu',  shortLabel: 'Menu',     icone: 'an an-list',              rota: '/portal/rotinas',         tipo: 'link', ordem: 6 },
     // Minha Conta (admin)
     { id: 'c1000000-0000-0000-0000-000000000014', moduloId: 'b1000000-0000-0000-0000-000000000005', nome: 'Dados pessoais',   shortLabel: 'Dados',    icone: 'an an-user',              rota: '/portal/minha-conta',     tipo: 'link', ordem: 1 },
     { id: 'c1000000-0000-0000-0000-000000000015', moduloId: 'b1000000-0000-0000-0000-000000000005', nome: 'Meu Plano',        shortLabel: 'Plano',    icone: 'an an-tag',               rota: '/portal/meu-plano',       tipo: 'link', ordem: 2 },
@@ -254,7 +257,7 @@ async function main() {
   console.log('[seed] Associações PerfilRotina OK.');
 
   // ── Resumo ───────────────────────────────────────────────────────────────
-  const [[{ clientes }]]    = [await ds.query(`SELECT count(*)::int AS clientes FROM clientes_api`)];
+  const [[{ clientes }]]    = [await ds.query(`SELECT count(*)::int AS clientes FROM usuarios`)];
   const [[{ planos_count }]] = [await ds.query(`SELECT count(*)::int AS planos_count FROM planos`)];
   console.log(`\n[seed] ✓ Concluído — clientes: ${clientes}, planos: ${planos_count}`);
 

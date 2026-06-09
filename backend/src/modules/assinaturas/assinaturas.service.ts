@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto';
 import { Cron } from '@nestjs/schedule';
 import { Assinatura } from '../../entities/assinatura.entity';
 import { Token } from '../../entities/token.entity';
-import { ClienteApi } from '../../entities/cliente.entity';
+import { Usuario } from '../../entities/usuario.entity';
 import { Plano } from '../../entities/plano.entity';
 import { Fatura } from '../../entities/fatura.entity';
 import { Consumo } from '../../entities/consumo.entity';
@@ -16,7 +16,7 @@ export class AssinaturasService {
   constructor(
     @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
     @InjectRepository(Token, 'buscadados') private tokens: Repository<Token>,
-    @InjectRepository(ClienteApi, 'buscadados') private clientes: Repository<ClienteApi>,
+    @InjectRepository(Usuario, 'buscadados') private clientes: Repository<Usuario>,
     @InjectRepository(Plano, 'buscadados') private planos: Repository<Plano>,
     @InjectRepository(Fatura, 'buscadados') private faturas: Repository<Fatura>,
     @InjectRepository(Consumo, 'buscadados') private consumos: Repository<Consumo>,

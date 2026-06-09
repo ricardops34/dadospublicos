@@ -2,31 +2,31 @@ import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch,
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { Perfil } from '../portal/perfil.decorator';
-import { ClientesService } from './clientes.service';
-import { AgendarExclusaoDto, CreateClienteDto, UpdateClienteDto } from './dto/create-cliente.dto';
+import { UsuariosService } from './usuarios.service';
+import { AgendarExclusaoDto, CreateUsuarioDto, UpdateUsuarioDto } from './dto/create-usuario.dto';
 import { CnpjService } from '../cnpj/cnpj.service';
 import { GeocodeService } from '../geocode/geocode.service';
 
-@ApiTags('Clientes (PO-UI)')
+@ApiTags('Usuarios (PO-UI)')
 @ApiBearerAuth()
-@Controller('admin/clientes-poui')
+@Controller('admin/usuarios-poui')
 @UseGuards(JwtPortalGuard)
 @Perfil('admin')
-export class ClientesPoUiController {
+export class UsuariosPoUiController {
   constructor(
-    private readonly clientesService: ClientesService,
+    private readonly usuariosService: UsuariosService,
     private readonly cnpjService: CnpjService,
     private readonly geocodeService: GeocodeService,
   ) {}
 
-  private toPoUiListItem(cliente: any) {
-    const safeCliente = this.clientesService.sanitizeAdminResponse(cliente);
+  private toPoUiListItem(usuario: any) {
+    const safeUsuario = this.usuariosService.sanitizeAdminResponse(usuario);
 
     return {
-      ...safeCliente,
-      ativoStatus: cliente.ativo ? 1 : 0,
-      emailVerificado: cliente.emailVerificado ? 1 : 0,
-      plano: cliente.assinaturas?.find((assinatura: any) => assinatura.status === 'ativa')?.plano?.nome ?? '—',
+      ...safeUsuario,
+      ativoStatus: usuario.ativo ? 1 : 0,
+      emailVerificado: usuario.emailVerificado ? 1 : 0,
+      plano: usuario.assinaturas?.find((assinatura: any) => assinatura.status === 'ativa')?.plano?.nome ?? '—',
     };
   }
 
@@ -40,11 +40,11 @@ export class ClientesPoUiController {
     delete filters.pageSize;
     delete filters.search;
 
-    const [items, total] = await this.clientesService.findAll(pagina, limite, search, filters);
+    const [items, total] = await this.usuariosService.findAll(pagina, limite, search, filters);
 
     return {
       hasNext: (pagina * limite) < total,
-      items: items.map((cliente) => this.toPoUiListItem(cliente)),
+      items: items.map((usuario) => this.toPoUiListItem(usuario)),
     };
   }
 
@@ -81,57 +81,57 @@ export class ClientesPoUiController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const cliente = await this.clientesService.findOne(id);
-    return this.clientesService.sanitizeAdminResponse(cliente);
+    const usuario = await this.usuariosService.findOne(id);
+    return this.usuariosService.sanitizeAdminResponse(usuario);
   }
 
   @Post()
-  async create(@Body() createClienteDto: CreateClienteDto) {
-    const res = await this.clientesService.adminCreate(createClienteDto);
-    const cliente = await this.clientesService.findOne(res.id);
-    return this.clientesService.sanitizeAdminResponse(cliente);
+  async create(@Body() createUsuarioDto: CreateUsuarioDto) {
+    const res = await this.usuariosService.adminCreate(createUsuarioDto);
+    const usuario = await this.usuariosService.findOne(res.id);
+    return this.usuariosService.sanitizeAdminResponse(usuario);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateClienteDto: UpdateClienteDto) {
-    await this.clientesService.atualizar(id, updateClienteDto);
-    const cliente = await this.clientesService.findOne(id);
-    return this.clientesService.sanitizeAdminResponse(cliente);
+  async update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
+    await this.usuariosService.atualizar(id, updateUsuarioDto);
+    const usuario = await this.usuariosService.findOne(id);
+    return this.usuariosService.sanitizeAdminResponse(usuario);
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      const result = await this.clientesService.agendarExclusaoAdmin(id, { agendarPara: 'agora' });
+      const result = await this.usuariosService.agendarExclusaoAdmin(id, { agendarPara: 'agora' });
       return { success: true, ...result };
     } catch (e: any) {
-      throw new HttpException(e.message || 'Erro ao excluir cliente.', HttpStatus.UNPROCESSABLE_ENTITY);
+      throw new HttpException(e.message || 'Erro ao excluir usuário.', HttpStatus.UNPROCESSABLE_ENTITY);
     }
   }
 
   @Patch(':id/ativo')
   async ativar(@Param('id') id: string, @Body('ativo') ativo: boolean) {
-    return this.clientesService.ativar(id, ativo);
+    return this.usuariosService.ativar(id, ativo);
   }
 
   @Patch(':id/confirmar-email')
   async confirmarEmail(@Param('id') id: string) {
-    return this.clientesService.confirmarEmail(id);
+    return this.usuariosService.confirmarEmail(id);
   }
 
   @Post(':id/enviar-reset-senha')
   async enviarResetSenha(@Param('id') id: string) {
-    return this.clientesService.enviarResetPorAdmin(id);
+    return this.usuariosService.enviarResetPorAdmin(id);
   }
 
   @Post(':id/agendar-exclusao')
   async agendarExclusao(@Param('id') id: string, @Body() dto: AgendarExclusaoDto) {
-    return this.clientesService.agendarExclusaoAdmin(id, dto);
+    return this.usuariosService.agendarExclusaoAdmin(id, dto);
   }
 
   @Post(':id/cancelar-exclusao')
   async cancelarExclusao(@Param('id') id: string) {
-    return this.clientesService.cancelarExclusaoAdmin(id);
+    return this.usuariosService.cancelarExclusaoAdmin(id);
   }
 
   @Post('validate-cpf')

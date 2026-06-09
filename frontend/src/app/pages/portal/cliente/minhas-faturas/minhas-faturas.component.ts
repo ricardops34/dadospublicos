@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { PoTableColumn } from '@po-ui/ng-components';
-import { ClientePortalService } from '../cliente.service';
+import { UsuarioPortalService } from '../usuario.service';
 
 @Component({
   selector: 'app-minhas-faturas',
@@ -30,7 +30,7 @@ export class MinhasFaturasComponent implements OnInit {
     { property: 'totalRequisicoes', label: 'Req.',      type: 'number', width: '7%' },
   ];
 
-  constructor(private svc: ClientePortalService, private cdr: ChangeDetectorRef) {}
+  constructor(private svc: UsuarioPortalService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.minhasFaturas().subscribe({

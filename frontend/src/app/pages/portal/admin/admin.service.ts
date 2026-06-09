@@ -19,35 +19,35 @@ export class AdminService {
   ) {}
 
   detalheCliente(id: string) {
-    return this.http.get<any>(`${API}/admin/clientes-poui/${id}`);
+    return this.http.get<any>(`${API}/admin/usuarios-poui/${id}`);
   }
 
   ativarCliente(id: string, ativo: boolean) {
-    return this.http.patch<any>(`${API}/admin/clientes-poui/${id}/ativo`, { ativo });
+    return this.http.patch<any>(`${API}/admin/usuarios-poui/${id}/ativo`, { ativo });
   }
 
   agendarExclusaoCliente(id: string, agendarPara: 'agora' | 'fim-plano') {
-    return this.http.post<any>(`${API}/admin/clientes-poui/${id}/agendar-exclusao`, { agendarPara });
+    return this.http.post<any>(`${API}/admin/usuarios-poui/${id}/agendar-exclusao`, { agendarPara });
   }
 
   cancelarExclusaoCliente(id: string) {
-    return this.http.post<any>(`${API}/admin/clientes-poui/${id}/cancelar-exclusao`, {});
+    return this.http.post<any>(`${API}/admin/usuarios-poui/${id}/cancelar-exclusao`, {});
   }
 
   confirmarEmailCliente(id: string) {
-    return this.http.patch<any>(`${API}/admin/clientes-poui/${id}/confirmar-email`, {});
+    return this.http.patch<any>(`${API}/admin/usuarios-poui/${id}/confirmar-email`, {});
   }
 
   enviarResetSenhaCliente(id: string) {
-    return this.http.post<any>(`${API}/admin/clientes-poui/${id}/enviar-reset-senha`, {});
+    return this.http.post<any>(`${API}/admin/usuarios-poui/${id}/enviar-reset-senha`, {});
   }
 
   lookupCnpj(cnpj: string) {
-    return this.http.get<any>(`${API}/admin/clientes-poui/lookup/cnpj/${cnpj.replace(/\D/g, '')}`);
+    return this.http.get<any>(`${API}/admin/usuarios-poui/lookup/cnpj/${cnpj.replace(/\D/g, '')}`);
   }
 
   lookupCep(cep: string) {
-    return this.http.get<any>(`${API}/admin/clientes-poui/lookup/cep/${cep.replace(/\D/g, '')}`);
+    return this.http.get<any>(`${API}/admin/usuarios-poui/lookup/cep/${cep.replace(/\D/g, '')}`);
   }
 
   listarAssinaturas(pagina = 1, limite = 20) {

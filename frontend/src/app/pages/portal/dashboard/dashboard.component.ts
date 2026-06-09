@@ -3,7 +3,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { PoChartSerie, PoChartType } from '@po-ui/ng-components';
 import { AuthService } from '../../../services/auth.service';
-import { ClientePortalService } from '../cliente/cliente.service';
+import { UsuarioPortalService } from '../cliente/usuario.service';
 
 @Component({
   selector: 'app-portal-dashboard',
@@ -26,7 +26,7 @@ export class DashboardComponent implements OnInit {
   chartConsumo: PoChartSerie[] = [];
   chartCategories: string[] = [];
 
-  constructor(private auth: AuthService, private clienteSvc: ClientePortalService, private cdr: ChangeDetectorRef) {}
+  constructor(private auth: AuthService, private clienteSvc: UsuarioPortalService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.nome = this.auth.getNome();

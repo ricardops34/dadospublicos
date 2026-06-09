@@ -28,7 +28,7 @@ export class VerificarEmailComponent implements OnInit {
       return;
     }
 
-    this.http.get<{mensagem: string}>(`${environment.apiUrl}/clientes/verificar-email/${token}`).subscribe({
+    this.http.get<{mensagem: string}>(`${environment.apiUrl}/usuarios/verificar-email/${token}`).subscribe({
       next: (res) => {
         this.verificando = false;
         this.sucesso = true;

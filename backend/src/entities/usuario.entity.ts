@@ -2,8 +2,8 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, Pri
 import { Assinatura } from './assinatura.entity';
 import { Conta } from './conta.entity';
 
-@Entity('clientes_api')
-export class ClienteApi {
+@Entity('usuarios')
+export class Usuario {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

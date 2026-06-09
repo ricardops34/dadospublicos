@@ -13,7 +13,7 @@ export class LpRegistroService {
   registrosHabilitados(): Observable<boolean> {
     if (!this.status$) {
       this.status$ = this.http
-        .get<{ habilitado: boolean }>(`${environment.apiUrl}/clientes/status-registro`)
+        .get<{ habilitado: boolean }>(`${environment.apiUrl}/usuarios/status-registro`)
         .pipe(
           map((r) => r.habilitado),
           catchError(() => of(false)),

@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PoComboFilterMode, PoModalAction, PoModalComponent } from '@po-ui/ng-components';
 import { NotifService } from '../../../../services/notif.service';
 import { AuthService } from '../../../../services/auth.service';
-import { ClienteExclusaoResponse, ClientePortalService } from '../cliente.service';
+import { UsuarioExclusaoResponse, UsuarioPortalService } from '../usuario.service';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -75,7 +75,7 @@ export class MinhaContaComponent implements OnInit {
   };
 
   constructor(
-    private svc: ClientePortalService,
+    private svc: UsuarioPortalService,
     private notif: NotifService,
     private auth: AuthService,
     private router: Router,
@@ -208,7 +208,7 @@ export class MinhaContaComponent implements OnInit {
 
   salvarConta() {
     this.salvandoConta = true;
-    this.http.patch(`${environment.apiUrl}/clientes/me/conta`, this.formConta).subscribe({
+    this.http.patch(`${environment.apiUrl}/usuarios/me/conta`, this.formConta).subscribe({
       next: (contaAtualizada) => {
         this.conta = { ...this.conta, ...contaAtualizada };
         this.editandoConta = false;
@@ -353,7 +353,7 @@ export class MinhaContaComponent implements OnInit {
     });
   }
 
-  private aplicarResultadoExclusao(response: ClienteExclusaoResponse) {
+  private aplicarResultadoExclusao(response: UsuarioExclusaoResponse) {
     if (response.tipoFluxo === 'exclusao-imediata') {
       this.notif.success(response.mensagem || 'Conta excluída com sucesso.');
       this.auth.logout();

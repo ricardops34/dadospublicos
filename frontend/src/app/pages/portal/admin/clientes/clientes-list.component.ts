@@ -25,7 +25,7 @@ import { AdminService } from '../admin.service';
 export class ClientesListComponent {
   @ViewChild('dynamicTable') dynamicTable!: PoPageDynamicTableComponent;
 
-  apiService = `${environment.apiUrl}/admin/clientes-poui`;
+  apiService = `${environment.apiUrl}/admin/usuarios-poui`;
   breadcrumb = { items: [{ label: 'Início', link: '/portal/dashboard' }, { label: 'Clientes', link: '/portal/clientes' }] };
 
   constructor(

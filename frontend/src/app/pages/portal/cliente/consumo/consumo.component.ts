@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { PoChartSerie, PoChartType } from '@po-ui/ng-components';
-import { ClientePortalService } from '../cliente.service';
+import { UsuarioPortalService } from '../usuario.service';
 
 @Component({
   selector: 'app-consumo',
@@ -16,7 +16,7 @@ export class ConsumoComponent implements OnInit {
   chartSeries: PoChartSerie[] = [];
   chartCategories: string[] = [];
 
-  constructor(private svc: ClientePortalService, private cdr: ChangeDetectorRef) {}
+  constructor(private svc: UsuarioPortalService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.minhaAssinatura().subscribe({ next: (a) => { this.assinatura = a; }, error: () => {} });

@@ -2,14 +2,14 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { ClientePortalService } from '../pages/portal/cliente/cliente.service';
+import { UsuarioPortalService } from '../pages/portal/cliente/usuario.service';
 import { temRecursoPainel360 } from '../pages/portal/painel-360/painel-360.types';
 import { AuthService } from '../services/auth.service';
 
 export const clienteRecursoGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const clienteService = inject(ClientePortalService);
+  const clienteService = inject(UsuarioPortalService);
 
   if (auth.isAdmin()) {
     return true;

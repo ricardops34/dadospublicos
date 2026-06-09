@@ -39,14 +39,14 @@ async function main() {
       inscricao_estadual, inscricao_municipal,
       ativo, onboarding_pendente, agendar_exclusao_em,
       criado_em, atualizado_em
-    FROM clientes_api
+    FROM usuarios
     WHERE perfil = 'cliente'
       AND conta_id IS NULL
       AND id NOT IN (SELECT proprietario_id FROM contas)
   `);
 
   await ds.query(`
-    UPDATE clientes_api u
+    UPDATE usuarios u
     SET conta_id = c.id
     FROM contas c
     WHERE c.proprietario_id = u.id
@@ -56,14 +56,14 @@ async function main() {
   await ds.query(`
     UPDATE assinaturas a
     SET conta_id = u.conta_id
-    FROM clientes_api u
+    FROM usuarios u
     WHERE a.cliente_id = u.id
       AND u.conta_id IS NOT NULL
       AND a.conta_id IS NULL
   `);
 
   const [[{ total_contas }]]    = [await ds.query(`SELECT count(*)::int AS total_contas FROM contas`)];
-  const [[{ sem_conta }]]       = [await ds.query(`SELECT count(*)::int AS sem_conta FROM clientes_api WHERE perfil='cliente' AND conta_id IS NULL`)];
+  const [[{ sem_conta }]]       = [await ds.query(`SELECT count(*)::int AS sem_conta FROM usuarios WHERE perfil='cliente' AND conta_id IS NULL`)];
   console.log(`[migrate] Contas: ${total_contas} | Clientes sem conta: ${sem_conta} (deve ser 0)`);
 
   // ── 2. Menu dinâmico ──────────────────────────────────────────────────────
@@ -116,6 +116,9 @@ async function main() {
     { id: 'c1000000-0000-0000-0000-000000000011', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Parâmetros',       shortLabel: 'Params',     icone: 'an an-sliders',           rota: '/portal/parametros',       tipo: 'link',   ordem: 1 },
     { id: 'c1000000-0000-0000-0000-000000000012', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Config. E-mail',   shortLabel: 'E-mail',     icone: 'an an-envelope',          rota: '/portal/config-email',     tipo: 'link',   ordem: 2 },
     { id: 'c1000000-0000-0000-0000-000000000013', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'ETL / Sistema',    shortLabel: 'ETL',        icone: 'an an-database',          rota: '/portal/etl',              tipo: 'link',   ordem: 3 },
+    { id: 'c1000000-0000-0000-0000-000000000020', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Perfis',           shortLabel: 'Perfis',     icone: 'an an-identification-badge', rota: '/portal/perfis',        tipo: 'link',   ordem: 4 },
+    { id: 'c1000000-0000-0000-0000-000000000021', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Módulos',          shortLabel: 'Módulos',    icone: 'an an-squares-four',      rota: '/portal/modulos',          tipo: 'link',   ordem: 5 },
+    { id: 'c1000000-0000-0000-0000-000000000022', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Manutenção Menu',  shortLabel: 'Menu',       icone: 'an an-list',              rota: '/portal/rotinas',          tipo: 'link',   ordem: 6 },
     { id: 'c1000000-0000-0000-0000-000000000014', moduloId: 'b1000000-0000-0000-0000-000000000005', nome: 'Dados pessoais',   shortLabel: 'Dados',      icone: 'an an-user',              rota: '/portal/minha-conta',      tipo: 'link',   ordem: 1 },
     { id: 'c1000000-0000-0000-0000-000000000015', moduloId: 'b1000000-0000-0000-0000-000000000005', nome: 'Meu Plano',        shortLabel: 'Plano',      icone: 'an an-tag',               rota: '/portal/meu-plano',        tipo: 'link',   ordem: 2 },
     { id: 'c1000000-0000-0000-0000-000000000016', moduloId: 'b1000000-0000-0000-0000-000000000005', nome: 'Meu Token API',    shortLabel: 'Token',      icone: 'an an-key',               rota: '/portal/meu-token',        tipo: 'link',   ordem: 3 },

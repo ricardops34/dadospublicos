@@ -30,7 +30,7 @@ export class ClientesFormComponent {
     if (form?.dirty) form.markAsPristine();
   }
 
-  apiService = `${environment.apiUrl}/admin/clientes-poui`;
+  apiService = `${environment.apiUrl}/admin/usuarios-poui`;
 
   constructor(private http: HttpClient) {}
 
@@ -45,7 +45,7 @@ export class ClientesFormComponent {
     this.mudarUf({ value: uf });
     this.http
       .get<{ items?: Array<{ label: string; value: string }> }>(
-        `${environment.apiUrl}/admin/clientes-poui/municipios/${uf}`,
+        `${environment.apiUrl}/admin/usuarios-poui/municipios/${uf}`,
       )
       .pipe(
         map((res) => res.items ?? []),
@@ -75,13 +75,13 @@ export class ClientesFormComponent {
   }
 
   validarCpf = (changedValue: any) => {
-    return this.http.post(`${environment.apiUrl}/admin/clientes-poui/validate-cpf`, changedValue).pipe(
+    return this.http.post(`${environment.apiUrl}/admin/usuarios-poui/validate-cpf`, changedValue).pipe(
       catchError(() => of({ value: changedValue })),
     );
   };
 
   validarCep = (changedValue: any) => {
-    return this.http.post(`${environment.apiUrl}/admin/clientes-poui/validate-cep`, changedValue).pipe(
+    return this.http.post(`${environment.apiUrl}/admin/usuarios-poui/validate-cep`, changedValue).pipe(
       map((res: any) => {
         if (res?.fields?.length) {
           return { value: changedValue?.value ?? changedValue, fields: res.fields };
@@ -106,7 +106,7 @@ export class ClientesFormComponent {
     const cnpj = (changedValue.value ?? '').replace(/\D/g, '');
     if (cnpj.length !== 14) return of({ value: changedValue.value });
 
-    return this.http.post<any>(`${environment.apiUrl}/admin/clientes-poui/validate-cnpj`, changedValue).pipe(
+    return this.http.post<any>(`${environment.apiUrl}/admin/usuarios-poui/validate-cnpj`, changedValue).pipe(
       map((res: any) => {
         if (res?.fields?.length) {
           return { value: changedValue.value, fields: res.fields };
@@ -162,7 +162,7 @@ export class ClientesFormComponent {
     this.fields = this.fields.map((field) => {
       if (field.property === 'municipio') {
         if (uf) {
-          field.optionsService = `${environment.apiUrl}/admin/clientes-poui/municipios/${uf}`;
+          field.optionsService = `${environment.apiUrl}/admin/usuarios-poui/municipios/${uf}`;
           field.disabled = false;
         } else {
           field.optionsService = undefined;
@@ -221,7 +221,7 @@ export class ClientesFormComponent {
     { property: 'logradouro', label: 'Rua', required: true, gridColumns: 5 },
     { property: 'numero', label: 'Número', required: true, gridColumns: 2 },
     { property: 'bairro', label: 'Bairro', required: true, gridColumns: 4 },
-    { property: 'uf', label: 'Estado', required: true, gridColumns: 4, type: 'combo', optionsService: `${environment.apiUrl}/admin/clientes-poui/ufs`, validate: this.mudarUf.bind(this) },
+    { property: 'uf', label: 'Estado', required: true, gridColumns: 4, type: 'combo', optionsService: `${environment.apiUrl}/admin/usuarios-poui/ufs`, validate: this.mudarUf.bind(this) },
     { property: 'municipio', label: 'Município', required: true, gridColumns: 4, type: 'combo', disabled: true },
     { property: 'complemento', label: 'Complemento', gridColumns: 4 },
   ];

@@ -14,7 +14,7 @@ import { ConsumoModule } from './modules/consumo/consumo.module';
 import { EtlModule } from './modules/etl/etl.module';
 import { HealthModule } from './modules/health/health.module';
 import { PlanosModule } from './modules/planos/planos.module';
-import { ClientesModule } from './modules/clientes/clientes.module';
+import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { AssinaturasModule } from './modules/assinaturas/assinaturas.module';
 import { FaturasModule } from './modules/faturas/faturas.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -118,7 +118,7 @@ import { MenuModule } from './modules/menu/menu.module';
 
     // Plataforma comercial
     PlanosModule,
-    ClientesModule,
+    UsuariosModule,
     AssinaturasModule,
     FaturasModule,
     Painel360Module,

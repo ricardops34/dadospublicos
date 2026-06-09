@@ -4,7 +4,7 @@ import { forkJoin } from 'rxjs';
 import { PoTableAction, PoTableColumn, PoUploadFileRestrictions } from '@po-ui/ng-components';
 import { AuthService } from '../../../../services/auth.service';
 import { NotifService } from '../../../../services/notif.service';
-import { ClientePortalService } from '../cliente.service';
+import { UsuarioPortalService } from '../usuario.service';
 import {
   Painel360GeoJsonCollection,
   Painel360Lote,
@@ -74,7 +74,7 @@ export class Painel360Component implements OnInit {
   ];
 
   constructor(
-    private clienteService: ClientePortalService,
+    private clienteService: UsuarioPortalService,
     private auth: AuthService,
     private notif: NotifService,
   ) {

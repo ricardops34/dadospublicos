@@ -1,13 +1,13 @@
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
-import { ClientePortalService } from '../pages/portal/cliente/cliente.service';
+import { UsuarioPortalService } from '../pages/portal/cliente/usuario.service';
 import { AuthService } from '../services/auth.service';
 
 export const clienteOnboardingGuard = (_route?: any, state?: any) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const clienteService = inject(ClientePortalService);
+  const clienteService = inject(UsuarioPortalService);
 
   if (!auth.isCliente()) {
     return true;

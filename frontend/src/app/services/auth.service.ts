@@ -45,31 +45,31 @@ export class AuthService {
   }
 
   loginApi(email: string, senha: string) {
-    return this.http.post<any>(`${environment.apiUrl}/clientes/login`, { email, senha });
+    return this.http.post<any>(`${environment.apiUrl}/usuarios/login`, { email, senha });
   }
 
   signupApi(dados: any) {
-    return this.http.post<any>(`${environment.apiUrl}/clientes/signup`, dados);
+    return this.http.post<any>(`${environment.apiUrl}/usuarios/signup`, dados);
   }
 
   recuperarSenha(email: string) {
-    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/recuperar-senha`, { email });
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/usuarios/recuperar-senha`, { email });
   }
 
   verificarEmailCodigo(email: string, codigo: string) {
-    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/verificar-email-codigo`, { email, codigo });
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/usuarios/verificar-email-codigo`, { email, codigo });
   }
 
   reenviarCodigoVerificacao(email: string) {
-    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/reenviar-codigo`, { email });
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/usuarios/reenviar-codigo`, { email });
   }
 
   verificarCodigoReset(email: string, codigo: string) {
-    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/verificar-codigo-reset`, { email, codigo });
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/usuarios/verificar-codigo-reset`, { email, codigo });
   }
 
   redefinirSenhaComCodigo(email: string, codigo: string, novaSenha: string) {
-    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/clientes/redefinir-senha`, { email, codigo, novaSenha });
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/usuarios/redefinir-senha`, { email, codigo, novaSenha });
   }
 
   loginCliente(id: string, nome: string) {

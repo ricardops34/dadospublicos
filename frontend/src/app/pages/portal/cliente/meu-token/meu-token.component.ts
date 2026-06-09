@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { NotifService } from '../../../../services/notif.service';
-import { ClientePortalService } from '../cliente.service';
+import { UsuarioPortalService } from '../usuario.service';
 
 @Component({
   selector: 'app-meu-token',
@@ -16,7 +16,7 @@ export class MeuTokenComponent implements OnInit {
   regerando = false;
   novoToken: string | null = null;
 
-  constructor(private svc: ClientePortalService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
+  constructor(private svc: UsuarioPortalService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.svc.meuPerfil().subscribe({

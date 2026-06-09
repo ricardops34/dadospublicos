@@ -99,7 +99,7 @@ export class ConsumoController {
       .createQueryBuilder('c')
       .innerJoin('tokens', 't', 't.id = c.token_id')
       .innerJoin('assinaturas', 'a', 'a.token_id = t.id')
-      .innerJoin('clientes_api', 'cl', 'cl.id = a.cliente_id')
+      .innerJoin('usuarios', 'cl', 'cl.id = a.cliente_id')
       .innerJoin('planos', 'p', 'p.id = a.plano_id')
       .select([
         'cl.nome AS cliente',

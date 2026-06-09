@@ -1,15 +1,15 @@
 import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
-import { ClientesService } from './clientes.service';
-import { AgendarExclusaoDto, CreateClienteDto, LoginClienteDto, RecuperarSenhaDto, UpdateClienteDto, VerificarEmailCodigoDto } from './dto/create-cliente.dto';
+import { UsuariosService } from './usuarios.service';
+import { AgendarExclusaoDto, CreateUsuarioDto, LoginUsuarioDto, RecuperarSenhaDto, UpdateUsuarioDto, VerificarEmailCodigoDto } from './dto/create-usuario.dto';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { ParametrosService } from '../parametros/parametros.service';
 
-@ApiTags('Clientes')
-@Controller('clientes')
-export class ClientesController {
+@ApiTags('Usuarios')
+@Controller('usuarios')
+export class UsuariosController {
   constructor(
-    private readonly service: ClientesService,
+    private readonly service: UsuariosService,
     private readonly params: ParametrosService,
   ) {}
 
@@ -21,14 +21,14 @@ export class ClientesController {
   }
 
   @Post('signup')
-  @ApiOperation({ summary: 'Cadastro de novo cliente (público)' })
-  signup(@Body() dto: CreateClienteDto) {
+  @ApiOperation({ summary: 'Cadastro de novo usuário (público)' })
+  signup(@Body() dto: CreateUsuarioDto) {
     return this.service.signup(dto);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login do cliente (retorna dados + assinatura ativa)' })
-  login(@Body() dto: LoginClienteDto) {
+  @ApiOperation({ summary: 'Login do usuário (retorna dados + assinatura ativa)' })
+  login(@Body() dto: LoginUsuarioDto) {
     return this.service.login(dto);
   }
 
@@ -75,7 +75,7 @@ export class ClientesController {
   @Get('me')
   @UseGuards(JwtPortalGuard)
   @ApiSecurity('bearer')
-  @ApiOperation({ summary: 'Perfil do cliente logado + assinatura + token de API' })
+  @ApiOperation({ summary: 'Perfil do usuário logado + assinatura + token de API' })
   meuPerfil(@Req() req: any) {
     return this.service.meuPerfil(req['usuario'].sub);
   }
@@ -84,7 +84,7 @@ export class ClientesController {
   @UseGuards(JwtPortalGuard)
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Atualiza dados pessoais do usuário logado' })
-  atualizar(@Req() req: any, @Body() dto: UpdateClienteDto) {
+  atualizar(@Req() req: any, @Body() dto: UpdateUsuarioDto) {
     return this.service.atualizar(req['usuario'].sub, dto);
   }
 
