@@ -21,7 +21,7 @@ export class PlanosService {
     @InjectRepository(Plano, 'buscadados') private planos: Repository<Plano>,
     @InjectRepository(RecursoPlano, 'buscadados') private recursos: Repository<RecursoPlano>,
     @InjectRepository(PlanoRecurso, 'buscadados') private planosRecursos: Repository<PlanoRecurso>,
-  ) {}
+  ) { }
 
   async findAll(apenasAtivos = true) {
     const planos = await this.planos.find({
@@ -128,7 +128,6 @@ export class PlanosService {
 
   async seed() {
     const recursosPadrao = [
-      { slug: 'limite-free', nome: 'Limite Free' },
       { slug: 'limite-gratuito', nome: 'Limite Gratuito' },
       { slug: 'limite-basico', nome: 'Limite Básico' },
       { slug: 'limite-intermediario', nome: 'Limite Intermediário' },
@@ -144,32 +143,7 @@ export class PlanosService {
     ];
 
     const planosPadrao: SeedPlano[] = [
-      {
-        nome: 'Free',
-        slug: 'free',
-        descricao: 'Plano de entrada com consulta de CEP e até 3 CNPJs por hora.',
-        precoMensal: 0,
-        precoSemestral: 0,
-        precoAnual: 0,
-        limiteMensal: 0,
-        rateLimitPorMinuto: 3,
-        rateLimitPorHora: 3,
-        acessoCnpj: true,
-        acessoCnpjRaiz: false,
-        acessoPesquisa: false,
-        acessoGeocode: true,
-        acessoSuframa: false,
-        acessoMapa: false,
-        exibirNaLp: true,
-        ordem: 0,
-        maisPopular: false,
-        seloDestaque: null,
-        recursos: [
-          { slug: 'limite-free', descricaoExibicao: '3 consultas CNPJ por hora' },
-          { slug: 'consulta-cnpj', descricaoExibicao: 'Consulta por CNPJ' },
-          { slug: 'consulta-cep', descricaoExibicao: 'Consulta de CEP' },
-        ],
-      },
+
       {
         nome: 'Gratuito',
         slug: 'gratuito',

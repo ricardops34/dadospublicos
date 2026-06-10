@@ -1,12 +1,18 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Assinatura } from './assinatura.entity';
+import { ClienteCnae } from './cliente-cnae.entity';
 
-@Entity('contas')
-export class Conta {
+/**
+ * Cliente — pessoa física ou jurídica que contrata os serviços da plataforma.
+ * Dono dos dados de negócio, do plano e do token de API (docs/regra-cliente-usuario.md).
+ * Cliente (1) → (N) Usuários.
+ */
+@Entity('clientes')
+export class Cliente {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** FK para o usuário proprietário da conta */
+  /** FK para o usuário principal (administrador) do Cliente */
   @Column({ name: 'proprietario_id', type: 'uuid' })
   proprietarioId: string;
 
@@ -49,6 +55,13 @@ export class Conta {
   @Column({ name: 'inscricao_municipal', type: 'varchar', length: 50, nullable: true })
   inscricaoMunicipal: string | null;
 
+  /** CNAE principal (código de 7 dígitos do catálogo RFB) — pessoa jurídica */
+  @Column({ name: 'cnae_principal', type: 'varchar', length: 7, nullable: true })
+  cnaePrincipal: string | null;
+
+  @Column({ name: 'cnae_principal_descricao', type: 'varchar', length: 300, nullable: true })
+  cnaePrincipalDescricao: string | null;
+
   @Column({ default: true })
   ativo: boolean;
 
@@ -64,6 +77,9 @@ export class Conta {
   @UpdateDateColumn({ name: 'atualizado_em' })
   atualizadoEm: Date;
 
-  @OneToMany(() => Assinatura, (a) => a.conta)
+  @OneToMany(() => Assinatura, (a) => a.cliente)
   assinaturas: Assinatura[];
+
+  @OneToMany(() => ClienteCnae, (c) => c.cliente)
+  cnaesSecundarios: ClienteCnae[];
 }

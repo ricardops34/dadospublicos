@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+
+/** Item de CNAE secundário aceito como string (código) ou objeto { codigo, descricao } */
+export type CnaeSecundarioInput = string | { codigo: string; descricao?: string | null };
 
 export class CreateUsuarioDto {
   @ApiProperty({ example: 'João Silva' }) @IsString() nome: string;
@@ -21,12 +24,31 @@ export class CreateUsuarioDto {
   @ApiPropertyOptional() @IsOptional() @IsString() uf?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoEstadual?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoMunicipal?: string;
+  @ApiPropertyOptional({ example: '6201501' }) @IsOptional() @IsString() cnaePrincipal?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() cnaePrincipalDescricao?: string;
+  @ApiPropertyOptional({ type: [String], description: 'Códigos de CNAE secundários (PJ)' }) @IsOptional() @IsArray() cnaesSecundarios?: CnaeSecundarioInput[];
   @ApiPropertyOptional({ enum: ['admin', 'cliente'] }) @IsOptional() @IsIn(['admin', 'cliente']) perfil?: 'admin' | 'cliente';
 }
 
 export class LoginUsuarioDto {
   @ApiProperty() @IsEmail() email: string;
   @ApiProperty() @IsString() senha: string;
+}
+
+/** Criação de usuário adicional do Cliente — feita pelo usuário principal */
+export class CriarUsuarioClienteDto {
+  @ApiProperty({ example: 'Maria Souza' }) @IsString() nome: string;
+  @ApiProperty({ example: 'maria@empresa.com' }) @IsEmail() email: string;
+  @ApiProperty({ example: '(11) 9 9999-9999' }) @IsString() telefone: string;
+  @ApiProperty({ minLength: 8 }) @IsString() @MinLength(8) senha: string;
+}
+
+/** Edição de usuário do Cliente — feita pelo usuário principal */
+export class EditarUsuarioClienteDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() nome?: string;
+  @ApiPropertyOptional() @IsOptional() @IsEmail() email?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() telefone?: string;
+  @ApiPropertyOptional({ minLength: 8 }) @IsOptional() @IsString() @MinLength(8) senha?: string;
 }
 
 export class AgendarExclusaoDto {
@@ -66,5 +88,8 @@ export class UpdateUsuarioDto {
   @ApiPropertyOptional() @IsOptional() @IsString() uf?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoEstadual?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() inscricaoMunicipal?: string;
+  @ApiPropertyOptional({ example: '6201501' }) @IsOptional() @IsString() cnaePrincipal?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() cnaePrincipalDescricao?: string;
+  @ApiPropertyOptional({ type: [String], description: 'Códigos de CNAE secundários (PJ)' }) @IsOptional() @IsArray() cnaesSecundarios?: CnaeSecundarioInput[];
   @ApiPropertyOptional({ enum: ['admin', 'cliente'] }) @IsOptional() @IsIn(['admin', 'cliente']) perfil?: 'admin' | 'cliente';
 }

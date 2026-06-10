@@ -3,12 +3,12 @@
     <div class="rfb-hero__text">
       <span class="rfb-hero__badge">
         <span class="an an-database-duotone"></span>
-        Dados da Receita Federal em JSON
+        Dados públicos em JSON
       </span>
 
       <h1 class="rfb-hero__title">
-        API de <span class="rfb-hero__title--highlight">CNPJ</span><br />
-        simples e rapida
+        <span class="rfb-hero__title--highlight">Dados públicos,</span><br />
+        resultados reais
       </h1>
 
       <p class="rfb-hero__subtitle">
@@ -17,28 +17,14 @@
       </p>
 
       <div class="rfb-hero__ctas">
-        <po-button
-          *ngIf="registrosHabilitados"
-          p-label="Criar conta gratis"
-          p-kind="primary"
-          p-size="large"
-          p-icon="an an-rocket-launch"
-          (p-click)="irParaCadastro()">
+        <po-button *ngIf="registrosHabilitados" p-label="Criar conta gratis" p-kind="primary" p-size="large"
+          p-icon="an an-rocket-launch" (p-click)="irParaCadastro()">
         </po-button>
-        <po-button
-          *ngIf="!registrosHabilitados"
-          p-label="Em breve"
-          p-kind="secondary"
-          p-size="large"
-          p-icon="an an-clock"
-          [p-disabled]="true">
+        <po-button *ngIf="!registrosHabilitados" p-label="Em breve" p-kind="secondary" p-size="large"
+          p-icon="an an-clock" [p-disabled]="true">
         </po-button>
         <a [href]="docsUrl" rel="noopener" (click)="registrarCliqueDocumentacao()">
-          <po-button
-            p-label="Ver documentacao"
-            p-kind="secondary"
-            p-size="large"
-            p-icon="an an-book-open">
+          <po-button p-label="Ver documentacao" p-kind="secondary" p-size="large" p-icon="an an-book-open">
           </po-button>
         </a>
       </div>

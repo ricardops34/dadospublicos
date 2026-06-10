@@ -1,25 +1,28 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Assinatura } from './assinatura.entity';
-import { Conta } from './conta.entity';
+import { Cliente } from './cliente.entity';
 
+/**
+ * Usuário — pessoa que acessa o sistema em nome de um Cliente.
+ * Contém apenas credenciais e dados pessoais; dados de negócio
+ * (CNPJ, razão social, endereço, CNAE…) vivem em `clientes`
+ * (docs/regra-cliente-usuario.md).
+ */
 @Entity('usuarios')
 export class Usuario {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** FK para a conta/tenant à qual este usuário pertence (null para admin) */
-  @Column({ name: 'conta_id', type: 'uuid', nullable: true })
-  contaId: string | null;
+  /** FK para o Cliente ao qual este usuário pertence (null para admin da plataforma) */
+  @Column({ name: 'cliente_id', type: 'uuid', nullable: true })
+  clienteId: string | null;
 
-  @ManyToOne(() => Conta, { nullable: true })
-  @JoinColumn({ name: 'conta_id' })
-  conta: Conta | null;
+  @ManyToOne(() => Cliente, { nullable: true })
+  @JoinColumn({ name: 'cliente_id' })
+  cliente: Cliente | null;
 
   @Column({ type: 'varchar', length: 150 })
   nome: string;
-
-  @Column({ name: 'tipo_pessoa', type: 'varchar', length: 1, default: 'J' })
-  tipoPessoa: 'F' | 'J';
 
   @Column({ type: 'varchar', length: 14, nullable: true })
   cpf: string | null;
@@ -33,44 +36,11 @@ export class Usuario {
   @Column({ name: 'senha_hash', type: 'varchar', length: 255 })
   senhaHash: string;
 
-  @Column({ type: 'varchar', length: 18, nullable: true })
-  cnpj: string | null;
-
-  @Column({ name: 'razao_social', type: 'varchar', length: 200, nullable: true })
-  razaoSocial: string | null;
-
   @Column({ type: 'varchar', length: 20, nullable: true })
   telefone: string | null;
 
   @Column({ type: 'boolean', nullable: true, default: null })
   whatsapp: boolean | null;
-
-  @Column({ type: 'varchar', length: 10, nullable: true })
-  cep: string | null;
-
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  logradouro: string | null;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  numero: string | null;
-
-  @Column({ type: 'varchar', length: 150, nullable: true })
-  complemento: string | null;
-
-  @Column({ type: 'varchar', length: 150, nullable: true })
-  bairro: string | null;
-
-  @Column({ type: 'varchar', length: 150, nullable: true })
-  municipio: string | null;
-
-  @Column({ type: 'varchar', length: 2, nullable: true })
-  uf: string | null;
-
-  @Column({ name: 'inscricao_estadual', type: 'varchar', length: 50, nullable: true })
-  inscricaoEstadual: string | null;
-
-  @Column({ name: 'inscricao_municipal', type: 'varchar', length: 50, nullable: true })
-  inscricaoMunicipal: string | null;
 
   /** Nome do arquivo do avatar escolhido (ex: avatar_05.png) */
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -115,6 +85,6 @@ export class Usuario {
   @UpdateDateColumn({ name: 'atualizado_em' })
   atualizadoEm: Date;
 
-  @OneToMany(() => Assinatura, (a) => a.cliente)
+  @OneToMany(() => Assinatura, (a) => a.usuario)
   assinaturas: Assinatura[];
 }

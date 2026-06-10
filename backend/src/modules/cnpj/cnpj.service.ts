@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { RedisCacheService } from '../redis-cache/redis-cache.service';
 import { EmpresaRfb } from '../../entities/empresa-rfb.entity';
 import { Estabelecimento } from '../../entities/estabelecimento.entity';
@@ -124,5 +124,39 @@ export class CnpjService {
 
     await this.cache.set(cacheKey, result, 86400);
     return result;
+  }
+
+  /**
+   * Pesquisa CNAEs no catálogo RFB no formato esperado pelos combos/multiselects PO-UI.
+   * `filter` filtra por código ou descrição; `value` (csv de códigos) resolve itens já selecionados.
+   */
+  async pesquisarCnaes(filter?: string, value?: string) {
+    let query = this.cnaes.createQueryBuilder('cnae');
+
+    if (value) {
+      const codigos = value.split(',').map((c) => c.trim().replace(/\D/g, '')).filter(Boolean);
+      if (!codigos.length) return { items: [] };
+      query = query.where('cnae.codigo IN (:...codigos)', { codigos });
+    } else if (filter) {
+      query = query.where('cnae.codigo ILIKE :filter OR cnae.descricao ILIKE :filter', { filter: `%${filter}%` });
+    }
+
+    const result = await query.orderBy('cnae.codigo', 'ASC').take(50).getMany();
+    return { items: result.map((c) => ({ value: c.codigo, label: `${c.codigo} - ${c.descricao}` })) };
+  }
+
+  /** Busca um CNAE pelo código — usado pelo getObjectByValue do po-combo */
+  async obterCnae(codigo: string) {
+    const limpo = (codigo ?? '').replace(/\D/g, '');
+    const cnae = await this.cnaes.findOne({ where: { codigo: limpo } });
+    if (!cnae) throw new NotFoundException('CNAE não encontrado.');
+    return { value: cnae.codigo, label: `${cnae.codigo} - ${cnae.descricao}`, descricao: cnae.descricao };
+  }
+
+  /** Retorna as entidades do catálogo para uma lista de códigos (resolução de descrições) */
+  async obterCnaesPorCodigos(codigos: string[]) {
+    const limpos = [...new Set((codigos ?? []).map((c) => (c ?? '').toString().replace(/\D/g, '')).filter(Boolean))];
+    if (!limpos.length) return [];
+    return this.cnaes.find({ where: { codigo: In(limpos) } });
   }
 }

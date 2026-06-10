@@ -68,10 +68,16 @@ export class ClientesFormComponent {
       ['cep',         d['cep']],
       ['numero',      d['numero']],
       ['razaoSocial', d['razaoSocial']],
+      ['cnaePrincipal', d['cnaePrincipal']],
     ];
-    return campos
+    const fields: any[] = campos
       .filter(([, val]) => val !== undefined && val !== null && val !== '')
       .map(([property, value]) => ({ property, value }));
+
+    if (Array.isArray(d['cnaesSecundarios']) && d['cnaesSecundarios'].length) {
+      fields.push({ property: 'cnaesSecundarios', value: d['cnaesSecundarios'] });
+    }
+    return fields;
   }
 
   validarCpf = (changedValue: any) => {
@@ -139,7 +145,7 @@ export class ClientesFormComponent {
         field.visible = tipo === 'J';
         field.required = tipo === 'J';
       }
-      if (field.property === 'razaoSocial') {
+      if (field.property === 'razaoSocial' || field.property === 'cnaePrincipal' || field.property === 'cnaesSecundarios') {
         field.visible = tipo === 'J';
       }
       return field;
@@ -199,6 +205,8 @@ export class ClientesFormComponent {
     },
     { property: 'cnpj', label: 'CNPJ', mask: '99.999.999/9999-99', gridColumns: 6, visible: true, required: true, validate: this.validarCnpj.bind(this) },
     { property: 'razaoSocial', label: 'Razão Social', gridColumns: 6, visible: true },
+    { property: 'cnaePrincipal', label: 'CNAE Principal', type: 'combo', gridColumns: 6, visible: true, optionsService: `${environment.apiUrl}/admin/usuarios-poui/cnaes` },
+    { property: 'cnaesSecundarios', label: 'CNAEs Secundários', gridColumns: 6, visible: true, optionsMulti: true, optionsService: `${environment.apiUrl}/admin/usuarios-poui/cnaes` },
     { property: 'cpf', label: 'CPF', mask: '999.999.999-99', gridColumns: 6, visible: false, required: false, validate: this.validarCpf.bind(this) },
     { property: 'dataNascimento', label: 'Data de Nascimento', type: 'date', format: 'dd/MM/yyyy', gridColumns: 6, visible: false },
     { property: 'nome', label: 'Nome', required: true, gridColumns: 6 },

@@ -9,10 +9,10 @@ import { PlanoMinimo } from '../auth/plano.decorator';
 @Controller('cnpj')
 @UseGuards(AuthGuard, ApiRateLimitGuard)
 export class CnpjController {
-  constructor(private readonly service: CnpjService) {}
+  constructor(private readonly service: CnpjService) { }
 
   @Get(':cnpj')
-  @PlanoMinimo('free')
+  @PlanoMinimo('gratuito')
   @ApiSecurity('token')
   @ApiOperation({ summary: 'Consulta dados completos de um CNPJ' })
   @ApiParam({ name: 'cnpj', example: '27865757000102' })

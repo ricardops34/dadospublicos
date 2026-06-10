@@ -16,7 +16,9 @@ export class FaturasController {
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Histórico de faturas do cliente logado' })
   minhas(@Req() req: any) {
-    return this.service.findByCliente(req['usuario'].sub);
+    // JWT antigo usa contaId; o novo usa clienteId
+    const clienteId = req['usuario'].clienteId ?? req['usuario'].contaId ?? null;
+    return this.service.findDoUsuario(req['usuario'].sub, clienteId);
   }
 
   // --- Admin ---

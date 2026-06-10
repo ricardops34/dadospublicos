@@ -21,12 +21,19 @@ export class UsuariosPoUiController {
 
   private toPoUiListItem(usuario: any) {
     const safeUsuario = this.usuariosService.sanitizeAdminResponse(usuario);
+    delete (safeUsuario as any).cliente;
 
     return {
       ...safeUsuario,
+      // Dados de negócio vêm do Cliente
+      tipoPessoa: usuario.cliente?.tipoPessoa ?? 'J',
+      cnpj: usuario.cliente?.cnpj ?? null,
+      razaoSocial: usuario.cliente?.razaoSocial ?? null,
       ativoStatus: usuario.ativo ? 1 : 0,
       emailVerificado: usuario.emailVerificado ? 1 : 0,
       plano: usuario.assinaturas?.find((assinatura: any) => assinatura.status === 'ativa')?.plano?.nome ?? '—',
+      cliente: usuario.cliente?.razaoSocial ?? usuario.cliente?.cnpj ?? '—',
+      principal: usuario.cliente && usuario.cliente.proprietarioId === usuario.id ? 1 : 0,
     };
   }
 
@@ -35,12 +42,14 @@ export class UsuariosPoUiController {
     const pagina = parseInt(page, 10);
     const limite = parseInt(pageSize, 10);
     const search = reqQuery.search;
+    const ordenacao = reqQuery.order;
     const filters = { ...reqQuery };
     delete filters.page;
     delete filters.pageSize;
     delete filters.search;
+    delete filters.order;
 
-    const [items, total] = await this.usuariosService.findAll(pagina, limite, search, filters);
+    const [items, total] = await this.usuariosService.findAll(pagina, limite, search, filters, ordenacao);
 
     return {
       hasNext: (pagina * limite) < total,
@@ -56,6 +65,16 @@ export class UsuariosPoUiController {
   @Get('municipios/:uf')
   getMunicipios(@Param('uf') uf: string, @Query('filter') filter?: string) {
     return this.geocodeService.getMunicipios(uf, filter);
+  }
+
+  @Get('cnaes')
+  pesquisarCnaes(@Query('filter') filter?: string, @Query('value') value?: string) {
+    return this.cnpjService.pesquisarCnaes(filter, value);
+  }
+
+  @Get('cnaes/:codigo')
+  obterCnae(@Param('codigo') codigo: string) {
+    return this.cnpjService.obterCnae(codigo);
   }
 
   @Get('seed-ibge')
@@ -163,6 +182,8 @@ export class UsuariosPoUiController {
           { property: 'dataNascimento', visible: true },
           { property: 'cnpj', visible: false, required: false, value: null },
           { property: 'razaoSocial', visible: false, value: null },
+          { property: 'cnaePrincipal', visible: false, value: null },
+          { property: 'cnaesSecundarios', visible: false, value: null },
         ],
       };
     }
@@ -173,6 +194,8 @@ export class UsuariosPoUiController {
         { property: 'dataNascimento', visible: false, value: null },
         { property: 'cnpj', visible: true, required: true },
         { property: 'razaoSocial', visible: true },
+        { property: 'cnaePrincipal', visible: true },
+        { property: 'cnaesSecundarios', visible: true },
       ],
     };
   }
@@ -231,6 +254,8 @@ export class UsuariosPoUiController {
           bairro: dados.estabelecimento.bairro,
           municipio: dados.estabelecimento.municipio?.nome,
           uf: dados.estabelecimento.uf,
+          cnaePrincipal: dados.estabelecimento.atividade_principal?.id ?? null,
+          cnaesSecundarios: dados.estabelecimento.atividades_secundarias ?? [],
         },
       };
     } catch {

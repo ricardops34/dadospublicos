@@ -14,7 +14,7 @@ export class AuthGuard implements CanActivate {
     private reflector: Reflector,
     @InjectRepository(Token, 'buscadados') private tokens: Repository<Token>,
     @InjectRepository(Consumo, 'buscadados') private consumos: Repository<Consumo>,
-  ) {}
+  ) { }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const planoMinimo = this.reflector.get<Plano>(PLANO_KEY, ctx.getHandler()) ?? 'gratuito';
@@ -27,7 +27,7 @@ export class AuthGuard implements CanActivate {
     const token = await this.tokens.findOne({ where: { token: rawToken, ativo: true } });
     if (!token) throw new UnauthorizedException('Token inválido ou inativo.');
 
-    const ordem: Plano[] = ['free', 'gratuito', 'basico', 'intermediario', 'avancado', 'premium'];
+    const ordem: Plano[] = ['gratuito', 'basico', 'intermediario', 'avancado', 'premium'];
     if (ordem.indexOf(token.plano) < ordem.indexOf(planoMinimo)) {
       throw new ForbiddenException(`Plano ${planoMinimo} necessário. Plano atual: ${token.plano}.`);
     }

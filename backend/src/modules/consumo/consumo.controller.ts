@@ -45,16 +45,26 @@ export class ConsumoController {
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Histórico de consumo do cliente logado (portal JWT)' })
   async consumoPortal(@Req() req: any) {
-    const clienteId = req['usuario'].sub;
-    const cacheKey = `consumo:portal:${clienteId}`;
+    const usuarioId = req['usuario'].sub;
+    // JWT antigo usa contaId; o novo usa clienteId
+    const clienteId = req['usuario'].clienteId ?? req['usuario'].contaId ?? null;
+    // Consumo é do Cliente — compartilhado por todos os seus usuários
+    const cacheKey = `consumo:portal:${clienteId ?? usuarioId}`;
     const cached = await this.cache.get(cacheKey);
     if (cached) return cached;
 
-    const rows = await this.consumos
+    const qb = this.consumos
       .createQueryBuilder('c')
       .innerJoin('tokens', 't', 't.id = c.token_id')
-      .innerJoin('assinaturas', 'a', 'a.token_id = t.id')
-      .where('a.cliente_id = :clienteId', { clienteId })
+      .leftJoin('assinaturas', 'a', 'a.token_id = t.id');
+
+    if (clienteId) {
+      qb.where('(t.cliente_id = :clienteId OR a.usuario_id = :usuarioId)', { clienteId, usuarioId });
+    } else {
+      qb.where('a.usuario_id = :usuarioId', { usuarioId });
+    }
+
+    const rows = await qb
       .select(['c.ano AS ano', 'c.mes AS mes', 'c.quantidade AS quantidade', 'c.atualizado_em AS atualizado_em'])
       .orderBy('c.ano', 'DESC')
       .addOrderBy('c.mes', 'DESC')
@@ -99,7 +109,7 @@ export class ConsumoController {
       .createQueryBuilder('c')
       .innerJoin('tokens', 't', 't.id = c.token_id')
       .innerJoin('assinaturas', 'a', 'a.token_id = t.id')
-      .innerJoin('usuarios', 'cl', 'cl.id = a.cliente_id')
+      .innerJoin('usuarios', 'cl', 'cl.id = a.usuario_id')
       .innerJoin('planos', 'p', 'p.id = a.plano_id')
       .select([
         'cl.nome AS cliente',

@@ -58,9 +58,12 @@ export class FaturasService {
     return { geradas };
   }
 
-  findByCliente(clienteId: string) {
+  /** Faturas do Cliente do usuário logado (compartilhadas entre os usuários do Cliente) */
+  findDoUsuario(usuarioId: string, clienteId?: string | null) {
+    const where: any[] = [{ assinatura: { usuarioId } }];
+    if (clienteId) where.push({ assinatura: { clienteId } });
     return this.faturas.find({
-      where: { assinatura: { clienteId } },
+      where,
       relations: ['assinatura', 'assinatura.plano'],
       order: { criadoEm: 'DESC' },
     });
@@ -75,7 +78,7 @@ export class FaturasService {
       order: { criadoEm: 'DESC' },
       skip: (pagina - 1) * limite,
       take: limite,
-      relations: ['assinatura', 'assinatura.cliente', 'assinatura.plano'],
+      relations: ['assinatura', 'assinatura.usuario', 'assinatura.cliente', 'assinatura.plano'],
     });
   }
 

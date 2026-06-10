@@ -19,6 +19,11 @@ export interface UsuarioExclusaoResponse {
   agendarExclusaoEm: Date | string | null;
 }
 
+export interface CnaeSecundario {
+  codigo: string;
+  descricao?: string | null;
+}
+
 export interface UsuarioPerfil {
   id: string;
   nome: string;
@@ -58,6 +63,9 @@ export interface UsuarioPerfil {
     uf?: string | null;
     inscricaoEstadual?: string | null;
     inscricaoMunicipal?: string | null;
+    cnaePrincipal?: string | null;
+    cnaePrincipalDescricao?: string | null;
+    cnaesSecundarios?: CnaeSecundario[];
   } | null;
 }
 

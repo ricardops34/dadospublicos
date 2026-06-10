@@ -1,10 +1,10 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PoComboFilterMode, PoModalAction, PoModalComponent } from '@po-ui/ng-components';
+import { PoComboFilterMode, PoModalAction, PoModalComponent, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
 import { NotifService } from '../../../../services/notif.service';
 import { AuthService } from '../../../../services/auth.service';
-import { UsuarioExclusaoResponse, UsuarioPortalService } from '../usuario.service';
+import { CnaeSecundario, UsuarioExclusaoResponse, UsuarioPortalService } from '../usuario.service';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -16,6 +16,7 @@ import { environment } from '../../../../../environments/environment';
 export class MinhaContaComponent implements OnInit {
   @ViewChild('modalExclusao') modalExclusao!: PoModalComponent;
   @ViewChild('modalAvatar') modalAvatar!: PoModalComponent;
+  @ViewChild('modalUsuario') modalUsuario!: PoModalComponent;
 
   perfil: any = null;
   conta: any = null;
@@ -49,6 +50,85 @@ export class MinhaContaComponent implements OnInit {
   ufOptions: any[] = [];
   municipioFilterService = '';
   municipioDisabled = true;
+
+  // ─── CNAE (pessoa jurídica) ─────────────────────────────────────────────
+  cnaeFilterService = `${environment.apiUrl}/portal/geocode/cnaes`;
+  cnaesSecundarios: CnaeSecundario[] = [];
+  formCnaesSecundarios: CnaeSecundario[] = [];
+  novoCnaeSecundario: string | null = null;
+  adicionandoCnae = false;
+
+  colunasCnae: PoTableColumn[] = [
+    { property: 'codigo', label: 'Código', width: '120px' },
+    { property: 'descricao', label: 'Descrição' },
+  ];
+
+  acoesCnaeEdicao: PoTableAction[] = [
+    { label: 'Remover', icon: 'an an-trash', type: 'danger', action: (item: CnaeSecundario) => this.removerCnaeSecundario(item) },
+  ];
+
+  // ─── Usuários da conta (manutenção pelo usuário principal) ─────────────
+  usuariosConta: any[] = [];
+  carregandoUsuarios = false;
+  souPrincipal = false;
+  salvandoUsuario = false;
+  editandoUsuarioId: string | null = null;
+  formUsuario = { nome: '', email: '', telefone: '', senha: '' };
+
+  colunasUsuarios: PoTableColumn[] = [
+    { property: 'nome', label: 'Nome' },
+    { property: 'email', label: 'E-mail' },
+    { property: 'telefone', label: 'Telefone', width: '140px' },
+    {
+      property: 'principalLabel', label: 'Função', type: 'label', width: '110px',
+      labels: [
+        { value: 'principal', color: 'color-08', label: 'Principal' },
+        { value: 'comum', color: 'color-02', label: 'Usuário' },
+      ],
+    },
+    {
+      property: 'statusLabel', label: 'Status', type: 'label', width: '110px',
+      labels: [
+        { value: 'ativo', color: 'color-10', label: 'Ativo' },
+        { value: 'bloqueado', color: 'color-07', label: 'Bloqueado' },
+      ],
+    },
+    { property: 'ultimoLogin', label: 'Último acesso', type: 'dateTime', format: 'dd/MM/yyyy HH:mm', width: '160px' },
+  ];
+
+  acoesUsuarios: PoTableAction[] = [
+    {
+      label: 'Editar', icon: 'an an-pencil',
+      visible: () => this.souPrincipal,
+      action: (item: any) => this.abrirEdicaoUsuario(item),
+    },
+    {
+      label: 'Bloquear', icon: 'an an-lock', type: 'danger',
+      visible: (item: any) => this.souPrincipal && item.ativo && !item.principal,
+      action: (item: any) => this.alterarBloqueioUsuario(item, false),
+    },
+    {
+      label: 'Desbloquear', icon: 'an an-check-circle',
+      visible: (item: any) => this.souPrincipal && !item.ativo,
+      action: (item: any) => this.alterarBloqueioUsuario(item, true),
+    },
+    {
+      label: 'Tornar principal', icon: 'an an-star',
+      visible: (item: any) => this.souPrincipal && !item.principal && item.ativo,
+      action: (item: any) => this.transferirPrincipal(item),
+    },
+  ];
+
+  acaoSalvarUsuario: PoModalAction = {
+    label: 'Salvar',
+    action: () => this.salvarUsuario(),
+    loading: false,
+  };
+
+  acaoCancelarUsuario: PoModalAction = {
+    label: 'Cancelar',
+    action: () => this.modalUsuario.close(),
+  };
 
   editandoSenha = false;
   salvandoSenha = false;
@@ -89,7 +169,12 @@ export class MinhaContaComponent implements OnInit {
     uf: '',
     inscricaoEstadual: '',
     inscricaoMunicipal: '',
+    cnaePrincipal: '',
   };
+
+  get ehPessoaJuridica(): boolean {
+    return (this.conta?.tipoPessoa ?? this.perfil?.tipoPessoa ?? 'J') !== 'F';
+  }
 
   constructor(
     private svc: UsuarioPortalService,
@@ -136,12 +221,19 @@ export class MinhaContaComponent implements OnInit {
             uf: this.conta.uf ?? '',
             inscricaoEstadual: this.conta.inscricaoEstadual ?? '',
             inscricaoMunicipal: this.conta.inscricaoMunicipal ?? '',
+            cnaePrincipal: this.conta.cnaePrincipal ?? '',
           };
+          this.cnaesSecundarios = (this.conta.cnaesSecundarios ?? []).map((c: CnaeSecundario) => ({ ...c }));
 
           if (this.conta.uf) {
             this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${this.conta.uf}`;
             this.municipioDisabled = false;
           }
+        }
+
+        this.souPrincipal = !!(perfilData as any).usuarioPrincipal;
+        if (this.conta) {
+          this.carregarUsuariosConta();
         }
 
         const assinaturaPagaAtiva = perfilData.assinaturas?.find((a: any) => this.svc.assinaturaEhPaga(a));
@@ -234,10 +326,14 @@ export class MinhaContaComponent implements OnInit {
 
   iniciarEdicaoConta() {
     this.editandoConta = true;
+    this.formCnaesSecundarios = this.cnaesSecundarios.map((c) => ({ ...c }));
+    this.novoCnaeSecundario = null;
   }
 
   cancelarEdicaoConta() {
     this.editandoConta = false;
+    this.formCnaesSecundarios = [];
+    this.novoCnaeSecundario = null;
     if (this.conta) {
       this.formConta = {
         cnpj: this.conta.cnpj ?? '',
@@ -252,22 +348,67 @@ export class MinhaContaComponent implements OnInit {
         uf: this.conta.uf ?? '',
         inscricaoEstadual: this.conta.inscricaoEstadual ?? '',
         inscricaoMunicipal: this.conta.inscricaoMunicipal ?? '',
+        cnaePrincipal: this.conta.cnaePrincipal ?? '',
       };
     }
   }
 
+  adicionarCnaeSecundario() {
+    const codigo = (this.novoCnaeSecundario ?? '').replace(/\D/g, '');
+    if (!codigo) {
+      this.notif.error('Selecione um CNAE para adicionar.');
+      return;
+    }
+    if (codigo === (this.formConta.cnaePrincipal ?? '').replace(/\D/g, '')) {
+      this.notif.error('Este CNAE já é o principal.');
+      return;
+    }
+    if (this.formCnaesSecundarios.some((c) => c.codigo === codigo)) {
+      this.notif.error('CNAE já adicionado.');
+      return;
+    }
+
+    this.adicionandoCnae = true;
+    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cnaes/${codigo}`).subscribe({
+      next: (cnae) => {
+        this.formCnaesSecundarios = [...this.formCnaesSecundarios, { codigo, descricao: cnae?.descricao ?? null }];
+        this.novoCnaeSecundario = null;
+        this.adicionandoCnae = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.adicionandoCnae = false;
+        this.notif.error('CNAE não encontrado.');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  removerCnaeSecundario(item: CnaeSecundario) {
+    this.formCnaesSecundarios = this.formCnaesSecundarios.filter((c) => c.codigo !== item.codigo);
+    this.cdr.detectChanges();
+  }
+
   salvarConta() {
     this.salvandoConta = true;
-    this.http.patch(`${environment.apiUrl}/usuarios/me/conta`, this.formConta).subscribe({
+    const payload = {
+      ...this.formConta,
+      cnaesSecundarios: this.formCnaesSecundarios.map((c) => ({ codigo: c.codigo, descricao: c.descricao ?? null })),
+    };
+    this.http.patch<any>(`${environment.apiUrl}/usuarios/me/conta`, payload).subscribe({
       next: (contaAtualizada) => {
         this.conta = { ...this.conta, ...contaAtualizada };
+        this.cnaesSecundarios = (contaAtualizada?.cnaesSecundarios ?? this.formCnaesSecundarios).map((c: CnaeSecundario) => ({ ...c }));
+        this.svc.invalidarPerfilCache();
         this.editandoConta = false;
         this.salvandoConta = false;
         this.notif.success('Dados da empresa atualizados.');
+        this.cdr.detectChanges();
       },
       error: () => {
         this.notif.error('Erro ao salvar dados da empresa.');
         this.salvandoConta = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -288,6 +429,12 @@ export class MinhaContaComponent implements OnInit {
         if (!this.formConta.uf && d.uf) {
           this.formConta.uf = d.uf;
           this.onUfChange(d.uf);
+        }
+        if (!this.formConta.cnaePrincipal && d.cnaePrincipal) {
+          this.formConta.cnaePrincipal = d.cnaePrincipal;
+        }
+        if (!this.formCnaesSecundarios.length && d.cnaesSecundarios?.length) {
+          this.formCnaesSecundarios = d.cnaesSecundarios.map((c: CnaeSecundario) => ({ codigo: c.codigo, descricao: c.descricao ?? null }));
         }
         this.cdr.detectChanges();
       },
@@ -323,6 +470,106 @@ export class MinhaContaComponent implements OnInit {
       this.municipioFilterService = '';
       this.municipioDisabled = true;
     }
+  }
+
+  // ─── Usuários da conta ─────────────────────────────────────────────────────
+
+  carregarUsuariosConta() {
+    this.carregandoUsuarios = true;
+    this.http.get<any[]>(`${environment.apiUrl}/usuarios/me/conta/usuarios`).subscribe({
+      next: (usuarios) => {
+        this.usuariosConta = (usuarios ?? []).map((u) => ({
+          ...u,
+          principalLabel: u.principal ? 'principal' : 'comum',
+          statusLabel: u.ativo ? 'ativo' : 'bloqueado',
+        }));
+        this.carregandoUsuarios = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.carregandoUsuarios = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  abrirNovoUsuario() {
+    this.editandoUsuarioId = null;
+    this.formUsuario = { nome: '', email: '', telefone: '', senha: '' };
+    this.modalUsuario.open();
+  }
+
+  abrirEdicaoUsuario(item: any) {
+    this.editandoUsuarioId = item.id;
+    this.formUsuario = { nome: item.nome ?? '', email: item.email ?? '', telefone: item.telefone ?? '', senha: '' };
+    this.modalUsuario.open();
+  }
+
+  salvarUsuario() {
+    if (!this.formUsuario.nome || !this.formUsuario.email) {
+      this.notif.error('Informe nome e e-mail.');
+      return;
+    }
+    if (!this.editandoUsuarioId && (!this.formUsuario.senha || this.formUsuario.senha.length < 8)) {
+      this.notif.error('Informe uma senha com pelo menos 8 caracteres.');
+      return;
+    }
+    if (!this.editandoUsuarioId && !this.formUsuario.telefone) {
+      this.notif.error('Informe o telefone.');
+      return;
+    }
+
+    this.acaoSalvarUsuario = { ...this.acaoSalvarUsuario, loading: true };
+
+    const request = this.editandoUsuarioId
+      ? this.http.patch(`${environment.apiUrl}/usuarios/me/conta/usuarios/${this.editandoUsuarioId}`, {
+          nome: this.formUsuario.nome,
+          email: this.formUsuario.email,
+          telefone: this.formUsuario.telefone,
+          ...(this.formUsuario.senha ? { senha: this.formUsuario.senha } : {}),
+        })
+      : this.http.post(`${environment.apiUrl}/usuarios/me/conta/usuarios`, this.formUsuario);
+
+    request.subscribe({
+      next: () => {
+        this.acaoSalvarUsuario = { ...this.acaoSalvarUsuario, loading: false };
+        this.modalUsuario.close();
+        this.notif.success(this.editandoUsuarioId ? 'Usuário atualizado.' : 'Usuário criado.');
+        this.carregarUsuariosConta();
+      },
+      error: (err) => {
+        this.acaoSalvarUsuario = { ...this.acaoSalvarUsuario, loading: false };
+        this.notif.error(err?.error?.message ?? 'Erro ao salvar usuário.');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  alterarBloqueioUsuario(item: any, ativo: boolean) {
+    const acao = ativo ? 'desbloquear' : 'bloquear';
+    if (!window.confirm(`Confirma ${acao} o usuário ${item.nome}?`)) return;
+
+    this.http.patch(`${environment.apiUrl}/usuarios/me/conta/usuarios/${item.id}/ativo`, { ativo }).subscribe({
+      next: (res: any) => {
+        this.notif.success(res?.mensagem ?? 'Status atualizado.');
+        this.carregarUsuariosConta();
+      },
+      error: (err) => this.notif.error(err?.error?.message ?? 'Erro ao alterar status do usuário.'),
+    });
+  }
+
+  transferirPrincipal(item: any) {
+    if (!window.confirm(`Transferir a função de usuário principal para ${item.nome}? Você deixará de ser o principal da conta.`)) return;
+
+    this.http.post(`${environment.apiUrl}/usuarios/me/conta/usuarios/${item.id}/transferir-principal`, {}).subscribe({
+      next: (res: any) => {
+        this.notif.success(res?.mensagem ?? 'Função transferida.');
+        this.souPrincipal = false;
+        this.svc.invalidarPerfilCache();
+        this.carregarUsuariosConta();
+      },
+      error: (err) => this.notif.error(err?.error?.message ?? 'Erro ao transferir função.'),
+    });
   }
 
   // ─── Troca de senha ────────────────────────────────────────────────────────

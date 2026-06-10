@@ -7,9 +7,9 @@ export class Notificacao {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** null = broadcast para todos os clientes */
-  @Column({ name: 'cliente_id', type: 'uuid', nullable: true })
-  clienteId: string | null;
+  /** Usuário destinatário; null = broadcast para todos os usuários */
+  @Column({ name: 'usuario_id', type: 'uuid', nullable: true })
+  usuarioId: string | null;
 
   @Column({ length: 150 })
   titulo: string;

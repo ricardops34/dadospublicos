@@ -16,37 +16,80 @@ export class AssinaturasService {
   constructor(
     @InjectRepository(Assinatura, 'buscadados') private assinaturas: Repository<Assinatura>,
     @InjectRepository(Token, 'buscadados') private tokens: Repository<Token>,
-    @InjectRepository(Usuario, 'buscadados') private clientes: Repository<Usuario>,
+    @InjectRepository(Usuario, 'buscadados') private usuarios: Repository<Usuario>,
     @InjectRepository(Plano, 'buscadados') private planos: Repository<Plano>,
     @InjectRepository(Fatura, 'buscadados') private faturas: Repository<Fatura>,
     @InjectRepository(Consumo, 'buscadados') private consumos: Repository<Consumo>,
     private cache: RedisCacheService,
   ) {}
 
-  async assinar(clienteId: string, planoSlug: string) {
-    const cliente = await this.clientes.findOne({ where: { id: clienteId, ativo: true } });
-    if (!cliente) throw new NotFoundException('Cliente nao encontrado.');
+  // ─── O Cliente é o dono do plano e do token de API ─────────────────────────
+  // Regra de negócio (docs/regra-cliente-usuario.md): o token pertence ao
+  // Cliente e é compartilhado por todos os seus usuários; a regeneração
+  // afeta todos. Resolução por Cliente, com fallback legado pela assinatura
+  // do próprio usuário (registros anteriores ao backfill).
+
+  private async usuarioComAssinaturaAtiva(usuarioId: string, relations: string[] = []) {
+    const usuario = await this.usuarios.findOne({ where: { id: usuarioId } });
+
+    if (usuario?.clienteId) {
+      const porCliente = await this.assinaturas.findOne({
+        where: { clienteId: usuario.clienteId, status: 'ativa' },
+        relations,
+        order: { criadoEm: 'DESC' },
+      });
+      if (porCliente) return { usuario, assinatura: porCliente };
+    }
+
+    const assinatura = await this.assinaturas.findOne({
+      where: { usuarioId, status: 'ativa' },
+      relations,
+      order: { criadoEm: 'DESC' },
+    });
+    return { usuario, assinatura };
+  }
+
+  /** Cache da assinatura é por Cliente — compartilhado pelos usuários */
+  private chaveCacheAssinatura(clienteId: string | null | undefined, usuarioId: string) {
+    return `assinatura:minha:${clienteId ?? usuarioId}`;
+  }
+
+  private async limparCacheAssinatura(clienteId: string | null | undefined, usuarioId: string) {
+    await this.cache.del(this.chaveCacheAssinatura(clienteId, usuarioId));
+    await this.cache.del(`assinatura:minha:${usuarioId}`);
+  }
+
+  /** Desativa todos os tokens ativos do Cliente — afeta todos os usuários */
+  private async desativarTokensDoCliente(clienteId: string | null | undefined, tokenIdLegado?: string | null) {
+    if (clienteId) await this.tokens.update({ clienteId, ativo: true }, { ativo: false });
+    if (tokenIdLegado) await this.tokens.update(tokenIdLegado, { ativo: false });
+  }
+
+  async assinar(usuarioId: string, planoSlug: string) {
+    const usuario = await this.usuarios.findOne({ where: { id: usuarioId, ativo: true } });
+    if (!usuario) throw new NotFoundException('Cliente nao encontrado.');
 
     const plano = await this.planos.findOne({ where: { slug: planoSlug, ativo: true } });
     if (!plano) throw new NotFoundException(`Plano "${planoSlug}" nao encontrado.`);
 
-    const ativa = await this.assinaturas.findOne({ where: { clienteId, status: 'ativa' } });
+    const whereAtiva: any[] = usuario.clienteId
+      ? [{ clienteId: usuario.clienteId, status: 'ativa' }, { usuarioId, status: 'ativa' }]
+      : [{ usuarioId, status: 'ativa' }];
+    const ativa = await this.assinaturas.findOne({ where: whereAtiva });
     if (ativa) {
       ativa.status = 'cancelada';
       ativa.canceladoEm = new Date();
       ativa.motivoCancelamento = 'Substituida por novo plano';
       await this.assinaturas.save(ativa);
-
-      if (ativa.tokenId) {
-        await this.tokens.update(ativa.tokenId, { ativo: false });
-      }
     }
+    await this.desativarTokensDoCliente(usuario.clienteId, ativa?.tokenId);
 
     const tokenValor = randomBytes(32).toString('hex');
     const token = await this.tokens.save(this.tokens.create({
       token: tokenValor,
-      nome: `${cliente.nome} - ${plano.nome}`,
-      email: cliente.email,
+      clienteId: usuario.clienteId ?? null,
+      nome: `${usuario.nome} - ${plano.nome}`,
+      email: usuario.email,
       plano: plano.slug as any,
       limiteMensal: plano.limiteMensal,
       ativo: true,
@@ -56,7 +99,8 @@ export class AssinaturasService {
     const vencimento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, hoje.getDate());
 
     const assinatura = await this.assinaturas.save(this.assinaturas.create({
-      clienteId,
+      usuarioId,
+      clienteId: usuario.clienteId ?? null,
       planoId: plano.id,
       tokenId: token.id,
       status: 'ativa',
@@ -64,7 +108,7 @@ export class AssinaturasService {
       proximoVencimento: vencimento.toISOString().split('T')[0],
     }));
 
-    await this.cache.del(`assinatura:minha:${clienteId}`);
+    await this.limparCacheAssinatura(usuario.clienteId, usuarioId);
     return {
       assinatura_id: assinatura.id,
       plano: plano.nome,
@@ -74,15 +118,13 @@ export class AssinaturasService {
     };
   }
 
-  async meuToken(clienteId: string) {
-    const cacheKey = `assinatura:minha:${clienteId}`;
+  async meuToken(usuarioId: string) {
+    const { usuario, assinatura } = await this.usuarioComAssinaturaAtiva(usuarioId, ['plano', 'token', 'plano.recursos', 'plano.recursos.recurso']);
+
+    const cacheKey = this.chaveCacheAssinatura(usuario?.clienteId, usuarioId);
     const cached = await this.cache.get(cacheKey);
     if (cached) return cached;
 
-    const assinatura = await this.assinaturas.findOne({
-      where: { clienteId, status: 'ativa' },
-      relations: ['plano', 'token', 'plano.recursos', 'plano.recursos.recurso'],
-    });
     if (!assinatura) throw new NotFoundException('Nenhuma assinatura ativa encontrada.');
 
     const result = {
@@ -109,11 +151,8 @@ export class AssinaturasService {
     return result;
   }
 
-  async recursosDoPlanoAtivo(clienteId: string) {
-    const assinatura = await this.assinaturas.findOne({
-      where: { clienteId, status: 'ativa' },
-      relations: ['plano', 'plano.recursos', 'plano.recursos.recurso'],
-    });
+  async recursosDoPlanoAtivo(usuarioId: string) {
+    const { assinatura } = await this.usuarioComAssinaturaAtiva(usuarioId, ['plano', 'plano.recursos', 'plano.recursos.recurso']);
 
     if (!assinatura?.plano) {
       return [];
@@ -122,8 +161,8 @@ export class AssinaturasService {
     return this.extrairRecursosDoPlano(assinatura.plano);
   }
 
-  async cancelar(clienteId: string, motivo?: string, quando: 'agora' | 'fim-vigencia' = 'agora') {
-    const assinatura = await this.assinaturas.findOne({ where: { clienteId, status: 'ativa' } });
+  async cancelar(usuarioId: string, motivo?: string, quando: 'agora' | 'fim-vigencia' = 'agora') {
+    const { usuario, assinatura } = await this.usuarioComAssinaturaAtiva(usuarioId);
     if (!assinatura) throw new NotFoundException('Nenhuma assinatura ativa.');
 
     if (quando === 'fim-vigencia') {
@@ -141,8 +180,8 @@ export class AssinaturasService {
     assinatura.canceladoEm = new Date();
     assinatura.motivoCancelamento = motivo ?? 'Cancelado pelo cliente';
     await this.assinaturas.save(assinatura);
-    if (assinatura.tokenId) await this.tokens.update(assinatura.tokenId, { ativo: false });
-    await this.cache.del(`assinatura:minha:${clienteId}`);
+    await this.desativarTokensDoCliente(usuario?.clienteId ?? assinatura.clienteId, assinatura.tokenId);
+    await this.limparCacheAssinatura(usuario?.clienteId, usuarioId);
     return { mensagem: 'Assinatura cancelada com sucesso.' };
   }
 
@@ -159,24 +198,25 @@ export class AssinaturasService {
       ass.canceladoEm = new Date();
       ass.agendarCancelamentoEm = null;
       await this.assinaturas.save(ass);
-      if (ass.tokenId) await this.tokens.update(ass.tokenId, { ativo: false });
+      await this.desativarTokensDoCliente(ass.clienteId, ass.tokenId);
     }
     console.log(`[Cron] ${vencidas.length} assinatura(s) cancelada(s) por agendamento.`);
   }
 
-  async regerarToken(clienteId: string) {
-    const assinatura = await this.assinaturas.findOne({
-      where: { clienteId, status: 'ativa' },
-      relations: ['plano'],
-    });
+  async regerarToken(usuarioId: string) {
+    const { usuario, assinatura } = await this.usuarioComAssinaturaAtiva(usuarioId, ['plano']);
     if (!assinatura) throw new NotFoundException('Nenhuma assinatura ativa.');
 
-    if (assinatura.tokenId) await this.tokens.update(assinatura.tokenId, { ativo: false });
+    const clienteId = usuario?.clienteId ?? assinatura.clienteId;
+    // Regeneração invalida o token do Cliente para todos os seus usuários
+    await this.desativarTokensDoCliente(clienteId, assinatura.tokenId);
 
     const novoValor = randomBytes(32).toString('hex');
     const novoToken = await this.tokens.save(this.tokens.create({
       token: novoValor,
-      nome: `${clienteId} - regerar`,
+      clienteId: clienteId ?? null,
+      nome: `${usuario?.nome ?? usuarioId} - regerar`,
+      email: usuario?.email ?? null,
       plano: assinatura.plano.slug as any,
       limiteMensal: assinatura.plano.limiteMensal,
       ativo: true,
@@ -184,7 +224,7 @@ export class AssinaturasService {
 
     assinatura.tokenId = novoToken.id;
     await this.assinaturas.save(assinatura);
-    await this.cache.del(`assinatura:minha:${clienteId}`);
+    await this.limparCacheAssinatura(usuario?.clienteId, usuarioId);
     return { token_api: novoValor, mensagem: 'Token regerado. O anterior foi invalidado.' };
   }
 
@@ -193,7 +233,7 @@ export class AssinaturasService {
       order: { criadoEm: 'DESC' },
       skip: (pagina - 1) * limite,
       take: limite,
-      relations: ['cliente', 'plano', 'token'],
+      relations: ['usuario', 'cliente', 'plano', 'token'],
     });
   }
 
@@ -240,7 +280,7 @@ export class AssinaturasService {
     const ass = await this.assinaturas.findOne({ where: { id } });
     if (!ass) throw new NotFoundException('Assinatura nao encontrada.');
     ass.status = 'suspensa';
-    if (ass.tokenId) await this.tokens.update(ass.tokenId, { ativo: false });
+    await this.desativarTokensDoCliente(ass.clienteId, ass.tokenId);
     return this.assinaturas.save(ass);
   }
 
@@ -275,11 +315,8 @@ export class AssinaturasService {
     return { diasUsados, diasTotais, diasRestantes, valor };
   }
 
-  async upgradePreview(clienteId: string, novoPlanoSlug: string) {
-    const assinatura = await this.assinaturas.findOne({
-      where: { clienteId, status: 'ativa' },
-      relations: ['plano'],
-    });
+  async upgradePreview(usuarioId: string, novoPlanoSlug: string) {
+    const { assinatura } = await this.usuarioComAssinaturaAtiva(usuarioId, ['plano']);
     if (!assinatura) throw new NotFoundException('Nenhuma assinatura ativa.');
     if (!assinatura.proximoVencimento) {
       throw new BadRequestException('Assinatura sem data de vencimento definida.');
@@ -308,11 +345,8 @@ export class AssinaturasService {
     };
   }
 
-  async upgrade(clienteId: string, novoPlanoSlug: string) {
-    const assinatura = await this.assinaturas.findOne({
-      where: { clienteId, status: 'ativa' },
-      relations: ['plano'],
-    });
+  async upgrade(usuarioId: string, novoPlanoSlug: string) {
+    const { usuario, assinatura } = await this.usuarioComAssinaturaAtiva(usuarioId, ['plano']);
     if (!assinatura) throw new NotFoundException('Nenhuma assinatura ativa.');
     if (!assinatura.proximoVencimento) {
       throw new BadRequestException('Assinatura sem data de vencimento definida.');
@@ -331,14 +365,15 @@ export class AssinaturasService {
 
     const nomeAnterior = assinatura.plano.nome;
 
-    const cliente = await this.clientes.findOne({ where: { id: clienteId } });
-    if (assinatura.tokenId) await this.tokens.update(assinatura.tokenId, { ativo: false });
+    const clienteId = usuario?.clienteId ?? assinatura.clienteId;
+    await this.desativarTokensDoCliente(clienteId, assinatura.tokenId);
 
     const tokenValor = randomBytes(32).toString('hex');
     const novoToken = await this.tokens.save(this.tokens.create({
       token: tokenValor,
-      nome: `${cliente!.nome} - ${novoPlano.nome}`,
-      email: cliente!.email,
+      clienteId: clienteId ?? null,
+      nome: `${usuario!.nome} - ${novoPlano.nome}`,
+      email: usuario!.email,
       plano: novoPlano.slug as any,
       limiteMensal: novoPlano.limiteMensal,
       ativo: true,
@@ -360,7 +395,7 @@ export class AssinaturasService {
       observacao: `Upgrade de ${nomeAnterior} para ${novoPlano.nome}. Credito: R$ ${credito.valor.toFixed(2)} | Cobranca: R$ ${cobranca.valor.toFixed(2)}`,
     }));
 
-    await this.cache.del(`assinatura:minha:${clienteId}`);
+    await this.limparCacheAssinatura(usuario?.clienteId, usuarioId);
     return {
       mensagem: `Upgrade realizado para ${novoPlano.nome}.`,
       token_api: tokenValor,

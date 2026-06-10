@@ -34,8 +34,8 @@ async function main() {
   const ds       = app.get(getDataSourceToken('buscadados'));
   const dsViacep = app.get(getDataSourceToken('viacep'));
   await ds.query(`
-    INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo, email_verificado, onboarding_pendente, tipo_pessoa)
-    VALUES ($1, $2, $3, 'admin', true, true, false, 'J')
+    INSERT INTO usuarios (nome, email, senha_hash, perfil, ativo, email_verificado, onboarding_pendente)
+    VALUES ($1, $2, $3, 'admin', true, true, false)
     ON CONFLICT (email) DO UPDATE
     SET nome = EXCLUDED.nome, senha_hash = EXCLUDED.senha_hash,
         perfil = 'admin', ativo = true, email_verificado = true, onboarding_pendente = false
@@ -52,7 +52,7 @@ async function main() {
 
   const [activePlan] = await ds.query(`
     SELECT p.slug FROM assinaturas a JOIN planos p ON p.id = a.plano_id
-    WHERE a.cliente_id = $1 AND a.status = 'ativa' ORDER BY a.criado_em DESC LIMIT 1
+    WHERE a.usuario_id = $1 AND a.status = 'ativa' ORDER BY a.criado_em DESC LIMIT 1
   `, [adminRow.id]);
 
   if (!activePlan || activePlan.slug !== ADMIN_PLAN_SLUG) {
@@ -65,7 +65,7 @@ async function main() {
   await ds.query(`
     UPDATE assinaturas SET data_fim = $1, proximo_vencimento = $1, status = 'ativa',
       cancelado_em = NULL, agendar_cancelamento_em = NULL, motivo_cancelamento = NULL
-    WHERE cliente_id = $2 AND status = 'ativa'
+    WHERE usuario_id = $2 AND status = 'ativa'
   `, [ADMIN_PLAN_EXPIRY, adminRow.id]);
 
   // ── UFs e Municípios IBGE ────────────────────────────────────────────────
@@ -82,53 +82,52 @@ async function main() {
     console.log(`[seed] IBGE já carregado (${ufCount} UFs). Use FORCE_IBGE_SYNC=1 para forçar.`);
   }
 
-  // ── Tenant: backfill de Contas para clientes existentes ─────────────────
-  console.log('[seed] Migrando dados de tenant (contas)...');
+  // ── Clientes: garante Cliente para todo usuário de perfil cliente ────────
+  console.log('[seed] Verificando vínculo usuário → cliente...');
 
-  // Cria Conta para cada cliente que ainda não tem conta vinculada
+  // Cria Cliente para cada usuário cliente que ainda não tem vínculo
   await ds.query(`
-    INSERT INTO contas (
-      proprietario_id, tipo_pessoa, cnpj, razao_social, telefone,
-      cep, logradouro, numero, complemento, bairro, municipio, uf,
-      inscricao_estadual, inscricao_municipal,
-      ativo, onboarding_pendente, agendar_exclusao_em,
-      criado_em, atualizado_em
+    INSERT INTO clientes (
+      proprietario_id, tipo_pessoa, ativo, onboarding_pendente,
+      agendar_exclusao_em, criado_em, atualizado_em
     )
-    SELECT
-      id,
-      COALESCE(tipo_pessoa, 'J'),
-      cnpj, razao_social, telefone,
-      cep, logradouro, numero, complemento, bairro, municipio, uf,
-      inscricao_estadual, inscricao_municipal,
-      ativo, onboarding_pendente, agendar_exclusao_em,
-      criado_em, atualizado_em
+    SELECT id, 'J', ativo, onboarding_pendente, agendar_exclusao_em, criado_em, atualizado_em
     FROM usuarios
     WHERE perfil = 'cliente'
-      AND conta_id IS NULL
-      AND id NOT IN (SELECT proprietario_id FROM contas)
+      AND cliente_id IS NULL
+      AND id NOT IN (SELECT proprietario_id FROM clientes)
   `);
 
-  // Vincula conta_id em usuarios
+  // Vincula cliente_id em usuarios
   await ds.query(`
     UPDATE usuarios u
-    SET conta_id = c.id
-    FROM contas c
+    SET cliente_id = c.id
+    FROM clientes c
     WHERE c.proprietario_id = u.id
-      AND u.conta_id IS NULL
+      AND u.cliente_id IS NULL
   `);
 
-  // Propaga conta_id para assinaturas
+  // Propaga cliente_id para assinaturas e tokens
   await ds.query(`
     UPDATE assinaturas a
-    SET conta_id = u.conta_id
+    SET cliente_id = u.cliente_id
     FROM usuarios u
-    WHERE a.cliente_id = u.id
-      AND u.conta_id IS NOT NULL
-      AND a.conta_id IS NULL
+    WHERE a.usuario_id = u.id
+      AND u.cliente_id IS NOT NULL
+      AND a.cliente_id IS NULL
+  `);
+  await ds.query(`
+    UPDATE tokens t
+    SET cliente_id = u.cliente_id
+    FROM assinaturas a
+    JOIN usuarios u ON u.id = a.usuario_id
+    WHERE a.token_id = t.id
+      AND t.cliente_id IS NULL
+      AND u.cliente_id IS NOT NULL
   `);
 
-  const [[{ contas_count }]] = [await ds.query(`SELECT count(*)::int AS contas_count FROM contas`)];
-  console.log(`[seed] Tenant OK — ${contas_count} conta(s).`);
+  const [[{ clientes_count }]] = [await ds.query(`SELECT count(*)::int AS clientes_count FROM clientes`)];
+  console.log(`[seed] Clientes OK — ${clientes_count} cliente(s).`);
 
   // ── Menu dinâmico: Perfis, Módulos, Rotinas ──────────────────────────────
   console.log('[seed] Semeando perfis, módulos, rotinas e associações do menu...');
@@ -188,6 +187,7 @@ async function main() {
     { id: 'c1000000-0000-0000-0000-000000000020', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Perfis',           shortLabel: 'Perfis',   icone: 'an an-identification-badge', rota: '/portal/perfis',       tipo: 'link', ordem: 4 },
     { id: 'c1000000-0000-0000-0000-000000000021', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Módulos',          shortLabel: 'Módulos',  icone: 'an an-squares-four',      rota: '/portal/modulos',         tipo: 'link', ordem: 5 },
     { id: 'c1000000-0000-0000-0000-000000000022', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Manutenção Menu',  shortLabel: 'Menu',     icone: 'an an-list',              rota: '/portal/rotinas',         tipo: 'link', ordem: 6 },
+    { id: 'c1000000-0000-0000-0000-000000000023', moduloId: 'b1000000-0000-0000-0000-000000000004', nome: 'Usuários',         shortLabel: 'Usuários', icone: 'an an-users',             rota: '/portal/usuarios-admin',  tipo: 'link', ordem: 7 },
     // Minha Conta (admin)
     { id: 'c1000000-0000-0000-0000-000000000014', moduloId: 'b1000000-0000-0000-0000-000000000005', nome: 'Dados pessoais',   shortLabel: 'Dados',    icone: 'an an-user',              rota: '/portal/minha-conta',     tipo: 'link', ordem: 1 },
     { id: 'c1000000-0000-0000-0000-000000000015', moduloId: 'b1000000-0000-0000-0000-000000000005', nome: 'Meu Plano',        shortLabel: 'Plano',    icone: 'an an-tag',               rota: '/portal/meu-plano',       tipo: 'link', ordem: 2 },
@@ -257,9 +257,9 @@ async function main() {
   console.log('[seed] Associações PerfilRotina OK.');
 
   // ── Resumo ───────────────────────────────────────────────────────────────
-  const [[{ clientes }]]    = [await ds.query(`SELECT count(*)::int AS clientes FROM usuarios`)];
-  const [[{ planos_count }]] = [await ds.query(`SELECT count(*)::int AS planos_count FROM planos`)];
-  console.log(`\n[seed] ✓ Concluído — clientes: ${clientes}, planos: ${planos_count}`);
+  const [[{ usuarios_count }]] = [await ds.query(`SELECT count(*)::int AS usuarios_count FROM usuarios`)];
+  const [[{ planos_count }]]   = [await ds.query(`SELECT count(*)::int AS planos_count FROM planos`)];
+  console.log(`\n[seed] ✓ Concluído — usuários: ${usuarios_count}, planos: ${planos_count}`);
 
   process.exit(0);
 }

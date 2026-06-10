@@ -36,6 +36,10 @@ import { AdminService } from '../admin.service';
           <po-info class="po-md-6" p-label="CNPJ" [p-value]="cliente.cnpj || '—'"></po-info>
           <po-info class="po-md-6" p-label="Razão Social" [p-value]="cliente.razaoSocial || '—'"></po-info>
         </div>
+        <div class="po-row" *ngIf="cliente.tipoPessoa === 'J'">
+          <po-info class="po-md-6" p-label="CNAE Principal" [p-value]="cnaePrincipalLabel"></po-info>
+          <po-info class="po-md-6" p-label="CNAEs Secundários" [p-value]="cnaesSecundariosLabel"></po-info>
+        </div>
         <div class="po-row">
           <po-info class="po-md-3" p-label="CEP" [p-value]="cliente.cep || '—'"></po-info>
           <po-info class="po-md-5" p-label="Rua" [p-value]="cliente.logradouro || '—'"></po-info>
@@ -174,5 +178,17 @@ export class ClientesDetailComponent implements OnInit {
   formatarData(valor: string | Date | null | undefined) {
     if (!valor) return '';
     return new Date(valor).toLocaleDateString('pt-BR');
+  }
+
+  get cnaePrincipalLabel(): string {
+    if (!this.cliente?.cnaePrincipal) return '—';
+    const descricao = this.cliente.cnaePrincipalDescricao ? ` - ${this.cliente.cnaePrincipalDescricao}` : '';
+    return `${this.cliente.cnaePrincipal}${descricao}`;
+  }
+
+  get cnaesSecundariosLabel(): string {
+    const lista = this.cliente?.cnaesSecundariosDetalhe ?? [];
+    if (!lista.length) return '—';
+    return lista.map((c: any) => (c.descricao ? `${c.codigo} - ${c.descricao}` : c.codigo)).join('; ');
   }
 }

@@ -84,7 +84,7 @@ export class PortalFaturasComponent implements OnInit {
       next: ([lista, count]: [any[], number]) => {
         this.faturas = lista.map(f => ({
           ...f,
-          cliente:    f.assinatura?.cliente?.nome ?? '—',
+          cliente:    f.assinatura?.cliente?.razaoSocial ?? f.assinatura?.usuario?.nome ?? '—',
           plano:      f.assinatura?.plano?.nome ?? '—',
           competencia: `${String(f.mes).padStart(2, '0')}/${f.ano}`,
         }));

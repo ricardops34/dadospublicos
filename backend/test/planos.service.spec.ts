@@ -81,14 +81,14 @@ function createService() {
   return { service, planos, recursos, planosRecursos };
 }
 
-test('seed inclui plano free com CEP e limite de 3 CNPJ por hora', async () => {
+test('seed inclui plano gratuito com CEP e limite de 3 CNPJ por hora', async () => {
   const { service, planos, recursos, planosRecursos } = createService();
 
   await service.seed();
 
-  const planoFree = planos.find((plano) => plano.slug === 'free');
+  const planoFree = planos.find((plano) => plano.slug === 'gratuito');
   assert.ok(planoFree);
-  assert.equal(planoFree.nome, 'Free');
+  assert.equal(planoFree.nome, 'gratuito');
   assert.equal(planoFree.acessoCnpj, true);
   assert.equal(planoFree.acessoGeocode, true);
   assert.equal(planoFree.rateLimitPorHora, 3);
@@ -108,7 +108,7 @@ test('findAll público retorna apenas planos ativos exibidos na LP', async () =>
       find: async ({ where }: any) => {
         assert.deepEqual(where, { ativo: true, exibirNaLp: true });
         return [
-          { id: '1', slug: 'free', ativo: true, exibirNaLp: true, ordem: 0, recursos: [] },
+          { id: '1', slug: 'gratuito', ativo: true, exibirNaLp: true, ordem: 0, recursos: [] },
         ];
       },
     } as any,
@@ -120,5 +120,5 @@ test('findAll público retorna apenas planos ativos exibidos na LP', async () =>
   const result = await service.findAll(true);
 
   assert.equal(result.length, 1);
-  assert.equal(result[0].slug, 'free');
+  assert.equal(result[0].slug, 'gratuito');
 });

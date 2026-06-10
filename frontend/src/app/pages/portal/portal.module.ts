@@ -23,6 +23,7 @@ const routes: Routes = [
       { path: 'planos',          canActivate: [adminGuard], loadChildren: () => import('./admin/planos/planos.module').then((m) => m.PortalPlanosModule) },
       { path: 'recurso-planos',  canActivate: [adminGuard], loadChildren: () => import('./admin/recurso-planos/recurso-planos.module').then((m) => m.RecursosPlanosModule) },
       { path: 'clientes',        canActivate: [adminGuard], loadChildren: () => import('./admin/clientes/clientes.module').then((m) => m.PortalClientesModule) },
+      { path: 'usuarios-admin',  canActivate: [adminGuard], loadChildren: () => import('./admin/usuarios-admin/usuarios-admin.module').then((m) => m.UsuariosAdminModule) },
       { path: 'assinaturas',     canActivate: [adminGuard], loadChildren: () => import('./admin/assinaturas/assinaturas.module').then((m) => m.PortalAssinaturasModule) },
       { path: 'faturas',         canActivate: [adminGuard], loadChildren: () => import('./admin/faturas/faturas.module').then((m) => m.PortalFaturasModule) },
       { path: 'consumo-admin',   canActivate: [adminGuard], loadChildren: () => import('./admin/consumo-admin/consumo-admin.module').then((m) => m.ConsumoAdminModule) },

@@ -23,7 +23,7 @@ function makeRequestProps(req: any) {
   };
 }
 
-test('ApiRateLimitGuard limita plano free a 3 consultas de CNPJ por hora', async () => {
+test('ApiRateLimitGuard limita plano gratuito a 3 consultas de CNPJ por hora', async () => {
   let totalHits = 0;
   let usedKey = '';
   let usedTtl = 0;
@@ -46,7 +46,7 @@ test('ApiRateLimitGuard limita plano free a 3 consultas de CNPJ por hora', async
   const req = {
     headers: { x_api_token: 'token-free' },
     query: {},
-    tokenInfo: { plano: 'free' },
+    tokenInfo: { plano: 'gratuito' },
   };
 
   await guard['handleRequest'](makeRequestProps(req));

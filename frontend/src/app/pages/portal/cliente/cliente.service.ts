@@ -57,6 +57,9 @@ export interface ClientePerfil {
     uf?: string | null;
     inscricaoEstadual?: string | null;
     inscricaoMunicipal?: string | null;
+    cnaePrincipal?: string | null;
+    cnaePrincipalDescricao?: string | null;
+    cnaesSecundarios?: Array<{ codigo: string; descricao?: string | null }>;
   } | null;
 }
 

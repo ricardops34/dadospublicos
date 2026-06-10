@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Usuario } from './usuario.entity';
-import { Conta } from './conta.entity';
+import { Cliente } from './cliente.entity';
 import { Plano } from './plano.entity';
 import { Token } from './token.entity';
 import { Fatura } from './fatura.entity';
@@ -12,16 +12,17 @@ export class Assinatura {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'cliente_id', type: 'uuid' })
-  clienteId: string;
+  /** Usuário que contratou (histórico) — o plano pertence ao Cliente */
+  @Column({ name: 'usuario_id', type: 'uuid' })
+  usuarioId: string;
 
-  /** Tenant/conta a qual esta assinatura pertence */
-  @Column({ name: 'conta_id', type: 'uuid', nullable: true })
-  contaId: string | null;
+  /** Cliente dono da assinatura/plano */
+  @Column({ name: 'cliente_id', type: 'uuid', nullable: true })
+  clienteId: string | null;
 
-  @ManyToOne(() => Conta, (c) => c.assinaturas, { nullable: true })
-  @JoinColumn({ name: 'conta_id' })
-  conta: Conta | null;
+  @ManyToOne(() => Cliente, (c) => c.assinaturas, { nullable: true })
+  @JoinColumn({ name: 'cliente_id' })
+  cliente: Cliente | null;
 
   @Column({ name: 'plano_id', type: 'uuid' })
   planoId: string;
@@ -56,9 +57,9 @@ export class Assinatura {
   @UpdateDateColumn({ name: 'atualizado_em' })
   atualizadoEm: Date;
 
-  @ManyToOne(() => Usuario, (c) => c.assinaturas)
-  @JoinColumn({ name: 'cliente_id' })
-  cliente: Usuario;
+  @ManyToOne(() => Usuario, (u) => u.assinaturas)
+  @JoinColumn({ name: 'usuario_id' })
+  usuario: Usuario;
 
   @ManyToOne(() => Plano, (p) => p.assinaturas)
   @JoinColumn({ name: 'plano_id' })

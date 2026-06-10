@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { GeocodeService } from './geocode.service';
@@ -21,6 +21,19 @@ export class GeocodePortalController {
     return this.geocode.buscarCep(cep);
   }
 
+  @Get('cnaes')
+  @ApiOperation({ summary: 'Pesquisa CNAEs no catálogo RFB — formato combo PO-UI' })
+  pesquisarCnaes(@Query('filter') filter?: string, @Query('value') value?: string) {
+    return this.cnpj.pesquisarCnaes(filter, value);
+  }
+
+  @Get('cnaes/:codigo')
+  @ApiOperation({ summary: 'Busca um CNAE pelo código' })
+  @ApiParam({ name: 'codigo', example: '6201501' })
+  obterCnae(@Param('codigo') codigo: string) {
+    return this.cnpj.obterCnae(codigo);
+  }
+
   @Get('cnpj/:cnpj')
   @ApiOperation({ summary: 'Consulta CNPJ — portal (qualquer perfil, sem token de API)' })
   @ApiParam({ name: 'cnpj', example: '27865757000102' })
@@ -30,6 +43,9 @@ export class GeocodePortalController {
     if (!dados) return null;
 
     const estab = dados.estabelecimento ?? {};
+    const codigosSecundarios: string[] = estab.atividades_secundarias ?? [];
+    const catalogoSecundarios = await this.cnpj.obterCnaesPorCodigos(codigosSecundarios);
+
     return {
       cnpj:        estab.cnpj,
       razaoSocial: dados.razao_social,
@@ -42,6 +58,12 @@ export class GeocodePortalController {
       bairro:      estab.bairro,
       municipio:   estab.municipio?.nome,
       uf:          estab.estado?.sigla ?? estab.uf,
+      cnaePrincipal:          estab.atividade_principal?.id ?? null,
+      cnaePrincipalDescricao: estab.atividade_principal?.descricao ?? null,
+      cnaesSecundarios: codigosSecundarios.map((codigo) => ({
+        codigo,
+        descricao: catalogoSecundarios.find((c) => c.codigo === codigo)?.descricao ?? null,
+      })),
     };
   }
 }

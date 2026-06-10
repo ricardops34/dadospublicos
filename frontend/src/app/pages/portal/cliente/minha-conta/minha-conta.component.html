@@ -126,6 +126,26 @@
             <po-info class="po-md-6" p-label="Município" [p-value]="conta?.municipio || '—'"></po-info>
             <po-info class="po-md-2" p-label="UF" [p-value]="conta?.uf || '—'"></po-info>
           </div>
+
+          <ng-container *ngIf="ehPessoaJuridica">
+            <po-divider p-label="Atividade econômica (CNAE)"></po-divider>
+            <div class="po-row">
+              <po-info class="po-md-12" p-label="CNAE Principal"
+                [p-value]="conta?.cnaePrincipal ? (conta.cnaePrincipal + ' - ' + (conta.cnaePrincipalDescricao || '')) : '—'">
+              </po-info>
+            </div>
+            <div class="po-row" *ngIf="cnaesSecundarios.length">
+              <po-table class="po-md-12"
+                [p-columns]="colunasCnae"
+                [p-items]="cnaesSecundarios"
+                [p-sort]="false"
+                [p-striped]="true">
+              </po-table>
+            </div>
+            <p *ngIf="!cnaesSecundarios.length" style="color: #6b7280; font-size: 0.85rem;">
+              Nenhum CNAE secundário cadastrado.
+            </p>
+          </ng-container>
         </ng-container>
 
         <ng-container *ngIf="editandoConta">
@@ -166,6 +186,46 @@
               (p-change)="onUfChange($event)">
             </po-combo>
           </div>
+          <ng-container *ngIf="ehPessoaJuridica">
+            <po-divider p-label="Atividade econômica (CNAE)"></po-divider>
+            <div class="po-row">
+              <po-combo class="po-md-12" p-label="CNAE Principal" name="cnaePrincipal"
+                [ngModel]="formConta.cnaePrincipal"
+                (ngModelChange)="formConta.cnaePrincipal = $event"
+                [p-filter-service]="cnaeFilterService"
+                [p-filter-mode]="PoComboFilterMode.contains"
+                p-placeholder="Pesquise por código ou descrição"
+                [p-clean]="true">
+              </po-combo>
+            </div>
+            <div class="po-row" style="align-items: flex-end;">
+              <po-combo class="po-md-10" p-label="Adicionar CNAE Secundário" name="novoCnaeSecundario"
+                [ngModel]="novoCnaeSecundario"
+                (ngModelChange)="novoCnaeSecundario = $event"
+                [p-filter-service]="cnaeFilterService"
+                [p-filter-mode]="PoComboFilterMode.contains"
+                p-placeholder="Pesquise por código ou descrição"
+                [p-clean]="true">
+              </po-combo>
+              <po-button class="po-md-2" p-label="Adicionar" p-kind="secondary" p-icon="an an-plus"
+                [p-loading]="adicionandoCnae" [p-disabled]="!novoCnaeSecundario"
+                (p-click)="adicionarCnaeSecundario()">
+              </po-button>
+            </div>
+            <div class="po-row" *ngIf="formCnaesSecundarios.length">
+              <po-table class="po-md-12"
+                [p-columns]="colunasCnae"
+                [p-items]="formCnaesSecundarios"
+                [p-actions]="acoesCnaeEdicao"
+                [p-sort]="false"
+                [p-striped]="true">
+              </po-table>
+            </div>
+            <p *ngIf="!formCnaesSecundarios.length" style="color: #6b7280; font-size: 0.85rem;">
+              Nenhum CNAE secundário adicionado.
+            </p>
+          </ng-container>
+
           <div class="po-row" style="justify-content: flex-end; gap: 8px; margin-top: 8px;">
             <po-button p-label="Cancelar" p-kind="tertiary" (p-click)="cancelarEdicaoConta()"></po-button>
             <po-button p-label="Salvar empresa" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="salvandoConta" (p-click)="salvarConta()"></po-button>
@@ -174,7 +234,35 @@
 
       </po-tab>
 
-      <!-- ─── ABA 3: Encerramento ────────────────────────────────────── -->
+      <!-- ─── ABA 3: Usuários da conta ───────────────────────────────── -->
+      <po-tab *ngIf="conta" p-label="Usuários" p-icon="an an-users">
+
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+          <p style="margin: 0; color: #6b7280; font-size: 0.85rem;">
+            Usuários com acesso a esta conta. Todos compartilham o plano e o token de API do Cliente.
+            <span *ngIf="!souPrincipal"><br>Somente o usuário principal pode gerenciar os usuários.</span>
+          </p>
+          <po-button
+            *ngIf="souPrincipal"
+            p-label="Novo usuário"
+            p-kind="primary"
+            p-icon="an an-user-plus"
+            (p-click)="abrirNovoUsuario()">
+          </po-button>
+        </div>
+
+        <po-table
+          [p-columns]="colunasUsuarios"
+          [p-items]="usuariosConta"
+          [p-actions]="acoesUsuarios"
+          [p-loading]="carregandoUsuarios"
+          [p-sort]="true"
+          [p-striped]="true">
+        </po-table>
+
+      </po-tab>
+
+      <!-- ─── ABA 4: Encerramento ────────────────────────────────────── -->
       <po-tab p-label="Encerramento" p-icon="an an-warning">
 
         <ng-container *ngIf="agendarExclusaoEm; else dangerZone">
@@ -244,6 +332,33 @@
   </p>
   <p *ngIf="temPlanoPagoAtivo && opcaoExclusao === 'fim-plano'" style="color: #6b7280; font-size: 0.82rem; margin-top: 8px;">
     A anonimização ficará programada para o fim da vigência do plano atual.
+  </p>
+</po-modal>
+
+<po-modal
+  #modalUsuario
+  [p-title]="editandoUsuarioId ? 'Editar usuário' : 'Novo usuário'"
+  p-size="md"
+  [p-primary-action]="acaoSalvarUsuario"
+  [p-secondary-action]="acaoCancelarUsuario">
+
+  <div class="po-row">
+    <po-input class="po-md-12" p-label="Nome *" [(ngModel)]="formUsuario.nome"></po-input>
+  </div>
+  <div class="po-row">
+    <po-input class="po-md-7" p-label="E-mail *" [(ngModel)]="formUsuario.email"></po-input>
+    <po-input class="po-md-5" p-label="Telefone *" [(ngModel)]="formUsuario.telefone" p-mask="(99) 9 9999-9999"></po-input>
+  </div>
+  <div class="po-row">
+    <po-password class="po-md-12"
+      [p-label]="editandoUsuarioId ? 'Nova senha (deixe em branco para manter)' : 'Senha *'"
+      p-help="Mínimo de 8 caracteres"
+      [(ngModel)]="formUsuario.senha">
+    </po-password>
+  </div>
+
+  <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;" *ngIf="!editandoUsuarioId">
+    O usuário será criado com o e-mail já verificado e poderá acessar o sistema imediatamente com a senha definida.
   </p>
 </po-modal>
 

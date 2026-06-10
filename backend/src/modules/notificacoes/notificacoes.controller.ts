@@ -10,6 +10,8 @@ class CriarNotificacaoDto {
   @IsNotEmpty() titulo: string;
   @IsNotEmpty() mensagem: string;
   @IsIn(['sistema', 'financeiro', 'conta', 'consumo']) tipo: NotificacaoTipo;
+  @IsOptional() @IsUUID() usuarioId?: string;
+  /** alias legado de usuarioId */
   @IsOptional() @IsUUID() clienteId?: string;
 }
 
@@ -46,8 +48,8 @@ export class NotificacoesController {
   @Post()
   @UseGuards(AdminGuard)
   @ApiSecurity('x-admin-key')
-  @ApiOperation({ summary: '[Admin] Cria notificação (broadcast ou para cliente específico)' })
+  @ApiOperation({ summary: '[Admin] Cria notificação (broadcast ou para usuário específico)' })
   criar(@Body() dto: CriarNotificacaoDto) {
-    return this.svc.criar(dto.titulo, dto.mensagem, dto.tipo, dto.clienteId);
+    return this.svc.criar(dto.titulo, dto.mensagem, dto.tipo, dto.usuarioId ?? dto.clienteId);
   }
 }

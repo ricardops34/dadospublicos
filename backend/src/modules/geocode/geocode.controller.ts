@@ -11,10 +11,10 @@ import { Perfil } from '../portal/perfil.decorator';
 @Controller('geocode')
 @UseGuards(AuthGuard)
 export class GeocodeController {
-  constructor(private readonly service: GeocodeService) {}
+  constructor(private readonly service: GeocodeService) { }
 
   @Get('cep/:cep')
-  @PlanoMinimo('free')
+  @PlanoMinimo('gratuito')
   @ApiSecurity('token')
   @ApiOperation({ summary: 'Retorna dados de endereço e coordenadas de um CEP (cache permanente)' })
   @ApiParam({ name: 'cep', description: 'CEP sem formatação', example: '01310100' })
@@ -23,7 +23,7 @@ export class GeocodeController {
   }
 
   @Get('ufs')
-  @PlanoMinimo('free')
+  @PlanoMinimo('gratuito')
   @ApiSecurity('token')
   @ApiOperation({ summary: 'Lista todas as Unidades Federativas (UFs) do Brasil' })
   @ApiQuery({ name: 'filter', required: false, description: 'Filtro por nome ou sigla da UF', example: 'São Paulo' })
@@ -32,7 +32,7 @@ export class GeocodeController {
   }
 
   @Get('municipios/:uf')
-  @PlanoMinimo('free')
+  @PlanoMinimo('gratuito')
   @ApiSecurity('token')
   @ApiOperation({ summary: 'Lista municípios de uma UF' })
   @ApiParam({ name: 'uf', description: 'Sigla da UF', example: 'SP' })

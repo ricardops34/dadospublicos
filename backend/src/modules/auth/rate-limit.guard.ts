@@ -25,7 +25,7 @@ export class ApiRateLimitGuard extends ThrottlerGuard {
       return true;
     }
 
-    if (tokenInfo?.plano === 'free') {
+    if (tokenInfo?.plano === 'gratuito') {
       const tokenKey = `free_cnpj:${token}`;
       const { totalHits } = await this.storageService.increment(tokenKey, 3600000, 3, 0, 'free-plan');
       if (totalHits > 3) {

@@ -36,7 +36,9 @@ export class PortalService {
 
     const payload = {
       sub: cliente.id,
-      contaId: cliente.contaId ?? null,
+      clienteId: cliente.clienteId ?? null,
+      // alias legado — leitores antigos usam contaId
+      contaId: cliente.clienteId ?? null,
       nome: cliente.nome,
       email: cliente.email,
       perfil: cliente.perfil,
@@ -55,7 +57,7 @@ export class PortalService {
     if (cliente.perfil === 'admin') {
       return this.resolverTokenAdmin(cliente);
     }
-    return this.resolverTokenCliente(cliente.id);
+    return this.resolverTokenCliente(cliente);
   }
 
   private async resolverTokenAdmin(cliente: Usuario): Promise<string> {
@@ -78,9 +80,20 @@ export class PortalService {
     return salvo.token;
   }
 
-  private async resolverTokenCliente(clienteId: string): Promise<string | null> {
+  private async resolverTokenCliente(usuario: Usuario): Promise<string | null> {
+    // O token de API pertence ao Cliente: todos os usuários do Cliente
+    // compartilham o mesmo token (docs/regra-cliente-usuario.md)
+    if (usuario.clienteId) {
+      const tokenCliente = await this.tokens.findOne({
+        where: { clienteId: usuario.clienteId, ativo: true },
+        order: { criadoEm: 'DESC' },
+      });
+      if (tokenCliente) return tokenCliente.token;
+    }
+
+    // Legado: tokens anteriores ao backfill, via assinatura do próprio usuário
     const assinatura = await this.assinaturas.findOne({
-      where: { clienteId, status: 'ativa' },
+      where: { usuarioId: usuario.id, status: 'ativa' },
       relations: ['token'],
       order: { criadoEm: 'DESC' },
     });

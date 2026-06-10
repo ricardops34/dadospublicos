@@ -126,8 +126,8 @@ export class PortalAssinaturasComponent implements OnInit {
             ...a,
             _plano: a.plano,
             _token: a.token,
-            cliente:    a.cliente?.nome  ?? '—',
-            email:      a.cliente?.email ?? '—',
+            cliente:    a.cliente?.razaoSocial ?? a.usuario?.nome ?? '—',
+            email:      a.usuario?.email ?? '—',
             plano:      a.plano?.nome    ?? '—',
             tokenAtivo: a.token?.ativo   ? 'Sim' : 'Não',
           }));

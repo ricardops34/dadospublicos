@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { UsuariosService } from './usuarios.service';
-import { AgendarExclusaoDto, CreateUsuarioDto, LoginUsuarioDto, RecuperarSenhaDto, UpdateUsuarioDto, VerificarEmailCodigoDto } from './dto/create-usuario.dto';
+import { AgendarExclusaoDto, CreateUsuarioDto, CriarUsuarioClienteDto, EditarUsuarioClienteDto, LoginUsuarioDto, RecuperarSenhaDto, UpdateUsuarioDto, VerificarEmailCodigoDto } from './dto/create-usuario.dto';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { ParametrosService } from '../parametros/parametros.service';
 
@@ -91,11 +91,54 @@ export class UsuariosController {
   @Patch('me/conta')
   @UseGuards(JwtPortalGuard)
   @ApiSecurity('bearer')
-  @ApiOperation({ summary: 'Atualiza dados da empresa/conta do usuário logado' })
-  atualizarConta(@Req() req: any, @Body() dto: any) {
-    const contaId = req['usuario'].contaId;
-    if (!contaId) return { mensagem: 'Sem conta vinculada.' };
-    return this.service.atualizarConta(contaId, dto);
+  @ApiOperation({ summary: 'Atualiza dados de negócio do Cliente do usuário logado' })
+  atualizarCliente(@Req() req: any, @Body() dto: any) {
+    // JWT antigo usa contaId; o novo usa clienteId
+    const clienteId = req['usuario'].clienteId ?? req['usuario'].contaId;
+    if (!clienteId) return { mensagem: 'Sem cliente vinculado.' };
+    return this.service.atualizarCliente(clienteId, dto);
+  }
+
+  // ─── Manutenção de usuários do Cliente (perfil cliente, módulo Minha Conta) ─
+
+  @Get('me/conta/usuarios')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Lista os usuários do Cliente do usuário logado' })
+  listarUsuariosCliente(@Req() req: any) {
+    return this.service.listarUsuariosDoCliente(req['usuario'].sub);
+  }
+
+  @Post('me/conta/usuarios')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Cria usuário adicional do Cliente (somente usuário principal)' })
+  criarUsuarioCliente(@Req() req: any, @Body() dto: CriarUsuarioClienteDto) {
+    return this.service.criarUsuarioDoCliente(req['usuario'].sub, dto);
+  }
+
+  @Patch('me/conta/usuarios/:id')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Edita usuário do Cliente (somente usuário principal)' })
+  editarUsuarioCliente(@Req() req: any, @Param('id') id: string, @Body() dto: EditarUsuarioClienteDto) {
+    return this.service.editarUsuarioDoCliente(req['usuario'].sub, id, dto);
+  }
+
+  @Patch('me/conta/usuarios/:id/ativo')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Bloqueia/desbloqueia usuário do Cliente (somente usuário principal; não há exclusão)' })
+  ativarUsuarioCliente(@Req() req: any, @Param('id') id: string, @Body('ativo') ativo: boolean) {
+    return this.service.ativarUsuarioDoCliente(req['usuario'].sub, id, ativo);
+  }
+
+  @Post('me/conta/usuarios/:id/transferir-principal')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Transfere a função de usuário principal para outro usuário da conta' })
+  transferirPrincipal(@Req() req: any, @Param('id') id: string) {
+    return this.service.transferirPrincipal(req['usuario'].sub, id);
   }
 
   @Post('me/agendar-exclusao')
