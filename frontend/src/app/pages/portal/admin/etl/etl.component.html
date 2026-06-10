@@ -85,20 +85,48 @@
         </po-container>
 
         <div class="po-row">
-          <div class="po-lg-6 po-sm-12 etl-grid-item">
-            <po-container p-title="1. Baixar arquivos">
-              <p>Faz download dos ZIPs da RFB. Pula os que ja existem no servidor.</p>
+          <div class="po-lg-4 po-sm-12 etl-grid-item">
+            <po-container p-title="Baixar base">
+              <p>cnpj.tar.gz da raiz do repositorio RFB. Executar apenas na carga inicial.</p>
               <po-button
-                p-label="Baixar"
+                p-label="Baixar base"
                 p-kind="secondary"
                 p-icon="an an-download-simple"
                 [p-disabled]="status.rodando"
-                (p-click)="executar('download')">
+                (p-click)="executar('download-base')">
               </po-button>
             </po-container>
           </div>
 
-          <div class="po-lg-6 po-sm-12 etl-grid-item">
+          <div class="po-lg-4 po-sm-12 etl-grid-item">
+            <po-container p-title="Baixar tabelas">
+              <p>Arquivos unicos mensais: Cnaes, Motivos, Municipios, Naturezas, Paises, Qualificacoes e Simples.</p>
+              <po-button
+                p-label="Baixar tabelas"
+                p-kind="secondary"
+                p-icon="an an-download-simple"
+                [p-disabled]="status.rodando"
+                (p-click)="executar('download-tabelas')">
+              </po-button>
+            </po-container>
+          </div>
+
+          <div class="po-lg-4 po-sm-12 etl-grid-item">
+            <po-container p-title="Baixar empresas">
+              <p>Arquivos particionados mensais: Empresas0-9, Estabelecimentos0-9 e Socios0-9.</p>
+              <po-button
+                p-label="Baixar empresas"
+                p-kind="secondary"
+                p-icon="an an-download-simple"
+                [p-disabled]="status.rodando"
+                (p-click)="executar('download-empresas')">
+              </po-button>
+            </po-container>
+          </div>
+        </div>
+
+        <div class="po-row">
+          <div class="po-lg-4 po-sm-12 etl-grid-item">
             <po-container p-title="2. Extrair ZIPs">
               <p>Descompacta os arquivos baixados para CSV antes da carga na base.</p>
               <po-button
@@ -111,7 +139,7 @@
             </po-container>
           </div>
 
-          <div class="po-lg-6 po-sm-12 etl-grid-item">
+          <div class="po-lg-4 po-sm-12 etl-grid-item">
             <po-container p-title="3. Aplicar na base">
               <p>Carrega os CSVs no PostgreSQL com truncamento previo e insercao em lotes.</p>
               <po-button
@@ -124,9 +152,9 @@
             </po-container>
           </div>
 
-          <div class="po-lg-6 po-sm-12 etl-grid-item">
+          <div class="po-lg-4 po-sm-12 etl-grid-item">
             <po-container p-title="ETL completo">
-              <p>Executa download, extracao e carga em sequencia.</p>
+              <p>Executa lookup + dados, extracao e carga em sequencia.</p>
               <po-button
                 p-label="Executar tudo"
                 p-kind="primary"

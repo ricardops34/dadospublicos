@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { PoTableAction, PoTableColumn, PoUploadFileRestrictions } from '@po-ui/ng-components';
@@ -77,6 +77,7 @@ export class Painel360Component implements OnInit {
     private clienteService: UsuarioPortalService,
     private auth: AuthService,
     private notif: NotifService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.uploadUrl = this.clienteService.uploadPainel360Url();
     const token = this.auth.getToken();
@@ -106,9 +107,11 @@ export class Painel360Component implements OnInit {
         } else {
           this.limparDetalhes();
         }
+        this.cdr.detectChanges();
       },
       error: () => {
         this.carregandoLotes = false;
+        this.cdr.detectChanges();
         this.notif.error('Erro ao carregar seus lotes do Painel 360.');
       },
     });
@@ -127,12 +130,14 @@ export class Painel360Component implements OnInit {
         this.totalResultados = resultados.total;
         this.geoJson = geoJson;
         this.carregandoDetalhes = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.resultados = [];
         this.totalResultados = 0;
         this.geoJson = null;
         this.carregandoDetalhes = false;
+        this.cdr.detectChanges();
         this.notif.error('Erro ao carregar o lote selecionado.');
       },
     });

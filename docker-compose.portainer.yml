@@ -14,7 +14,7 @@ services:
       DB_SISTEMA_NAME: ${DB_SISTEMA_NAME:-buscadados}
       DB_VIACEP_NAME: ${DB_VIACEP_NAME:-dados_viacep}
       ADMIN_KEY: ${ADMIN_KEY}
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-rfb-portal-secret}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       ETL_DOWNLOAD_DIR: /var/lib/etl/download

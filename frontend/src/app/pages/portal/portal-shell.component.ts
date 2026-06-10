@@ -1,4 +1,4 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { PoHeaderActionTool, PoHeaderBrand, PoHeaderUser, PoMenuItem } from '@po-ui/ng-components';
 import { AuthService } from '../../services/auth.service';
@@ -57,6 +57,7 @@ export class PortalShellComponent implements OnInit {
     private clienteService: UsuarioPortalService,
     private notifSvc: NotificacoesService,
     private menuService: MenuService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
@@ -82,13 +83,14 @@ export class PortalShellComponent implements OnInit {
       this.clienteService.meuPerfil().subscribe({
         next: (perfilCliente) => {
           if (this.clienteService.temOnboardingPendente(perfilCliente)) {
-            // Usa perfil onboarding do banco
             this.menuService.getMenu().subscribe({
               next: (items) => {
                 this.menuItems = this.processarMenuDinamico(items);
+                this.cdr.detectChanges();
               },
               error: () => {
                 this.menuItems = this.MENUS_CLIENTE_ONBOARDING_FALLBACK;
+                this.cdr.detectChanges();
               },
             });
             return;
@@ -99,6 +101,7 @@ export class PortalShellComponent implements OnInit {
         },
         error: () => {
           this.menuItems = this.MENUS_CLIENTE_ONBOARDING_FALLBACK;
+          this.cdr.detectChanges();
         },
       });
     }
@@ -108,10 +111,9 @@ export class PortalShellComponent implements OnInit {
     this.menuService.getMenu().subscribe({
       next: (items) => {
         this.menuItems = this.processarMenuDinamico(items);
+        this.cdr.detectChanges();
       },
-      error: () => {
-        // Fallback silencioso — menu fica vazio ou com onboarding
-      },
+      error: () => {},
     });
   }
 
@@ -135,11 +137,12 @@ export class PortalShellComponent implements OnInit {
   private configurarNotificacoes() {
     this.notifSvc.carregarContagem();
     this.notifSvc.listar().subscribe({
-      next: (lista) => (this.notificacoes = lista),
+      next: (lista) => { this.notificacoes = lista; this.cdr.detectChanges(); },
       error: () => {},
     });
     this.notifSvc.naoLidas.subscribe((total) => {
       this.atualizarBadgeNotif(total);
+      this.cdr.detectChanges();
     });
   }
 
@@ -172,9 +175,11 @@ export class PortalShellComponent implements OnInit {
       next: (lista) => {
         this.notificacoes = lista;
         this.carregandoNotif = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.carregandoNotif = false;
+        this.cdr.detectChanges();
       },
     });
   }

@@ -1,13 +1,17 @@
-param([string]$Tag = "latest")
+param(
+  [string]$Tag = "latest",
+  [switch]$NoCache
+)
 
-$Registry = "bjsoftware"
+$Registry  = "bjsoftware"
+$CacheFlag = if ($NoCache) { "--no-cache" } else { "" }
 
-Write-Host "==> Build rfb-api:$Tag"
-docker build -t "$Registry/rfb-api:$Tag" ./backend
+Write-Host "==> Build rfb-api:$Tag$(if ($NoCache) { ' (sem cache)' })"
+docker build $CacheFlag -t "$Registry/rfb-api:$Tag" ./backend
 if (-not $?) { exit 1 }
 
-Write-Host "==> Build rfb-frontend:$Tag"
-docker build -f ./frontend/Dockerfile.prod -t "$Registry/rfb-frontend:$Tag" ./frontend
+Write-Host "==> Build rfb-frontend:$Tag$(if ($NoCache) { ' (sem cache)' })"
+docker build $CacheFlag -f ./frontend/Dockerfile.prod -t "$Registry/rfb-frontend:$Tag" ./frontend
 if (-not $?) { exit 1 }
 
 Write-Host "==> Push rfb-api:$Tag"

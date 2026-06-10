@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Usuario } from '../../entities/usuario.entity';
 import { Assinatura } from '../../entities/assinatura.entity';
@@ -12,7 +13,13 @@ import { AdminModule } from '../admin/admin.module';
 
 @Module({
   imports: [
-    JwtModule.register({}),
+    JwtModule.registerAsync({
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET') || 'rfb-portal-secret',
+        signOptions: { expiresIn: '8h' },
+      }),
+      inject: [ConfigService],
+    }),
     TypeOrmModule.forFeature([Usuario, Assinatura, Token], 'buscadados'),
     AdminModule,
   ],

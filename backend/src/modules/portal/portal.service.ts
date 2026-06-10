@@ -42,10 +42,7 @@ export class PortalService {
       perfil: cliente.perfil,
     };
 
-    const jwt = this.jwtService.sign(payload, {
-      secret: this.config.get('JWT_SECRET', 'rfb-portal-secret'),
-      expiresIn: '8h',
-    });
+    const jwt = this.jwtService.sign(payload);
 
     const apiToken = await this.resolverApiToken(cliente);
 

@@ -23,7 +23,7 @@ export class JwtPortalGuard implements CanActivate {
     let payload: any;
     try {
       payload = this.jwtService.verify(token, {
-        secret: this.config.get('JWT_SECRET', 'rfb-portal-secret'),
+        secret: this.config.get('JWT_SECRET') || 'rfb-portal-secret',
       });
     } catch {
       throw new UnauthorizedException('Sessão inválida ou expirada.');

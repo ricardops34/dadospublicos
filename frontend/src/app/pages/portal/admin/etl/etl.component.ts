@@ -129,10 +129,13 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     return `${ano}-${String(mes).padStart(2, '0')}`;
   }
 
-  executar(fase: 'completo' | 'download' | 'extracao' | 'carga') {
+  executar(fase: 'completo' | 'download' | 'download-base' | 'download-tabelas' | 'download-empresas' | 'extracao' | 'carga') {
     const labels: Record<string, string> = {
       completo: 'ETL completo iniciado.',
-      download: 'Download dos arquivos iniciado.',
+      download: 'Download de tabelas e empresas iniciado.',
+      'download-base': 'Download do cnpj.tar.gz (base) iniciado.',
+      'download-tabelas': 'Download das tabelas de referencia iniciado.',
+      'download-empresas': 'Download dos dados de empresas iniciado.',
       extracao: 'Extracao dos ZIPs iniciada.',
       carga: 'Carga no banco iniciada.',
     };

@@ -1,7 +1,14 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export type EtlStatus = 'iniciado' | 'download' | 'extracao' | 'carga' | 'concluido' | 'erro';
-export type EtlFase = 'completo' | 'download' | 'extracao' | 'carga';
+export type EtlFase =
+  | 'completo'
+  | 'download'
+  | 'download-base'
+  | 'download-tabelas'
+  | 'download-empresas'
+  | 'extracao'
+  | 'carga';
 
 @Entity('etl_logs')
 export class EtlLog {

@@ -22,17 +22,38 @@ interface ArquivoRfb {
   tipo?: string;
 }
 
+interface PrefixoDados {
+  prefixo: string;
+  tabela: string;
+  tipo: string;
+}
+
+// Classe 1 — arquivos únicos mensais (dentro da pasta de competência)
+const ARQUIVOS_LOOKUP: ArquivoRfb[] = [
+  { grupo: 'lookup', nome: 'Cnaes.zip',        tabela: 'cnaes',               colunas: ['codigo', 'descricao'] },
+  { grupo: 'lookup', nome: 'Naturezas.zip',     tabela: 'naturezas_juridicas', colunas: ['codigo', 'descricao'] },
+  { grupo: 'lookup', nome: 'Qualificacoes.zip', tabela: 'qualificacoes',       colunas: ['codigo', 'descricao'] },
+  { grupo: 'lookup', nome: 'Motivos.zip',       tabela: 'motivos',             colunas: ['codigo', 'descricao'] },
+  { grupo: 'lookup', nome: 'Municipios.zip',    tabela: 'municipios',          colunas: ['codigo_rfb', 'nome'] },
+  { grupo: 'lookup', nome: 'Paises.zip',        tabela: 'paises',              colunas: ['codigo', 'nome'] },
+  { grupo: 'lookup', nome: 'Simples.zip',       tabela: 'simples',             tipo: 'simples' },
+];
+
+// Classe 2 — arquivos particionados numéricos 0..N (dentro da pasta de competência)
+const PREFIXOS_DADOS: PrefixoDados[] = [
+  { prefixo: 'Empresas',         tabela: 'empresas_rfb',    tipo: 'empresa' },
+  { prefixo: 'Estabelecimentos', tabela: 'estabelecimentos', tipo: 'estabelecimento' },
+  { prefixo: 'Socios',           tabela: 'socios',          tipo: 'socio' },
+];
+
+// Classe 3 — cnpj.tar.gz fica na raiz do compartilhamento, sem pasta de competência
+
+// Lista combinada para exibição (usa parte 0 como representante dos particionados)
 const ARQUIVOS_RFB: ArquivoRfb[] = [
-  { grupo: 'lookup', nome: 'Cnaes.zip',            tabela: 'cnaes',               colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Naturezas.zip',         tabela: 'naturezas_juridicas', colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Qualificacoes.zip',     tabela: 'qualificacoes',       colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Motivos.zip',           tabela: 'motivos',             colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Municipios.zip',        tabela: 'municipios',          colunas: ['codigo_rfb', 'nome'] },
-  { grupo: 'lookup', nome: 'Paises.zip',            tabela: 'paises',              colunas: ['codigo', 'nome'] },
-  { grupo: 'dados',  nome: 'Empresas0.zip',         tabela: 'empresas_rfb',        tipo: 'empresa' },
-  { grupo: 'dados',  nome: 'Estabelecimentos0.zip', tabela: 'estabelecimentos',    tipo: 'estabelecimento' },
-  { grupo: 'dados',  nome: 'Socios0.zip',           tabela: 'socios',              tipo: 'socio' },
-  { grupo: 'dados',  nome: 'Simples.zip',           tabela: 'simples',             tipo: 'simples' },
+  ...ARQUIVOS_LOOKUP,
+  { grupo: 'dados', nome: 'Empresas0.zip',         tabela: 'empresas_rfb',    tipo: 'empresa' },
+  { grupo: 'dados', nome: 'Estabelecimentos0.zip', tabela: 'estabelecimentos', tipo: 'estabelecimento' },
+  { grupo: 'dados', nome: 'Socios0.zip',           tabela: 'socios',          tipo: 'socio' },
 ];
 
 export interface Progresso {
@@ -142,7 +163,17 @@ export class EtlService {
       fs.mkdirSync(this.extrairDir,  { recursive: true });
 
       if (fase === 'completo' || fase === 'download') {
-        await this.faseDownload(log);
+        await this.faseDownloadTabelas(log);
+        await this.faseDownloadEmpresas(log);
+      }
+      if (fase === 'download-tabelas') {
+        await this.faseDownloadTabelas(log);
+      }
+      if (fase === 'download-empresas') {
+        await this.faseDownloadEmpresas(log);
+      }
+      if (fase === 'download-base') {
+        await this.faseDownloadBase(log);
       }
       if (fase === 'completo' || fase === 'extracao') {
         await this.faseExtracao(log);
@@ -167,36 +198,70 @@ export class EtlService {
     }
   }
 
-  private async faseDownload(log: EtlLog) {
+  /** Baixa tabelas de referência únicas mensais (Cnaes, Motivos, Municipios, Naturezas, Paises, Qualificacoes, Simples). */
+  private async faseDownloadTabelas(log: EtlLog) {
     log.status = 'download';
     await this.logs.save(log);
-    this.progresso.fase = 'Download';
-    this.progresso.total = ARQUIVOS_RFB.length;
+    this.progresso.fase = 'Download Tabelas';
+    this.progresso.total = ARQUIVOS_LOOKUP.length;
     this.progresso.feitos = 0;
 
     const competencia = log.competencia ?? this.competenciaPadrao();
 
-    for (const arq of ARQUIVOS_RFB) {
+    for (const arq of ARQUIVOS_LOOKUP) {
       this.progresso.arquivoAtual = arq.nome;
       this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
       await this.download(arq.nome, competencia);
+      this.progresso.feitos++;
+    }
+  }
 
-      // Para arquivos de dados particionados, baixa partes adicionais (0, 1, 2...)
-      if (arq.tipo && arq.nome.endsWith('0.zip')) {
-        const prefixo = arq.nome.replace('0.zip', '');
-        let parte = 1;
-        while (true) {
-          const nomeParte = `${prefixo}${parte}.zip`;
-          const destPath = path.join(this.downloadDir, nomeParte);
-          if (fs.existsSync(destPath)) { parte++; continue; }
-          const baixou = await this.downloadSemErro(nomeParte, competencia);
-          if (!baixou) break;
-          parte++;
-        }
+  /** Baixa arquivos particionados 0..N: Empresas, Estabelecimentos e Socios. */
+  private async faseDownloadEmpresas(log: EtlLog) {
+    log.status = 'download';
+    await this.logs.save(log);
+    this.progresso.fase = 'Download Empresas';
+    this.progresso.total = PREFIXOS_DADOS.length;
+    this.progresso.feitos = 0;
+
+    const competencia = log.competencia ?? this.competenciaPadrao();
+
+    for (const pd of PREFIXOS_DADOS) {
+      this.progresso.arquivoAtual = `${pd.prefixo}*.zip`;
+      this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
+
+      // Parte 0 é obrigatória — lança erro se não encontrada
+      await this.download(`${pd.prefixo}0.zip`, competencia);
+
+      // Partes 1..N — para no primeiro 404/403
+      let parte = 1;
+      while (true) {
+        const nome = `${pd.prefixo}${parte}.zip`;
+        const destPath = path.join(this.downloadDir, nome);
+        if (fs.existsSync(destPath)) { parte++; continue; }
+        const baixou = await this.downloadSemErro(nome, competencia);
+        if (!baixou) break;
+        parte++;
       }
 
       this.progresso.feitos++;
     }
+  }
+
+  /** Baixa cnpj.tar.gz da raiz do compartilhamento (sem pasta de competência). */
+  private async faseDownloadBase(log: EtlLog) {
+    log.status = 'download';
+    await this.logs.save(log);
+    this.progresso.fase = 'Download Base';
+    this.progresso.total = 1;
+    this.progresso.feitos = 0;
+    this.progresso.arquivoAtual = 'cnpj.tar.gz';
+    this.progresso.percentual = 0;
+
+    await this.downloadRaiz('cnpj.tar.gz');
+
+    this.progresso.feitos = 1;
+    this.progresso.percentual = 100;
   }
 
   private async faseExtracao(log: EtlLog) {
@@ -244,6 +309,34 @@ export class EtlService {
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  /** Baixa um arquivo da raiz do compartilhamento (sem pasta de competência). */
+  private async downloadRaiz(arquivo: string): Promise<void> {
+    const destPath = path.join(this.downloadDir, arquivo);
+    if (fs.existsSync(destPath)) {
+      this.logger.log(`  Já existe: ${arquivo}`);
+      return;
+    }
+
+    const baseUrl = await this.params.getValor('RFB_DOWNLOAD_BASE_URL', RFB_DEFAULT_URL);
+    const { url, headers } = this.buildDownloadConfigRaiz(baseUrl, arquivo);
+    this.logger.log(`  Baixando (raiz): ${arquivo} → ${url}`);
+
+    const response = await axios.get(url, {
+      responseType: 'stream',
+      maxRedirects: 5,
+      timeout: 0,
+      headers: { 'User-Agent': 'BuscaDados-ETL/1.0', ...headers },
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      const file = fs.createWriteStream(destPath);
+      response.data.pipe(file);
+      file.on('finish', () => { file.close(); resolve(); });
+      file.on('error', (err) => { fs.unlink(destPath, () => {}); reject(err); });
+      response.data.on('error', (err: Error) => { fs.unlink(destPath, () => {}); reject(err); });
+    });
+  }
 
   private async download(arquivo: string, competencia: string): Promise<void> {
     const destPath = path.join(this.downloadDir, arquivo);
@@ -327,6 +420,24 @@ export class EtlService {
 
     // URL direta — concatena pasta de competência e arquivo
     return { url: `${clean}/${competencia}/${arquivo}`, headers: {} };
+  }
+
+  /** Constrói URL para arquivos na raiz do compartilhamento (sem pasta de competência). */
+  private buildDownloadConfigRaiz(baseUrl: string, arquivo: string): {
+    url: string;
+    headers: Record<string, string>;
+  } {
+    const clean = baseUrl.replace(/\/+$/, '');
+
+    if (clean.includes('/index.php/s/')) {
+      const token = clean.split('/index.php/s/')[1]?.split('/')[0] ?? '';
+      const host  = clean.split('/index.php/s/')[0];
+      const url = `${host}/public.php/dav/files/${token}/${encodeURIComponent(arquivo)}`;
+      const auth = Buffer.from(`${token}:`).toString('base64');
+      return { url, headers: { Authorization: `Basic ${auth}` } };
+    }
+
+    return { url: `${clean}/${arquivo}`, headers: {} };
   }
 
   private extrair(zipPath: string): Promise<void> {

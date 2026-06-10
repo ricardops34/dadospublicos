@@ -44,14 +44,14 @@ CREATE TABLE IF NOT EXISTS contas (
 
 CREATE INDEX IF NOT EXISTS idx_contas_proprietario_id ON contas(proprietario_id);
 
--- ─── 3. Adicionar conta_id em clientes_api ─────────────────────────────────
+-- ─── 3. Adicionar conta_id em usuarios ─────────────────────────────────
 
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'clientes_api' AND column_name = 'conta_id'
+    WHERE table_name = 'usuarios' AND column_name = 'conta_id'
   ) THEN
-    ALTER TABLE clientes_api ADD COLUMN conta_id UUID;
+    ALTER TABLE usuarios ADD COLUMN conta_id UUID;
   END IF;
 END $$;
 
@@ -59,16 +59,16 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.table_constraints
-    WHERE table_name = 'clientes_api'
-      AND constraint_name = 'fk_clientes_api_conta_id'
+    WHERE table_name = 'usuarios'
+      AND constraint_name = 'fk_usuarios_conta_id'
   ) THEN
-    ALTER TABLE clientes_api
-      ADD CONSTRAINT fk_clientes_api_conta_id
+    ALTER TABLE usuarios
+      ADD CONSTRAINT fk_usuarios_conta_id
       FOREIGN KEY (conta_id) REFERENCES contas(id) ON DELETE SET NULL;
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_clientes_api_conta_id ON clientes_api(conta_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_conta_id ON usuarios(conta_id);
 
 -- ─── 4. Adicionar conta_id em assinaturas ──────────────────────────────────
 
@@ -112,14 +112,14 @@ SELECT
   inscricao_estadual, inscricao_municipal,
   ativo, onboarding_pendente, agendar_exclusao_em,
   criado_em, atualizado_em
-FROM clientes_api
+FROM usuarios
 WHERE perfil = 'cliente'
   AND conta_id IS NULL
   AND id NOT IN (SELECT proprietario_id FROM contas);
 
--- ─── 6. Setar conta_id em clientes_api ────────────────────────────────────
+-- ─── 6. Setar conta_id em usuarios ────────────────────────────────────
 
-UPDATE clientes_api u
+UPDATE usuarios u
 SET conta_id = c.id
 FROM contas c
 WHERE c.proprietario_id = u.id
@@ -129,7 +129,7 @@ WHERE c.proprietario_id = u.id
 
 UPDATE assinaturas a
 SET conta_id = u.conta_id
-FROM clientes_api u
+FROM usuarios u
 WHERE a.cliente_id = u.id
   AND u.conta_id IS NOT NULL
   AND a.conta_id IS NULL;
@@ -141,7 +141,7 @@ COMMIT;
 -- =============================================================
 SELECT
   (SELECT COUNT(*) FROM contas)                                              AS total_contas,
-  (SELECT COUNT(*) FROM clientes_api WHERE perfil='cliente')                 AS total_clientes,
-  (SELECT COUNT(*) FROM clientes_api WHERE perfil='cliente' AND conta_id IS NULL) AS clientes_sem_conta,
+  (SELECT COUNT(*) FROM usuarios WHERE perfil='cliente')                 AS total_clientes,
+  (SELECT COUNT(*) FROM usuarios WHERE perfil='cliente' AND conta_id IS NULL) AS clientes_sem_conta,
   (SELECT COUNT(*) FROM assinaturas WHERE conta_id IS NULL)                  AS assinaturas_sem_conta;
 -- clientes_sem_conta deve ser 0

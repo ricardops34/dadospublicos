@@ -65,7 +65,58 @@ imports: [PoModule, FormsModule]
 imports: [PoButtonComponent, PoTableComponent]
 ```
 
-## 8. PO-UI v21 — `po-page-dynamic-edit`: campo `validate` e atualização de outros campos
+## 8. Angular — `ChangeDetectorRef` obrigatório em todo componente com subscribe HTTP
+
+**TODO componente Angular** que faz chamadas HTTP e atualiza propriedades do template **DEVE** injetar `ChangeDetectorRef` e chamar `this.cdr.detectChanges()` nos callbacks.
+
+**Por quê:** `PoPageContentComponent` (PO-UI interno) usa `setTimeout` no `ngAfterViewInit` que em certas condições aborta o ciclo de Change Detection. Dados carregados via HTTP ficam no JS state mas o DOM não atualiza — só aparece quando outro evento (ex: mover o mouse) dispara um novo ciclo.
+
+```typescript
+// ✅ Padrão obrigatório — todo componente com subscribe HTTP
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+
+@Component({ ... })
+export class MeuComponent implements OnInit {
+  dados: any[] = [];
+  carregando = false;
+
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,   // ← SEMPRE injetar
+  ) {}
+
+  ngOnInit() {
+    this.carregando = true;
+    this.http.get<any[]>('/api/dados').subscribe({
+      next: (res) => {
+        this.dados = res;
+        this.carregando = false;
+        this.cdr.detectChanges();      // ← SEMPRE chamar no next
+      },
+      error: () => {
+        this.carregando = false;
+        this.cdr.detectChanges();      // ← SEMPRE chamar no error
+      },
+    });
+  }
+}
+
+// ❌ Errado — dados carregam no JS mas DOM fica vazio até próxima interação
+ngOnInit() {
+  this.http.get<any[]>('/api/dados').subscribe({
+    next: (res) => { this.dados = res; },  // sem detectChanges → bug silencioso
+  });
+}
+```
+
+**Checklist ao criar novo componente:**
+- [ ] Importou `ChangeDetectorRef` de `@angular/core`
+- [ ] Injetou `private cdr: ChangeDetectorRef` no constructor
+- [ ] Chamou `this.cdr.detectChanges()` em todo `next:` que altera propriedades do template
+- [ ] Chamou `this.cdr.detectChanges()` em todo `error:` que altera estado de loading/erro
+- [ ] Exceção: componentes que usam **somente** `po-page-dynamic-table`/`po-page-dynamic-edit` com `p-service-api` (PO-UI gerencia internamente)
+
+## 9. PO-UI v21 — `po-page-dynamic-edit`: campo `validate` e atualização de outros campos
 
 **NUNCA** tente acessar o formulário interno via `(pageEdit as any).dynamicForm.form` — essa propriedade interna não é acessível no PO-UI v21.
 

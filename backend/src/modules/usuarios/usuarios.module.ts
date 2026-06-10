@@ -7,12 +7,13 @@ import { Assinatura } from '../../entities/assinatura.entity';
 import { Conta } from '../../entities/conta.entity';
 import { PortalModule } from '../portal/portal.module';
 import { ParametrosModule } from '../parametros/parametros.module';
+import { EmailModule } from '../email/email.module';
 import { UsuariosPoUiController } from './usuarios-poui.controller';
 import { CnpjModule } from '../cnpj/cnpj.module';
 import { GeocodeModule } from '../geocode/geocode.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Usuario, Assinatura, Conta], 'buscadados'), PortalModule, ParametrosModule, CnpjModule, GeocodeModule],
+  imports: [TypeOrmModule.forFeature([Usuario, Assinatura, Conta], 'buscadados'), PortalModule, ParametrosModule, EmailModule, CnpjModule, GeocodeModule],
   controllers: [UsuariosController, UsuariosPoUiController],
   providers: [UsuariosService],
   exports: [UsuariosService, TypeOrmModule],

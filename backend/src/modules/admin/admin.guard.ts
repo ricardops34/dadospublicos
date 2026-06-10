@@ -16,7 +16,7 @@ export class AdminGuard implements CanActivate {
       try {
         const payload: any = jwt.verify(
           bearerToken,
-          this.cfg.get<string>('JWT_SECRET', 'rfb-portal-secret'),
+          this.cfg.get<string>('JWT_SECRET') || 'rfb-portal-secret',
         );
         if (payload?.perfil === 'admin') return true;
       } catch {

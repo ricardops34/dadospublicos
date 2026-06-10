@@ -1,5 +1,5 @@
 import { NotifService } from '../../../../services/notif.service';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 
@@ -85,13 +85,14 @@ export class ConfigEmailComponent implements OnInit {
     { label: 'SSL/TLS — porta 465',                  value: 'true'  },
   ];
 
-  constructor(private http: HttpClient, private notif: NotifService) {}
+  constructor(private http: HttpClient, private notif: NotifService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.http.get<any>(`${API}/admin/config-email`).subscribe({
       next: (res) => {
         this.cfg = { ...this.cfg, ...res };
         if (!this.emailTeste) this.emailTeste = res.smtpUser;
+        this.cdr.detectChanges();
       },
       error: () => this.notif.error('Erro ao carregar configurações.'),
     });
@@ -100,8 +101,8 @@ export class ConfigEmailComponent implements OnInit {
   salvar() {
     this.salvando = true;
     this.http.post(`${API}/admin/config-email`, this.cfg).subscribe({
-      next: () => { this.salvando = false; this.notif.success('Configurações salvas com sucesso!'); },
-      error: () => { this.salvando = false; this.notif.error('Erro ao salvar configurações.'); },
+      next: () => { this.salvando = false; this.cdr.detectChanges(); this.notif.success('Configurações salvas com sucesso!'); },
+      error: () => { this.salvando = false; this.cdr.detectChanges(); this.notif.error('Erro ao salvar configurações.'); },
     });
   }
 
@@ -109,8 +110,8 @@ export class ConfigEmailComponent implements OnInit {
     if (!this.emailTeste) { this.notif.warning('Informe o e-mail de destino.'); return; }
     this.testando = true;
     this.http.post(`${API}/admin/config-email/teste`, { destinatario: this.emailTeste }).subscribe({
-      next: (res: any) => { this.testando = false; this.notif.success(res.mensagem); },
-      error: (err: any) => { this.testando = false; this.notif.error(err?.error?.message ?? 'Erro ao enviar teste.'); },
+      next: (res: any) => { this.testando = false; this.cdr.detectChanges(); this.notif.success(res.mensagem); },
+      error: (err: any) => { this.testando = false; this.cdr.detectChanges(); this.notif.error(err?.error?.message ?? 'Erro ao enviar teste.'); },
     });
   }
 }
