@@ -5,9 +5,10 @@
 
     <!-- Header com avatar, nome e status de e-mail -->
     <div class="mc-header">
-      <div class="mc-avatar">
-        <span class="an an-user-circle"></span>
-      </div>
+      <button class="mc-avatar" type="button" title="Alterar avatar" (click)="abrirSeletorAvatar()">
+        <img [src]="'avatar/' + (perfil.avatar || 'avatar_01.png')" alt="Avatar do usuário">
+        <span class="mc-avatar__editar an an-pencil-simple"></span>
+      </button>
       <div>
         <h2>{{ perfil.nome }}</h2>
         <span class="mc-email">{{ perfil.email }}</span>
@@ -16,6 +17,9 @@
           [p-color]="perfil.emailVerificado ? 'color-10' : 'color-07'"
           style="margin-left: 8px;">
         </po-tag>
+        <div>
+          <po-button p-label="Alterar avatar" p-kind="tertiary" p-size="small" p-icon="an an-image" (p-click)="abrirSeletorAvatar()"></po-button>
+        </div>
       </div>
     </div>
 
@@ -241,4 +245,27 @@
   <p *ngIf="temPlanoPagoAtivo && opcaoExclusao === 'fim-plano'" style="color: #6b7280; font-size: 0.82rem; margin-top: 8px;">
     A anonimização ficará programada para o fim da vigência do plano atual.
   </p>
+</po-modal>
+
+<po-modal
+  #modalAvatar
+  p-title="Escolher avatar"
+  p-size="md"
+  [p-primary-action]="acaoSalvarAvatar"
+  [p-secondary-action]="acaoCancelarAvatar">
+
+  <p style="color: #6b7280; font-size: 0.85rem; margin: 0 0 12px;">
+    Selecione o avatar que será exibido no seu perfil e no topo do sistema.
+  </p>
+
+  <div class="avatar-grid">
+    <button
+      *ngFor="let av of avatares"
+      type="button"
+      class="avatar-opcao"
+      [class.avatar-opcao--ativo]="av === avatarSelecionado"
+      (click)="selecionarAvatar(av)">
+      <img [src]="'avatar/' + av" [alt]="'Avatar ' + av">
+    </button>
+  </div>
 </po-modal>

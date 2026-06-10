@@ -23,8 +23,11 @@ export class PortalShellComponent implements OnInit {
     logo: 'logo_bj.png',
   };
 
+  /** Avatar exibido enquanto o usuário não escolheu um próprio */
+  private readonly AVATAR_PADRAO = 'avatar/avatar_01.png';
+
   headerUser: PoHeaderUser = {
-    avatar: '',
+    avatar: 'avatar/avatar_01.png',
     customerBrand: '',
     items: [
       {
@@ -67,11 +70,14 @@ export class PortalShellComponent implements OnInit {
     this.headerUser.customerBrand = nome ? `${nome} · ${role}` : role;
 
     this.configurarNotificacoes();
+    this.configurarAvatar();
 
     if (perfil === 'admin') {
       this.headerActionsTools = [
         { icon: 'an an-gear', tooltip: 'Configuração de E-mail', action: () => this.router.navigate(['/portal/config-email']) },
       ];
+      // Para cliente o perfil é carregado no fluxo de menu; para admin busca aqui o avatar salvo
+      this.clienteService.meuPerfil().subscribe({ error: () => {} });
       this.carregarMenuDinamico();
       return;
     }
@@ -105,6 +111,20 @@ export class PortalShellComponent implements OnInit {
         },
       });
     }
+  }
+
+  /**
+   * Mantém o avatar do header sincronizado com o perfil do usuário —
+   * inclusive quando ele troca o avatar na tela Minha Conta.
+   */
+  private configurarAvatar() {
+    this.clienteService.avatar$.subscribe((avatar) => {
+      this.headerUser = {
+        ...this.headerUser,
+        avatar: avatar ? `avatar/${avatar}` : this.AVATAR_PADRAO,
+      };
+      this.cdr.detectChanges();
+    });
   }
 
   private carregarMenuDinamico() {

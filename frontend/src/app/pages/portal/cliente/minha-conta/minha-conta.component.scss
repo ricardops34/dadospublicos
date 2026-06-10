@@ -7,11 +7,61 @@
 }
 
 .mc-avatar {
+  position: relative;
   width: 64px; height: 64px;
   border-radius: 50%;
   background: #eff6ff;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   span { font-size: 3rem; color: #1a56db; }
+
+  img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .mc-avatar__editar {
+    position: absolute;
+    right: -2px; bottom: -2px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #1a56db;
+    color: #fff;
+    font-size: 0.8rem;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #fff;
+  }
 }
 
 .mc-email { font-size: 0.875rem; color: #6b7280; }
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 12px;
+}
+
+.avatar-opcao {
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+
+  img {
+    width: 100%;
+    border-radius: 50%;
+    display: block;
+  }
+
+  &:hover { transform: scale(1.05); }
+
+  &--ativo {
+    border-color: #1a56db;
+    background: #eff6ff;
+  }
+}

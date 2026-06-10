@@ -72,6 +72,10 @@ export class Usuario {
   @Column({ name: 'inscricao_municipal', type: 'varchar', length: 50, nullable: true })
   inscricaoMunicipal: string | null;
 
+  /** Nome do arquivo do avatar escolhido (ex: avatar_05.png) */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  avatar: string | null;
+
   @Column({ type: 'varchar', length: 20, default: 'cliente' })
   perfil: 'admin' | 'cliente';
 

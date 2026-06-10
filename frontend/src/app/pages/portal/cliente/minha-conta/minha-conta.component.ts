@@ -11,9 +11,11 @@ import { environment } from '../../../../../environments/environment';
   selector: 'app-minha-conta',
   standalone: false,
   templateUrl: './minha-conta.component.html',
+  styleUrls: ['./minha-conta.component.scss'],
 })
 export class MinhaContaComponent implements OnInit {
   @ViewChild('modalExclusao') modalExclusao!: PoModalComponent;
+  @ViewChild('modalAvatar') modalAvatar!: PoModalComponent;
 
   perfil: any = null;
   conta: any = null;
@@ -51,6 +53,21 @@ export class MinhaContaComponent implements OnInit {
   editandoSenha = false;
   salvandoSenha = false;
   formSenha = { senhaAtual: '', novaSenha: '', confirmarSenha: '' };
+
+  // Avatares disponíveis em frontend/public/avatar (avatar_01 é o padrão)
+  avatares = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map((n) => `avatar_${n}.png`);
+  avatarSelecionado: string | null = null;
+
+  acaoSalvarAvatar: PoModalAction = {
+    label: 'Salvar avatar',
+    action: () => this.salvarAvatar(),
+    loading: false,
+  };
+
+  acaoCancelarAvatar: PoModalAction = {
+    label: 'Cancelar',
+    action: () => this.modalAvatar.close(),
+  };
 
   // Formulário dados pessoais
   form = {
@@ -145,6 +162,39 @@ export class MinhaContaComponent implements OnInit {
       },
       error: () => {
         this.carregando = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ─── Avatar ────────────────────────────────────────────────────────────────
+
+  abrirSeletorAvatar() {
+    this.avatarSelecionado = this.perfil?.avatar ?? null;
+    this.modalAvatar.open();
+  }
+
+  selecionarAvatar(avatar: string) {
+    this.avatarSelecionado = avatar;
+  }
+
+  salvarAvatar() {
+    if (!this.avatarSelecionado) {
+      this.notif.error('Escolha um avatar.');
+      return;
+    }
+    this.acaoSalvarAvatar = { ...this.acaoSalvarAvatar, loading: true };
+    this.svc.atualizarAvatar(this.avatarSelecionado).subscribe({
+      next: () => {
+        this.perfil = { ...this.perfil, avatar: this.avatarSelecionado };
+        this.acaoSalvarAvatar = { ...this.acaoSalvarAvatar, loading: false };
+        this.modalAvatar.close();
+        this.notif.success('Avatar atualizado.');
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.acaoSalvarAvatar = { ...this.acaoSalvarAvatar, loading: false };
+        this.notif.error('Erro ao salvar avatar.');
         this.cdr.detectChanges();
       },
     });

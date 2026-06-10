@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Painel360Service } from '../painel-360/painel-360.service';
@@ -23,6 +23,7 @@ export interface UsuarioPerfil {
   id: string;
   nome: string;
   email: string;
+  avatar?: string | null;
   tipoPessoa?: 'F' | 'J' | null;
   telefone?: string | null;
   cpf?: string | null;
@@ -64,6 +65,10 @@ export interface UsuarioPerfil {
 export class UsuarioPortalService {
   private _perfilCache: UsuarioPerfil | null = null;
 
+  /** Avatar do usuário logado (nome do arquivo) — consumido pelo header do portal */
+  private _avatar$ = new BehaviorSubject<string | null>(null);
+  readonly avatar$ = this._avatar$.asObservable();
+
   constructor(
     private http: HttpClient,
     private painel360Service: Painel360Service,
@@ -72,7 +77,19 @@ export class UsuarioPortalService {
   meuPerfil(): Observable<UsuarioPerfil> {
     if (this._perfilCache) return of(this._perfilCache);
     return this.http.get<UsuarioPerfil>(`${API}/usuarios/me`).pipe(
-      tap(p => (this._perfilCache = p)),
+      tap(p => {
+        this._perfilCache = p;
+        this._avatar$.next(p.avatar ?? null);
+      }),
+    );
+  }
+
+  atualizarAvatar(avatar: string) {
+    return this.http.patch<UsuarioPerfil>(`${API}/usuarios/me`, { avatar }).pipe(
+      tap(() => {
+        if (this._perfilCache) this._perfilCache.avatar = avatar;
+        this._avatar$.next(avatar);
+      }),
     );
   }
 

@@ -46,6 +46,7 @@ export class VerificarEmailCodigoDto {
 
 export class UpdateUsuarioDto {
   @ApiPropertyOptional() @IsOptional() nome?: string;
+  @ApiPropertyOptional({ example: 'avatar_05.png' }) @IsOptional() @IsString() avatar?: string;
   @ApiPropertyOptional() @IsOptional() onboardingPendente?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsEmail() email?: string;
   @ApiPropertyOptional({ minLength: 8 }) @IsOptional() @IsString() @MinLength(8) senha?: string;
