@@ -53,19 +53,26 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   private intervalo: any;
 
   colunasArquivos: PoTableColumn[] = [
-    { property: 'nome', label: 'Arquivo', width: '25%' },
-    { property: 'grupo', label: 'Grupo', width: '10%' },
+    { property: 'nome', label: 'Arquivo', width: '28%' },
+    {
+      property: 'grupo', label: 'Grupo', type: 'label', width: '12%',
+      labels: [
+        { value: 'base',     label: 'Base',     color: 'color-09' },
+        { value: 'tabelas',  label: 'Tabelas',  color: 'color-08' },
+        { value: 'empresas', label: 'Empresas', color: 'color-01' },
+      ],
+    },
     { property: 'tabela', label: 'Tabela BD', width: '20%' },
     {
       property: 'status', label: 'Status', type: 'label', width: '15%',
       labels: [
         { value: 'nao_baixado', label: 'Nao baixado', color: 'color-07' },
-        { value: 'baixado', label: 'Baixado', color: 'color-08' },
-        { value: 'extraido', label: 'Extraido', color: 'color-10' },
+        { value: 'baixado',     label: 'Baixado',     color: 'color-08' },
+        { value: 'extraido',    label: 'Extraido',    color: 'color-10' },
       ],
     },
-    { property: 'zip.tamanhoMb', label: 'ZIP (MB)', width: '10%' },
-    { property: 'csv.tamanhoMb', label: 'CSV (MB)', width: '10%' },
+    { property: 'zip.tamanhoMb', label: 'ZIP (MB)', width: '12%' },
+    { property: 'csv.tamanhoMb', label: 'CSV (MB)', width: '13%' },
   ];
 
   colunasHistorico: PoTableColumn[] = [

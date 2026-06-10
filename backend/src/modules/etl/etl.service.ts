@@ -134,25 +134,64 @@ export class EtlService {
     fs.mkdirSync(this.downloadDir, { recursive: true });
     fs.mkdirSync(this.extrairDir,  { recursive: true });
 
-    return ARQUIVOS_RFB.map((arq) => {
-      const zipPath = path.join(this.downloadDir, arq.nome);
-      const csvBase = arq.nome.replace('.zip', '.csv');
-      const csvPath = path.join(this.extrairDir, csvBase);
+    const itens: any[] = [];
 
-      const zipInfo  = this.fileInfo(zipPath);
-      const csvInfo  = this.fileInfo(csvPath);
+    // ── 1. Base (cnpj.tar.gz) ──────────────────────────────────────────────
+    const tarInfo = this.fileInfo(path.join(this.downloadDir, 'cnpj.tar.gz'));
+    itens.push({
+      nome: 'cnpj.tar.gz',
+      grupo: 'base',
+      tabela: '(carga inicial)',
+      zip: tarInfo,
+      csv: { existe: false, tamanhoMb: null, modificadoEm: null },
+      status: tarInfo.existe ? 'baixado' : 'nao_baixado',
+    });
 
-      return {
+    // ── 2. Tabelas de referência (arquivos únicos mensais) ─────────────────
+    for (const arq of ARQUIVOS_LOOKUP) {
+      const zipInfo = this.fileInfo(path.join(this.downloadDir, arq.nome));
+      const csvInfo = this.fileInfo(path.join(this.extrairDir, arq.nome.replace('.zip', '.csv')));
+      itens.push({
         nome: arq.nome,
-        grupo: arq.grupo,
+        grupo: 'tabelas',
         tabela: arq.tabela,
         zip: zipInfo,
         csv: csvInfo,
-        status: !zipInfo.existe ? 'nao_baixado'
-              : !csvInfo.existe ? 'baixado'
-              : 'extraido',
-      };
-    });
+        status: !zipInfo.existe ? 'nao_baixado' : !csvInfo.existe ? 'baixado' : 'extraido',
+      });
+    }
+
+    // ── 3. Dados particionados — descobre partes existentes no disco ───────
+    for (const pd of PREFIXOS_DADOS) {
+      const partes = new Set<number>([0]); // parte 0 sempre visível
+
+      const zipRe = new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i');
+      const csvRe = new RegExp(`^${pd.prefixo}(\\d+)\\.csv$`, 'i');
+
+      for (const f of fs.readdirSync(this.downloadDir)) {
+        const m = f.match(zipRe);
+        if (m) partes.add(Number(m[1]));
+      }
+      for (const f of fs.readdirSync(this.extrairDir)) {
+        const m = f.match(csvRe);
+        if (m) partes.add(Number(m[1]));
+      }
+
+      for (const parte of [...partes].sort((a, b) => a - b)) {
+        const zipInfo = this.fileInfo(path.join(this.downloadDir, `${pd.prefixo}${parte}.zip`));
+        const csvInfo = this.fileInfo(path.join(this.extrairDir,  `${pd.prefixo}${parte}.csv`));
+        itens.push({
+          nome: `${pd.prefixo}${parte}.zip`,
+          grupo: 'empresas',
+          tabela: pd.tabela,
+          zip: zipInfo,
+          csv: csvInfo,
+          status: !zipInfo.existe ? 'nao_baixado' : !csvInfo.existe ? 'baixado' : 'extraido',
+        });
+      }
+    }
+
+    return itens;
   }
 
   // ─── Execução assíncrona ───────────────────────────────────────────────────
@@ -162,7 +201,20 @@ export class EtlService {
       fs.mkdirSync(this.downloadDir, { recursive: true });
       fs.mkdirSync(this.extrairDir,  { recursive: true });
 
-      if (fase === 'completo' || fase === 'download') {
+      if (fase === 'completo') {
+        const primeiraUso = await this.isPrimeiraUso();
+        this.logger.log(`ETL completo — ${primeiraUso ? 'primeira carga (tar.gz)' : 'atualização mensal (ZIPs)'}`);
+        if (primeiraUso) {
+          await this.faseDownloadBase(log);
+          await this.faseExtrairTarGz(log);
+        } else {
+          await this.faseDownloadTabelas(log);
+          await this.faseDownloadEmpresas(log);
+          await this.faseExtracao(log);
+        }
+        await this.faseCarga(log);
+      }
+      if (fase === 'download') {
         await this.faseDownloadTabelas(log);
         await this.faseDownloadEmpresas(log);
       }
@@ -175,10 +227,10 @@ export class EtlService {
       if (fase === 'download-base') {
         await this.faseDownloadBase(log);
       }
-      if (fase === 'completo' || fase === 'extracao') {
+      if (fase === 'extracao') {
         await this.faseExtracao(log);
       }
-      if (fase === 'completo' || fase === 'carga') {
+      if (fase === 'carga') {
         await this.faseCarga(log);
       }
 
@@ -196,6 +248,43 @@ export class EtlService {
       this.rodando = false;
       this.progresso = { fase: '', arquivoAtual: '', feitos: 0, total: 0, percentual: 0 };
     }
+  }
+
+  /** Retorna true se a tabela empresas_rfb estiver vazia (primeira carga). */
+  private async isPrimeiraUso(): Promise<boolean> {
+    try {
+      const [{ total }] = await this.dataSource.query(
+        'SELECT COUNT(*)::int AS total FROM empresas_rfb',
+      );
+      return total === 0;
+    } catch {
+      return true; // tabela ainda não existe → primeira carga
+    }
+  }
+
+  /** Extrai cnpj.tar.gz do downloadDir para o extrairDir (usado na primeira carga). */
+  private async faseExtrairTarGz(log: EtlLog) {
+    log.status = 'extracao';
+    await this.logs.save(log);
+    this.progresso.fase = 'Extraindo cnpj.tar.gz';
+    this.progresso.total = 1;
+    this.progresso.feitos = 0;
+    this.progresso.arquivoAtual = 'cnpj.tar.gz';
+    this.progresso.percentual = 0;
+
+    const tarPath = path.join(this.downloadDir, 'cnpj.tar.gz');
+    if (!fs.existsSync(tarPath)) {
+      throw new Error(
+        `cnpj.tar.gz não encontrado em ${this.downloadDir}. Execute "Baixar base" primeiro.`,
+      );
+    }
+
+    this.logger.log(`Extraindo cnpj.tar.gz → ${this.extrairDir}...`);
+    await tar.x({ file: tarPath, cwd: this.extrairDir, strip: 1 });
+    this.logger.log('Extração do cnpj.tar.gz concluída.');
+
+    this.progresso.feitos = 1;
+    this.progresso.percentual = 100;
   }
 
   /** Baixa tabelas de referência únicas mensais (Cnaes, Motivos, Municipios, Naturezas, Paises, Qualificacoes, Simples). */
@@ -464,7 +553,8 @@ export class EtlService {
   }
 
   private async carregarLookups() {
-    const lookups = ARQUIVOS_RFB.filter((a) => a.grupo === 'lookup');
+    // Simples não tem colunas definidas aqui — é tratado separadamente em carregarSimples()
+    const lookups = ARQUIVOS_RFB.filter((a) => a.grupo === 'lookup' && a.colunas?.length);
     for (const lk of lookups) {
       const csvPath = path.join(this.extrairDir, lk.nome.replace('.zip', '.csv'));
       if (!fs.existsSync(csvPath)) { this.logger.warn(`  Não encontrado: ${csvPath}`); continue; }

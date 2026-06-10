@@ -12,19 +12,19 @@
   </po-container>
 
   <div class="po-row etl-indicadores">
-    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
-      <po-widget p-title="Arquivos esperados">
+    <div class="po-xl-3 po-lg-3 po-md-3 po-sm-6 etl-indicadores__item">
+      <po-widget p-title="Arquivos identificados">
         <div class="etl-indicador-card">
           <span class="an an-hard-drives etl-indicador-card__icon"></span>
           <div class="etl-indicador-card__content">
             <strong>{{ arquivos.length }}</strong>
-            <small>Total esperado</small>
+            <small>Base + tabelas + partes</small>
           </div>
         </div>
       </po-widget>
     </div>
 
-    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
+    <div class="po-xl-3 po-lg-3 po-md-3 po-sm-6 etl-indicadores__item">
       <po-widget p-title="Baixados">
         <div class="etl-indicador-card">
           <span class="an an-download-simple etl-indicador-card__icon etl-indicador-card__icon--blue"></span>
@@ -36,7 +36,7 @@
       </po-widget>
     </div>
 
-    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
+    <div class="po-xl-3 po-lg-3 po-md-3 po-sm-6 etl-indicadores__item">
       <po-widget p-title="Extraidos">
         <div class="etl-indicador-card">
           <span class="an an-file-zip etl-indicador-card__icon etl-indicador-card__icon--green"></span>
@@ -48,7 +48,7 @@
       </po-widget>
     </div>
 
-    <div class="po-xl-3 po-md-6 po-sm-12 etl-indicadores__item">
+    <div class="po-xl-3 po-lg-3 po-md-3 po-sm-6 etl-indicadores__item">
       <po-widget p-title="Ultima execucao">
         <div class="etl-indicador-card">
           <span
@@ -84,85 +84,113 @@
           </div>
         </po-container>
 
-        <div class="po-row">
+        <div class="po-row etl-acoes">
+          <!-- Baixar base -->
           <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <po-container p-title="Baixar base">
-              <p>cnpj.tar.gz da raiz do repositorio RFB. Executar apenas na carga inicial.</p>
+            <div class="etl-card etl-card--base">
+              <span class="an an-package etl-card__icon"></span>
+              <div class="etl-card__body">
+                <strong class="etl-card__title">Baixar base</strong>
+                <span class="etl-card__desc">cnpj.tar.gz da raiz do repositorio. Executar apenas na carga inicial (59 GB).</span>
+              </div>
               <po-button
                 p-label="Baixar base"
                 p-kind="secondary"
-                p-icon="an an-download-simple"
+                p-icon="an an-download"
                 [p-disabled]="status.rodando"
                 (p-click)="executar('download-base')">
               </po-button>
-            </po-container>
+            </div>
           </div>
 
+          <!-- Baixar tabelas -->
           <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <po-container p-title="Baixar tabelas">
-              <p>Arquivos unicos mensais: Cnaes, Motivos, Municipios, Naturezas, Paises, Qualificacoes e Simples.</p>
+            <div class="etl-card etl-card--tabelas">
+              <span class="an an-list-bullets etl-card__icon"></span>
+              <div class="etl-card__body">
+                <strong class="etl-card__title">Baixar tabelas</strong>
+                <span class="etl-card__desc">Cnaes, Motivos, Municipios, Naturezas, Paises, Qualificacoes e Simples (ano-mes).</span>
+              </div>
               <po-button
                 p-label="Baixar tabelas"
                 p-kind="secondary"
-                p-icon="an an-download-simple"
+                p-icon="an an-download"
                 [p-disabled]="status.rodando"
                 (p-click)="executar('download-tabelas')">
               </po-button>
-            </po-container>
+            </div>
           </div>
 
+          <!-- Baixar empresas -->
           <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <po-container p-title="Baixar empresas">
-              <p>Arquivos particionados mensais: Empresas0-9, Estabelecimentos0-9 e Socios0-9.</p>
+            <div class="etl-card etl-card--empresas">
+              <span class="an an-buildings etl-card__icon"></span>
+              <div class="etl-card__body">
+                <strong class="etl-card__title">Baixar empresas</strong>
+                <span class="etl-card__desc">Empresas0-9, Estabelecimentos0-9 e Socios0-9 particionados (ano-mes).</span>
+              </div>
               <po-button
                 p-label="Baixar empresas"
                 p-kind="secondary"
-                p-icon="an an-download-simple"
+                p-icon="an an-download"
                 [p-disabled]="status.rodando"
                 (p-click)="executar('download-empresas')">
               </po-button>
-            </po-container>
+            </div>
           </div>
-        </div>
 
-        <div class="po-row">
+          <!-- Extrair -->
           <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <po-container p-title="2. Extrair ZIPs">
-              <p>Descompacta os arquivos baixados para CSV antes da carga na base.</p>
+            <div class="etl-card etl-card--extracao">
+              <span class="an an-file-text etl-card__icon"></span>
+              <div class="etl-card__body">
+                <strong class="etl-card__title">Extrair ZIPs</strong>
+                <span class="etl-card__desc">Descompacta os arquivos baixados para CSV antes da carga na base.</span>
+              </div>
               <po-button
                 p-label="Extrair"
                 p-kind="secondary"
-                p-icon="an an-file-zip"
+                p-icon="an an-arrows-down-up"
                 [p-disabled]="status.rodando"
                 (p-click)="executar('extracao')">
               </po-button>
-            </po-container>
+            </div>
           </div>
 
+          <!-- Aplicar -->
           <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <po-container p-title="3. Aplicar na base">
-              <p>Carrega os CSVs no PostgreSQL com truncamento previo e insercao em lotes.</p>
+            <div class="etl-card etl-card--carga">
+              <span class="an an-terminal-window etl-card__icon"></span>
+              <div class="etl-card__body">
+                <strong class="etl-card__title">Aplicar na base</strong>
+                <span class="etl-card__desc">Carrega os CSVs no PostgreSQL com truncamento previo e insercao em lotes.</span>
+              </div>
               <po-button
                 p-label="Aplicar"
                 p-kind="secondary"
-                p-icon="an an-database"
+                p-icon="an an-arrow-down"
                 [p-disabled]="status.rodando"
                 (p-click)="executar('carga')">
               </po-button>
-            </po-container>
+            </div>
           </div>
 
+          <!-- ETL completo -->
           <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <po-container p-title="ETL completo">
-              <p>Executa lookup + dados, extracao e carga em sequencia.</p>
+            <div class="etl-card etl-card--completo">
+              <span class="an an-arrow-clockwise etl-card__icon"></span>
+              <div class="etl-card__body">
+                <strong class="etl-card__title">ETL completo</strong>
+                <span class="etl-card__desc">Executa tabelas + empresas, extracao e carga em sequencia automaticamente.</span>
+              </div>
               <po-button
                 p-label="Executar tudo"
                 p-kind="primary"
-                p-icon="an an-play-circle"
+                p-icon="an an-arrow-clockwise"
                 [p-disabled]="status.rodando"
                 (p-click)="executar('completo')">
               </po-button>
-            </po-container>
+            </div>
           </div>
         </div>
       </div>

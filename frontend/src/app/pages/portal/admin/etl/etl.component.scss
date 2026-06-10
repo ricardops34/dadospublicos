@@ -25,14 +25,14 @@
 .etl-indicador-card {
   align-items: center;
   display: flex;
-  gap: 16px;
-  min-height: 88px;
+  gap: 10px;
+  min-height: 48px;
 }
 
 .etl-indicador-card__icon {
   color: var(--color-neutral-mid-60);
   flex-shrink: 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 
 .etl-indicador-card__icon--blue {
@@ -59,7 +59,7 @@
 
 .etl-indicador-card__content strong {
   color: var(--color-neutral-dark-90);
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-weight: var(--font-weight-bold);
   line-height: 1.1;
   text-transform: capitalize;
@@ -67,8 +67,8 @@
 
 .etl-indicador-card__content small {
   color: var(--color-neutral-mid-60);
-  font-size: 0.875rem;
-  margin-top: 4px;
+  font-size: 0.8rem;
+  margin-top: 2px;
 }
 
 .etl-tab-content {
@@ -79,9 +79,55 @@
   margin-bottom: 16px;
 }
 
-.etl-grid-item p {
-  margin: 0 0 16px;
+// ─── Cards de ação ────────────────────────────────────────────────────────────
+
+.etl-acoes {
+  margin-top: 8px;
 }
+
+.etl-card {
+  background: var(--color-neutral-light-00);
+  border: 1px solid var(--color-neutral-light-20);
+  border-left: 4px solid var(--color-neutral-mid-40);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 160px;
+  padding: 16px;
+}
+
+.etl-card__icon {
+  flex-shrink: 0;
+  font-size: 2rem;
+}
+
+.etl-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.etl-card__title {
+  color: var(--color-neutral-dark-90);
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.etl-card__desc {
+  color: var(--color-neutral-mid-60);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.etl-card--base       { border-left-color: #7c3aed; .etl-card__icon { color: #7c3aed; } }
+.etl-card--tabelas    { border-left-color: var(--color-brand-01-base); .etl-card__icon { color: var(--color-brand-01-base); } }
+.etl-card--empresas   { border-left-color: var(--color-action-default); .etl-card__icon { color: var(--color-action-default); } }
+.etl-card--extracao   { border-left-color: var(--color-warning-base); .etl-card__icon { color: var(--color-warning-base); } }
+.etl-card--carga      { border-left-color: var(--color-success-base); .etl-card__icon { color: var(--color-success-base); } }
+.etl-card--completo   { border-left-color: var(--color-brand-02-base); .etl-card__icon { color: var(--color-brand-02-base); } }
 
 .etl-toolbar {
   align-items: end;
