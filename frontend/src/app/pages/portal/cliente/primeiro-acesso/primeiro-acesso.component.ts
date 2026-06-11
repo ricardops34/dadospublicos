@@ -447,7 +447,7 @@ export class PrimeiroAcessoComponent implements OnInit {
   buscarCep() {
     const cep = (this.form.cep ?? '').replace(/\D/g, '');
     if (cep.length !== 8) return;
-    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cep/${cep}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/geocode/cep/${cep}`).subscribe({
       next: (d) => {
         if (!this.form.logradouro)  this.form.logradouro  = d.logradouro  ?? '';
         if (!this.form.complemento) this.form.complemento = d.complemento ?? '';
@@ -466,7 +466,7 @@ export class PrimeiroAcessoComponent implements OnInit {
   buscarCnpj() {
     const cnpj = (this.form.cnpj ?? '').replace(/\D/g, '');
     if (cnpj.length !== 14) return;
-    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cnpj/${cnpj}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/cnpj/${cnpj}`).subscribe({
       next: (d) => {
         if (!d) return;
         if (!this.form.razaoSocial)             this.form.razaoSocial             = d.razaoSocial             ?? '';

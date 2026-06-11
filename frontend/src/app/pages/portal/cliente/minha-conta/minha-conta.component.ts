@@ -416,7 +416,7 @@ export class MinhaContaComponent implements OnInit {
   buscarCnpj() {
     const cnpj = (this.formConta.cnpj ?? '').replace(/\D/g, '');
     if (cnpj.length !== 14) return;
-    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cnpj/${cnpj}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/cnpj/${cnpj}`).subscribe({
       next: (d) => {
         if (!d) return;
         if (!this.formConta.razaoSocial) this.formConta.razaoSocial = d.razaoSocial ?? '';
@@ -445,7 +445,7 @@ export class MinhaContaComponent implements OnInit {
   buscarCep() {
     const cep = (this.formConta.cep ?? '').replace(/\D/g, '');
     if (cep.length !== 8) return;
-    this.http.get<any>(`${environment.apiUrl}/portal/geocode/cep/${cep}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/geocode/cep/${cep}`).subscribe({
       next: (d) => {
         if (!this.formConta.logradouro)  this.formConta.logradouro  = d.logradouro  ?? '';
         if (!this.formConta.complemento) this.formConta.complemento = d.complemento ?? '';

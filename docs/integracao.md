@@ -25,6 +25,19 @@ RFB_API_TOKEN=token_do_plano_premium
 
 ---
 
+## Consumo pelo Portal do próprio produto
+
+O portal do cliente também é consumidor da API pública comercializada.
+
+Regras:
+
+- consultas de `CNPJ` no portal devem usar `GET /cnpj/:cnpj`
+- consultas de `CEP` no portal devem usar `GET /geocode/cep/:cep`
+- a autenticação deve ocorrer com o token do próprio cliente via header `x_api_token`
+- endpoints `/portal/*` devem ficar restritos a fluxos internos de sessão, onboarding e telas não cobertas pela API pública
+
+---
+
 ## Fluxo: enriquecimento de empresa
 
 Quando o usuário cadastra uma empresa no CRM e informa o CNPJ:

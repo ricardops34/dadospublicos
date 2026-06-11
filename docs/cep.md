@@ -95,6 +95,13 @@ No cadastro de clientes, ao sair do campo CEP (evento `blur`) ou após digitaç�
 - Consumir exclusivamente nossa API de CEP (`POST /admin/clientes-poui/validate-cep`).
 - **Não** realizar consultas diretas ao ViaCEP ou qualquer outro serviço externo pelo front-end.
 
+No portal do cliente, as telas devem consumir a **API pública de venda** usando o `x_api_token` do cliente autenticado:
+
+- `GET /geocode/cep/:cep` para CEP
+- `GET /cnpj/:cnpj` para CNPJ
+
+As APIs `/portal/*` devem existir apenas para necessidades específicas das telas do portal que não façam parte da superfície pública comercializada.
+
 ### Preenchimento Automático dos Campos
 
 Após retorno da API, preencher automaticamente:
@@ -141,7 +148,6 @@ A base começa vazia e cresce organicamente conforme os CEPs são consultados.
 | Endpoint | Guarda | Uso |
 |---|---|---|
 | `GET /geocode/cep/:cep` | API token (plano free) | Clientes pagantes |
-| `GET /portal/geocode/cep/:cep` | JWT portal (qualquer perfil) | Cadastro de clientes no portal |
 | `POST /admin/clientes-poui/validate-cep` | JWT portal (admin) | Formulário admin de clientes |
 
 - Validade dos dados: parâmetro `CEP_CACHE_VALIDITY_DAYS` (padrão: 180 dias)
@@ -153,3 +159,4 @@ A base começa vazia e cresce organicamente conforme os CEPs são consultados.
 - Consulta via campo `validate` do `po-page-dynamic-edit` (hook no blur/change do campo CEP).
 - Preenchimento via `aplicarValoresDinamicos()` com guarda de não-sobrescrita (`!current[key]`).
 - Campos UF e Município com tratamento especial (combo dependente).
+- No portal do cliente, a consulta deve usar a API pública autenticada com `x_api_token`, enviada automaticamente pelo interceptor Angular.

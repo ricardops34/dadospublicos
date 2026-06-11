@@ -75,4 +75,5 @@
   com rotas protegidas por guards locais
 - O Admin usa `x_admin_key` no localStorage (nunca em URL)
 - O Cliente usa `x_cliente_id` no localStorage após login
+- O portal armazena também o `apiToken` do cliente após login e o interceptor Angular o envia em `x_api_token` para endpoints públicos como `/cnpj/*` e `/geocode/*`
 - Temas: seguir padrão do CRM (Animalia Icons `an an-*`, PoModule)

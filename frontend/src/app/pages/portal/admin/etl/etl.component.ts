@@ -69,6 +69,8 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   historicoPage = 1;
   readonly historicoPageSize = 10;
   private intervalo: any;
+  private intervaloExtracao: any;
+  extraindo = false;
 
   logArquivosItens: EtlArquivoLogItem[] = [];
   logArquivosTotal = 0;
@@ -200,6 +202,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.pararPolling();
+    this.pararPollingExtracao();
   }
 
   competenciaAtualPadrao(): string {
@@ -314,6 +317,33 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
       clearInterval(this.intervalo);
       this.intervalo = null;
     }
+  }
+
+  private iniciarPollingExtracao(nomeArquivo: string) {
+    this.extraindo = true;
+    this.cdr.detectChanges();
+    let tentativas = 0;
+    const MAX = 60;
+
+    this.intervaloExtracao = setInterval(() => {
+      tentativas++;
+      this.carregarArquivos();
+      this.carregarLogArquivos();
+
+      const arq = this.arquivos.find((a) => a.nome === nomeArquivo);
+      if ((arq && arq.status === 'extraido') || tentativas >= MAX) {
+        this.pararPollingExtracao();
+      }
+    }, 2000);
+  }
+
+  private pararPollingExtracao() {
+    if (this.intervaloExtracao) {
+      clearInterval(this.intervaloExtracao);
+      this.intervaloExtracao = null;
+    }
+    this.extraindo = false;
+    this.cdr.detectChanges();
   }
 
   private carregarStatus(resetHistorico: boolean, appendHistorico: boolean, origemPolling: boolean) {
@@ -457,18 +487,26 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
 
   extrairArquivoLinha(row: ArquivoRfb) {
     const isTarGz = row.nome.endsWith('.tar.gz');
+    this.extraindo = true;
+    this.cdr.detectChanges();
+
     this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/extrair-arquivo`, { nome: row.nome }).subscribe({
       next: (res) => {
         this.notif.information(res.mensagem);
-        // tar.gz é síncrono: recarrega imediatamente. .zip é async: recarrega após delay.
         if (isTarGz) {
           this.carregarArquivos();
           this.carregarLogArquivos();
+          this.extraindo = false;
+          this.cdr.detectChanges();
         } else {
-          setTimeout(() => { this.carregarArquivos(); this.carregarLogArquivos(); }, 4000);
+          this.iniciarPollingExtracao(row.nome);
         }
       },
-      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao extrair arquivo.'),
+      error: (err) => {
+        this.notif.error(err.error?.message ?? 'Erro ao extrair arquivo.');
+        this.extraindo = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 

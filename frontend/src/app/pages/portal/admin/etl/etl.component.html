@@ -200,6 +200,14 @@
       <div class="etl-tab-content">
         <po-container p-title="Arquivos no servidor">
 
+          <po-container *ngIf="extraindo" class="etl-progresso">
+            <div class="etl-progresso__header">
+              <strong>Extraindo...</strong>
+              <span class="etl-progresso__label">Aguarde, verificando a cada 2 segundos</span>
+            </div>
+            <po-progress p-text="Extração em andamento" [p-value]="0" [p-indeterminate]="true"></po-progress>
+          </po-container>
+
           <div class="etl-lote-toolbar" *ngIf="selecionados.length > 0">
             <span class="etl-lote-info">
               <span class="an an-check-square"></span>
