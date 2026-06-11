@@ -200,25 +200,6 @@
       <div class="etl-tab-content">
         <po-container p-title="Arquivos no servidor">
 
-          <div class="etl-arquivos-toolbar">
-            <po-button
-              p-label="Apagar extraídos"
-              p-icon="an an-file-x"
-              p-kind="danger"
-              p-size="small"
-              [p-disabled]="status.rodando || !arquivosExtraidos()"
-              (p-click)="apagarTodosExtraidos()">
-            </po-button>
-            <po-button
-              p-label="Atualizar"
-              p-icon="an an-arrows-clockwise"
-              p-kind="secondary"
-              p-size="small"
-              [p-disabled]="carregando"
-              (p-click)="carregarArquivos()">
-            </po-button>
-          </div>
-
           <div class="etl-lote-toolbar" *ngIf="selecionados.length > 0">
             <span class="etl-lote-info">
               <span class="an an-check-square"></span>
@@ -227,15 +208,21 @@
             <div class="etl-lote-acoes">
               <po-button
                 p-label="Baixar selecionados"
-                p-icon="an an-download"
+                p-icon="an an-download-simple"
                 p-kind="secondary"
                 (p-click)="baixarLote()">
               </po-button>
               <po-button
-                p-label="Apagar selecionados"
+                p-label="Apagar arquivo selecionado"
                 p-icon="an an-trash"
                 p-kind="danger"
-                (p-click)="apagarLote()">
+                (p-click)="apagarArquivoLote()">
+              </po-button>
+              <po-button
+                p-label="Apagar CSV selecionado"
+                p-icon="an an-file-x"
+                p-kind="danger"
+                (p-click)="apagarCsvLote()">
               </po-button>
             </div>
           </div>

@@ -73,6 +73,13 @@ export class EtlController {
     return this.service.baixarArquivoUnico(nome, competencia);
   }
 
+  @Delete('arquivo-zip')
+  @ApiOperation({ summary: '[Admin] Apaga apenas o ZIP de um arquivo (mantém o CSV extraído)' })
+  apagarZipArquivo(@Query('nome') nome: string) {
+    if (!nome) throw new BadRequestException('nome e obrigatorio.');
+    return this.service.apagarZipArquivo(nome);
+  }
+
   @Delete('arquivo')
   @ApiOperation({ summary: '[Admin] Apaga o ZIP e o CSV de um arquivo da listagem' })
   apagarArquivo(@Query('nome') nome: string) {

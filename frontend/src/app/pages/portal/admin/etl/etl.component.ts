@@ -107,7 +107,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   acoesArquivos: PoTableAction[] = [
     {
       label: 'Baixar',
-      icon: 'an an-download',
+      icon: 'an an-download-simple',
       action: (row: ArquivoRfb) => this.baixarArquivoLinha(row),
     },
     {
@@ -118,22 +118,15 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     },
     {
       label: 'Processar',
-      icon: 'an an-arrow-down',
+      icon: 'an an-database',
       action: (row: ArquivoRfb) => this.processarArquivoLinha(row),
       visible: (row: ArquivoRfb) => row.status === 'extraido',
     },
     {
-      label: 'Apagar CSV',
-      icon: 'an an-file-x',
-      type: 'danger',
-      action: (row: ArquivoRfb) => this.apagarCsvArquivoLinha(row),
-      visible: (row: ArquivoRfb) => row.status === 'extraido' && !row.nome.endsWith('.tar.gz'),
-    },
-    {
-      label: 'Apagar tudo',
+      label: 'Apagar',
       icon: 'an an-trash',
       type: 'danger',
-      action: (row: ArquivoRfb) => this.apagarArquivoLinha(row),
+      action: (row: ArquivoRfb) => this.apagarZipArquivoLinha(row),
     },
   ];
 
@@ -511,6 +504,14 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     });
   }
 
+  apagarZipArquivoLinha(row: ArquivoRfb) {
+    if (!confirm(`Apagar o arquivo ${row.nome}?\nO CSV extraído será mantido.`)) return;
+    this.http.delete(`${environment.apiUrl}/etl/arquivo-zip?nome=${encodeURIComponent(row.nome)}`).subscribe({
+      next: () => { this.notif.success(`${row.nome} apagado.`); this.carregarArquivos(); },
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao apagar arquivo.'),
+    });
+  }
+
   apagarCsvArquivoLinha(row: ArquivoRfb) {
     if (!confirm(`Apagar o CSV de ${row.nome}?\nO arquivo ZIP será mantido.`)) return;
     this.http.delete(`${environment.apiUrl}/etl/arquivo-csv?nome=${encodeURIComponent(row.nome)}`).subscribe({
@@ -561,6 +562,41 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
         },
       });
     }
+  }
+
+  apagarArquivoLote() {
+    const arqs = [...this.selecionados];
+    if (!arqs.length) return;
+    if (!confirm(`Apagar o arquivo (ZIP/tar.gz) de ${arqs.length} item(ns) selecionado(s)?`)) return;
+    let concluidos = 0;
+    let erros = 0;
+    for (const arq of arqs) {
+      this.http.delete(`${environment.apiUrl}/etl/arquivo-zip?nome=${encodeURIComponent(arq.nome)}`).subscribe({
+        next: () => { concluidos++; if (concluidos + erros === arqs.length) this.finalizarLoteArquivo(concluidos, erros); },
+        error: () => { erros++;     if (concluidos + erros === arqs.length) this.finalizarLoteArquivo(concluidos, erros); },
+      });
+    }
+  }
+
+  apagarCsvLote() {
+    const arqs = [...this.selecionados];
+    if (!arqs.length) return;
+    if (!confirm(`Apagar o CSV de ${arqs.length} item(ns) selecionado(s)?`)) return;
+    let concluidos = 0;
+    let erros = 0;
+    for (const arq of arqs) {
+      this.http.delete(`${environment.apiUrl}/etl/arquivo-csv?nome=${encodeURIComponent(arq.nome)}`).subscribe({
+        next: () => { concluidos++; if (concluidos + erros === arqs.length) this.finalizarLoteArquivo(concluidos, erros); },
+        error: () => { erros++;     if (concluidos + erros === arqs.length) this.finalizarLoteArquivo(concluidos, erros); },
+      });
+    }
+  }
+
+  private finalizarLoteArquivo(concluidos: number, erros: number) {
+    this.selecionados = [];
+    if (erros) this.notif.error(`${concluidos} apagado(s), ${erros} com erro.`);
+    else this.notif.success(`${concluidos} item(ns) apagado(s).`);
+    this.carregarArquivos();
   }
 
   private finalizarLoteApagar(concluidos: number, erros: number) {

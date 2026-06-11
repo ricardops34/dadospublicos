@@ -567,6 +567,14 @@ export class EtlService {
     }
   }
 
+  async apagarZipArquivo(nome: string): Promise<{ apagados: string[] }> {
+    if (!/^[A-Za-z0-9_.-]+\.(zip|tar\.gz)$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
+    const zipPath = path.join(this.downloadDir, nome);
+    const apagados: string[] = [];
+    if (fs.existsSync(zipPath)) { fs.unlinkSync(zipPath); apagados.push(nome); }
+    return { apagados };
+  }
+
   async apagarTodosCsvs(): Promise<{ apagados: number }> {
     fs.mkdirSync(this.extrairDir, { recursive: true });
     const csvs = fs.readdirSync(this.extrairDir).filter((f) => /\.csv$/i.test(f));
