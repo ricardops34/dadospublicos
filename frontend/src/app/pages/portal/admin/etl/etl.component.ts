@@ -143,7 +143,8 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   ];
 
   colunasArquivos: PoTableColumn[] = [
-    { property: 'nome', label: 'Arquivo', width: '28%' },
+    { property: 'competencia', label: 'Competência', width: '10%' },
+    { property: 'nome', label: 'Arquivo', width: '22%' },
     {
       property: 'grupo', label: 'Grupo', type: 'label', width: '12%',
       labels: [
@@ -561,6 +562,21 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
         this.carregarLogArquivos();
       },
       error: (err) => this.notif.error(err.error?.message ?? 'Erro ao apagar CSVs.'),
+    });
+  }
+
+  moverParaCompetencia() {
+    const comp = this.competencia.trim();
+    if (!/^\d{4}-\d{2}$/.test(comp)) { this.notif.error('Informe uma competência válida (AAAA-MM) antes de mover.'); return; }
+    if (!confirm(`Mover todos os ZIPs soltos de downloads/ para a pasta ${comp}?`)) return;
+    this.http.post<{ movidos: string[] }>(`${environment.apiUrl}/etl/mover-para-competencia`, { competencia: comp }).subscribe({
+      next: (res) => {
+        this.notif.success(`${res.movidos.length} arquivo(s) movido(s) para ${comp}/.`);
+        this.carregarArquivos();
+        this.carregarResumo();
+        this.cdr.detectChanges();
+      },
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao mover arquivos.'),
     });
   }
 

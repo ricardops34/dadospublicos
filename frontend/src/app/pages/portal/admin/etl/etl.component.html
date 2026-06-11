@@ -216,6 +216,17 @@
       <div class="etl-tab-content">
         <po-container p-title="Arquivos no servidor">
 
+          <div class="etl-toolbar" style="margin-bottom:12px">
+            <span></span>
+            <po-button
+              p-label="Mover ZIPs da raiz para {{ competencia }}"
+              p-icon="an an-folder-open"
+              p-kind="secondary"
+              [p-disabled]="status.rodando"
+              (p-click)="moverParaCompetencia()">
+            </po-button>
+          </div>
+
           <po-container *ngIf="extraindo" class="etl-progresso">
             <div class="etl-progresso__header">
               <strong>Extraindo...</strong>

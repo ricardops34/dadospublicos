@@ -112,6 +112,13 @@ export class EtlController {
     return this.service.limparExtraidos();
   }
 
+  @Post('mover-para-competencia')
+  @ApiOperation({ summary: '[Admin] Move ZIPs soltos na raiz de downloads/ para a subpasta da competência (YYYY-MM)' })
+  moverParaCompetencia(@Body('competencia') competencia: string) {
+    if (!competencia) throw new BadRequestException('competencia e obrigatorio.');
+    return this.service.moverParaCompetencia(competencia);
+  }
+
   @Delete('logs')
   @ApiOperation({ summary: '[Admin] Limpa o historico de execucoes do ETL' })
   limparLogs() {

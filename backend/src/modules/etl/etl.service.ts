@@ -174,9 +174,17 @@ export class EtlService {
     const arquivosExtraidos = fs.readdirSync(this.extrairDir);
 
     const tarGzExiste = fs.existsSync(path.join(this.downloadDir, 'cnpj.tar.gz'));
-    const zipsEmExtraidos = arquivosExtraidos.filter((f) => /\.zip$/i.test(f)).length;
-    const csvsExtraidos   = arquivosExtraidos.filter((f) => /\.csv$/i.test(f)).length;
-    const zipsIncrementais = arquivosDownloads.filter((f) => /\.zip$/i.test(f)).length;
+    const zipsEmExtraidos  = arquivosExtraidos.filter((f) => /\.zip$/i.test(f)).length;
+    const csvsExtraidos    = arquivosExtraidos.filter((f) => /\.csv$/i.test(f)).length;
+
+    // Conta ZIPs nas subpastas ano-mes e na raiz
+    let zipsIncrementais = arquivosDownloads.filter((f) => /\.zip$/i.test(f) && fs.statSync(path.join(this.downloadDir, f)).isFile()).length;
+    for (const entry of arquivosDownloads) {
+      const entryPath = path.join(this.downloadDir, entry);
+      if (/^\d{4}-\d{2}$/.test(entry) && fs.statSync(entryPath).isDirectory()) {
+        zipsIncrementais += fs.readdirSync(entryPath).filter((f) => /\.zip$/i.test(f)).length;
+      }
+    }
 
     const bancoPrimeiraUso = await this.isPrimeiraUso();
 
@@ -200,48 +208,62 @@ export class EtlService {
       status: tarInfo.existe ? 'baixado' : 'nao_baixado',
     });
 
-    // ── 2. Tabelas de referência (arquivos únicos mensais) ─────────────────
-    for (const arq of ARQUIVOS_LOOKUP) {
-      const zipInfo = this.fileInfo(path.join(this.downloadDir, arq.nome));
-      const csvInfo = this.fileInfo(path.join(this.extrairDir, arq.nome.replace('.zip', '.csv')));
-      itens.push({
-        nome: arq.nome,
-        grupo: 'tabelas',
-        tabela: arq.tabela,
-        zip: zipInfo,
-        csv: csvInfo,
-        status: !zipInfo.existe ? 'nao_baixado' : !csvInfo.existe ? 'baixado' : 'extraido',
-      });
-    }
+    // ── 2. Subpastas ano-mes ───────────────────────────────────────────────
+    const competencias: string[] = fs.readdirSync(this.downloadDir)
+      .filter((e) => /^\d{4}-\d{2}$/.test(e) && fs.statSync(path.join(this.downloadDir, e)).isDirectory())
+      .sort();
 
-    // ── 3. Dados particionados — descobre partes existentes no disco ───────
-    for (const pd of PREFIXOS_DADOS) {
-      const partes = new Set<number>([0]); // parte 0 sempre visível
+    for (const comp of competencias) {
+      const compDir = path.join(this.downloadDir, comp);
 
-      const zipRe = new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i');
-      const csvRe = new RegExp(`^${pd.prefixo}(\\d+)\\.csv$`, 'i');
-
-      for (const f of fs.readdirSync(this.downloadDir)) {
-        const m = f.match(zipRe);
-        if (m) partes.add(Number(m[1]));
-      }
-      for (const f of fs.readdirSync(this.extrairDir)) {
-        const m = f.match(csvRe);
-        if (m) partes.add(Number(m[1]));
-      }
-
-      for (const parte of [...partes].sort((a, b) => a - b)) {
-        const zipInfo = this.fileInfo(path.join(this.downloadDir, `${pd.prefixo}${parte}.zip`));
-        const csvInfo = this.fileInfo(path.join(this.extrairDir,  `${pd.prefixo}${parte}.csv`));
+      for (const arq of ARQUIVOS_LOOKUP) {
+        const zipInfo = this.fileInfo(path.join(compDir, arq.nome));
+        const csvInfo = this.fileInfo(path.join(this.extrairDir, arq.nome.replace('.zip', '.csv')));
         itens.push({
-          nome: `${pd.prefixo}${parte}.zip`,
-          grupo: 'empresas',
-          tabela: pd.tabela,
-          zip: zipInfo,
-          csv: csvInfo,
+          nome: arq.nome, competencia: comp,
+          grupo: 'tabelas', tabela: arq.tabela,
+          zip: zipInfo, csv: csvInfo,
           status: !zipInfo.existe ? 'nao_baixado' : !csvInfo.existe ? 'baixado' : 'extraido',
         });
       }
+
+      for (const pd of PREFIXOS_DADOS) {
+        const zipRe = new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i');
+        const csvRe = new RegExp(`^${pd.prefixo}(\\d+)\\.csv$`, 'i');
+        const partes = new Set<number>([0]);
+        for (const f of fs.readdirSync(compDir)) { const m = f.match(zipRe); if (m) partes.add(Number(m[1])); }
+        for (const f of fs.readdirSync(this.extrairDir)) { const m = f.match(csvRe); if (m) partes.add(Number(m[1])); }
+        for (const parte of [...partes].sort((a, b) => a - b)) {
+          const zipInfo = this.fileInfo(path.join(compDir, `${pd.prefixo}${parte}.zip`));
+          const csvInfo = this.fileInfo(path.join(this.extrairDir, `${pd.prefixo}${parte}.csv`));
+          itens.push({
+            nome: `${pd.prefixo}${parte}.zip`, competencia: comp,
+            grupo: 'empresas', tabela: pd.tabela,
+            zip: zipInfo, csv: csvInfo,
+            status: !zipInfo.existe ? 'nao_baixado' : !csvInfo.existe ? 'baixado' : 'extraido',
+          });
+        }
+      }
+    }
+
+    // ── 3. Arquivos legados na raiz (ainda não movidos para subpasta) ──────
+    const lookupNomes = new Set(ARQUIVOS_LOOKUP.map((a) => a.nome.toLowerCase()));
+    const prefixoReLista = PREFIXOS_DADOS.map((pd) => ({ pd, re: new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i') }));
+    for (const f of fs.readdirSync(this.downloadDir)) {
+      if (f === 'cnpj.tar.gz') continue;
+      if (!fs.statSync(path.join(this.downloadDir, f)).isFile()) continue;
+      const isLookup = lookupNomes.has(f.toLowerCase());
+      const pd = prefixoReLista.find(({ re }) => re.test(f))?.pd;
+      if (!isLookup && !pd) continue;
+      const zipInfo = this.fileInfo(path.join(this.downloadDir, f));
+      const csvInfo = this.fileInfo(path.join(this.extrairDir, f.replace(/\.zip$/i, '.csv')));
+      itens.push({
+        nome: f, competencia: '(raiz)',
+        grupo: isLookup ? 'tabelas' : 'empresas',
+        tabela: isLookup ? ARQUIVOS_LOOKUP.find((a) => a.nome.toLowerCase() === f.toLowerCase())?.tabela ?? '' : pd!.tabela,
+        zip: zipInfo, csv: csvInfo,
+        status: !zipInfo.existe ? 'nao_baixado' : !csvInfo.existe ? 'baixado' : 'extraido',
+      });
     }
 
     return itens;
@@ -510,7 +532,7 @@ export class EtlService {
       let parte = 1;
       while (true) {
         const nome = `${pd.prefixo}${parte}.zip`;
-        const destPath = path.join(this.downloadDir, nome);
+        const destPath = path.join(this.downloadDir, competencia, nome);
         if (fs.existsSync(destPath)) { parte++; continue; }
         const inicio = Date.now();
         const baixou = await this.downloadSemErro(nome, competencia);
@@ -518,7 +540,7 @@ export class EtlService {
         const tamanhoMb = fs.existsSync(destPath)
           ? +(fs.statSync(destPath).size / 1024 / 1024).toFixed(1) : null;
         this.arquivoLogs.save(this.arquivoLogs.create({
-          etlLogId: this.currentLogId, arquivo: nome, operacao: 'download',
+          etlLogId: this.currentLogId, arquivo: `${competencia}/${nome}`, operacao: 'download',
           status: 'concluido', competencia, tamanhoMb, duracaoMs: Date.now() - inicio,
           concluidoEm: new Date(),
         })).catch(() => {});
@@ -551,12 +573,28 @@ export class EtlService {
     this.progresso.fase = 'Extração';
     this.progresso.feitos = 0;
 
-    // Monta lista completa: lookups + todas as partes particionadas presentes no disco
-    const zipsParaExtrair: string[] = ARQUIVOS_LOOKUP.map((a) => a.nome);
-    for (const pd of PREFIXOS_DADOS) {
-      const re = new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i');
-      for (const f of fs.readdirSync(this.downloadDir)) {
-        if (re.test(f)) zipsParaExtrair.push(f);
+    // Monta lista: varre subpastas ano-mes e a raiz (para compatibilidade)
+    // Retorna caminhos relativos a downloadDir, ex: "2026-05/Cnaes.zip"
+    const zipsParaExtrair: string[] = [];
+    const lookupNomes = new Set(ARQUIVOS_LOOKUP.map((a) => a.nome.toLowerCase()));
+    const prefixoRe = PREFIXOS_DADOS.map((pd) => new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i'));
+
+    const varrerDir = (dir: string, prefixo: string) => {
+      for (const f of fs.readdirSync(dir)) {
+        const isLookup = lookupNomes.has(f.toLowerCase());
+        const isDados  = prefixoRe.some((re) => re.test(f));
+        if (isLookup || isDados) zipsParaExtrair.push(prefixo ? `${prefixo}/${f}` : f);
+      }
+    };
+
+    // Raiz (arquivos legados não movidos)
+    varrerDir(this.downloadDir, '');
+
+    // Subpastas ano-mes
+    for (const entry of fs.readdirSync(this.downloadDir)) {
+      const entryPath = path.join(this.downloadDir, entry);
+      if (/^\d{4}-\d{2}$/.test(entry) && fs.statSync(entryPath).isDirectory()) {
+        varrerDir(entryPath, entry);
       }
     }
 
@@ -651,15 +689,17 @@ export class EtlService {
   }
 
   private async download(arquivo: string, competencia: string): Promise<void> {
-    const destPath = path.join(this.downloadDir, arquivo);
+    const destDir  = path.join(this.downloadDir, competencia);
+    const destPath = path.join(destDir, arquivo);
+    fs.mkdirSync(destDir, { recursive: true });
     if (fs.existsSync(destPath)) {
-      this.logger.log(`  Já existe: ${arquivo}`);
+      this.logger.log(`  Já existe: ${competencia}/${arquivo}`);
       return;
     }
 
     const baseUrl = await this.params.getValor('RFB_DOWNLOAD_BASE_URL', RFB_DEFAULT_URL);
     const { url, headers } = this.buildDownloadConfig(baseUrl, arquivo, competencia);
-    this.logger.log(`  Baixando: ${arquivo} (${competencia}) → ${url}`);
+    this.logger.log(`  Baixando: ${competencia}/${arquivo} → ${url}`);
 
     const response = await axios.get(url, {
       responseType: 'stream',
@@ -679,10 +719,10 @@ export class EtlService {
 
   /** Baixa com log de início/conclusão/erro na tabela etl_arquivo_logs. */
   private async downloadComLog(arquivo: string, competencia: string): Promise<void> {
-    const destPath = path.join(this.downloadDir, arquivo);
+    const destPath = path.join(this.downloadDir, competencia, arquivo);
     if (fs.existsSync(destPath)) {
       await this.arquivoLogs.save(this.arquivoLogs.create({
-        etlLogId: this.currentLogId, arquivo, operacao: 'download',
+        etlLogId: this.currentLogId, arquivo: `${competencia}/${arquivo}`, operacao: 'download',
         status: 'ja_existe', competencia, concluidoEm: new Date(),
       }));
       return;
@@ -690,7 +730,7 @@ export class EtlService {
 
     const inicio = Date.now();
     const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
-      etlLogId: this.currentLogId, arquivo, operacao: 'download',
+      etlLogId: this.currentLogId, arquivo: `${competencia}/${arquivo}`, operacao: 'download',
       status: 'iniciando', competencia,
     }));
     try {
@@ -735,6 +775,27 @@ export class EtlService {
     const csvs = fs.readdirSync(this.extrairDir).filter((f) => /\.csv$/i.test(f));
     for (const f of csvs) fs.unlinkSync(path.join(this.extrairDir, f));
     return { apagados: csvs.length };
+  }
+
+  /** Move ZIPs soltos na raiz de downloadDir para a subpasta da competência indicada. */
+  async moverParaCompetencia(competencia: string): Promise<{ movidos: string[] }> {
+    if (!/^\d{4}-\d{2}$/.test(competencia)) throw new BadRequestException('Competência inválida. Use o formato YYYY-MM.');
+    const destDir = path.join(this.downloadDir, competencia);
+    fs.mkdirSync(destDir, { recursive: true });
+
+    const lookupNomes = new Set(ARQUIVOS_LOOKUP.map((a) => a.nome.toLowerCase()));
+    const prefixoRe   = PREFIXOS_DADOS.map((pd) => new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i'));
+    const movidos: string[] = [];
+
+    for (const f of fs.readdirSync(this.downloadDir)) {
+      if (!fs.statSync(path.join(this.downloadDir, f)).isFile()) continue;
+      if (f === 'cnpj.tar.gz') continue;
+      if (!lookupNomes.has(f.toLowerCase()) && !prefixoRe.some((re) => re.test(f))) continue;
+      fs.renameSync(path.join(this.downloadDir, f), path.join(destDir, f));
+      movidos.push(f);
+    }
+
+    return { movidos };
   }
 
   async limparExtraidos(): Promise<{ apagados: number }> {
