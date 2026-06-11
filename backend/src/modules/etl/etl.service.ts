@@ -404,7 +404,9 @@ export class EtlService {
     log.status = 'extracao';
     await this.logs.save(log);
 
-    const zips = fs.readdirSync(this.extrairDir).filter((f) => /\.zip$/i.test(f));
+    const todosArquivos = fs.readdirSync(this.extrairDir);
+    const zips = todosArquivos.filter((f) => /\.zip$/i.test(f));
+    this.logger.log(`faseExtrairZipsEmExtraidos: ${todosArquivos.length} arquivo(s) em extraidos/, ${zips.length} ZIP(s) encontrado(s): ${zips.slice(0, 5).join(', ')}`);
     this.progresso.fase = 'Extraindo ZIPs em extraidos/';
     this.progresso.total = zips.length;
     this.progresso.feitos = 0;
@@ -455,9 +457,15 @@ export class EtlService {
       );
     }
 
-    this.logger.log(`Extraindo cnpj.tar.gz → ${this.extrairDir}...`);
-    await tar.x({ file: tarPath, cwd: this.extrairDir, strip: 1 });
-    this.logger.log('Extração do cnpj.tar.gz concluída (ZIPs em extraidos/).');
+    // Detecta se o tar.gz tem um diretório raiz para determinar o strip correto
+    const primeiraEntrada: string[] = [];
+    await tar.t({ file: tarPath, onentry: (e: any) => { if (primeiraEntrada.length < 3) primeiraEntrada.push(e.path); } });
+    const temDirRaiz = primeiraEntrada.length > 0 && primeiraEntrada.every((p) => p.includes('/'));
+    const stripLevel = temDirRaiz ? 1 : 0;
+    this.logger.log(`Extraindo cnpj.tar.gz → ${path.resolve(this.extrairDir)} (strip=${stripLevel}, entradas amostradas: ${primeiraEntrada.join(', ')})`);
+    await tar.x({ file: tarPath, cwd: this.extrairDir, strip: stripLevel });
+    const arquivosExtraidos = fs.readdirSync(this.extrairDir);
+    this.logger.log(`Extração concluída. Arquivos em extraidos/: ${arquivosExtraidos.length} → ${arquivosExtraidos.slice(0, 5).join(', ')}`);
 
     this.progresso.feitos = 1;
     this.progresso.percentual = 100;
