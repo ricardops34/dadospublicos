@@ -52,6 +52,20 @@ export class EtlController {
     return this.service.limparLogArquivos();
   }
 
+  @Post('extrair-arquivo')
+  @ApiOperation({ summary: '[Admin] Extrai um arquivo .zip específico em background' })
+  extrairArquivo(@Body('nome') nome: string) {
+    if (!nome) throw new BadRequestException('nome e obrigatorio.');
+    return this.service.extrairArquivoUnico(nome);
+  }
+
+  @Post('processar-arquivo')
+  @ApiOperation({ summary: '[Admin] Carrega o CSV de um arquivo específico no banco em background' })
+  processarArquivo(@Body('nome') nome: string) {
+    if (!nome) throw new BadRequestException('nome e obrigatorio.');
+    return this.service.processarArquivoUnico(nome);
+  }
+
   @Post('baixar-arquivo')
   @ApiOperation({ summary: '[Admin] Baixa (ou rebaixa) um arquivo especifico do RFB em background' })
   baixarArquivo(@Body('nome') nome: string, @Body('competencia') competencia: string) {
@@ -64,6 +78,13 @@ export class EtlController {
   apagarArquivo(@Query('nome') nome: string) {
     if (!nome) throw new BadRequestException('nome e obrigatorio.');
     return this.service.apagarArquivo(nome);
+  }
+
+  @Delete('arquivo-csv')
+  @ApiOperation({ summary: '[Admin] Apaga apenas o CSV extraído de um arquivo (mantém o ZIP)' })
+  apagarCsvArquivo(@Query('nome') nome: string) {
+    if (!nome) throw new BadRequestException('nome e obrigatorio.');
+    return this.service.apagarCsvArquivo(nome);
   }
 
   @Delete('logs')

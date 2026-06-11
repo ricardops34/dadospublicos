@@ -252,7 +252,12 @@ export class EtlService {
         await this.faseDownloadBase(log);
       }
       if (fase === 'extracao') {
-        await this.faseExtracao(log);
+        const tarPath = path.join(this.downloadDir, 'cnpj.tar.gz');
+        if (fs.existsSync(tarPath)) {
+          await this.faseExtrairTarGz(log);
+        } else {
+          await this.faseExtracao(log);
+        }
       }
       if (fase === 'carga') {
         await this.faseCarga(log);
@@ -562,6 +567,17 @@ export class EtlService {
     }
   }
 
+  async apagarCsvArquivo(nome: string): Promise<{ apagados: string[] }> {
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new Error('Nome de arquivo inválido.');
+    const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
+    const apagados: string[] = [];
+    if (fs.existsSync(csvPath)) {
+      fs.unlinkSync(csvPath);
+      apagados.push(nome.replace(/\.zip$/i, '.csv'));
+    }
+    return { apagados };
+  }
+
   async apagarArquivo(nome: string): Promise<{ apagados: string[] }> {
     if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) {
       throw new Error('Nome de arquivo inválido.');
@@ -572,6 +588,29 @@ export class EtlService {
     if (fs.existsSync(zipPath)) { fs.unlinkSync(zipPath); apagados.push(nome); }
     if (fs.existsSync(csvPath)) { fs.unlinkSync(csvPath); apagados.push(nome.replace(/\.zip$/i, '.csv')); }
     return { apagados };
+  }
+
+  async extrairArquivoUnico(nome: string): Promise<{ mensagem: string }> {
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new Error('Nome de arquivo inválido.');
+    const zipPath = path.join(this.downloadDir, nome);
+    if (!fs.existsSync(zipPath)) throw new Error(`Arquivo não encontrado: ${nome}`);
+    this.extrairComLog(nome, zipPath).catch((err) =>
+      this.logger.error(`Erro ao extrair ${nome}:`, err),
+    );
+    return { mensagem: `Extração de ${nome} iniciada em background.` };
+  }
+
+  async processarArquivoUnico(nome: string): Promise<{ mensagem: string }> {
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new Error('Nome de arquivo inválido.');
+    const csvNome = nome.replace(/\.zip$/i, '.csv');
+    const csvPath = path.join(this.extrairDir, csvNome);
+    if (!fs.existsSync(csvPath)) throw new Error(`CSV não encontrado: ${csvNome}. Execute a extração primeiro.`);
+    const { tabela, colunas } = this.resolverTabelaColunas(nome);
+    if (!tabela || !colunas.length) throw new Error(`Arquivo não reconhecido para carga: ${nome}`);
+    this.processarComLog(nome, csvPath, tabela, colunas).catch((err) =>
+      this.logger.error(`Erro ao processar ${nome}:`, err),
+    );
+    return { mensagem: `Carga de ${nome} iniciada em background.` };
   }
 
   async baixarArquivoUnico(nome: string, competencia: string): Promise<{ mensagem: string }> {
@@ -648,6 +687,74 @@ export class EtlService {
     }
 
     return { url: `${clean}/${arquivo}`, headers: {} };
+  }
+
+  private async extrairComLog(nome: string, zipPath: string): Promise<void> {
+    const inicio = Date.now();
+    const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+      etlLogId: null, arquivo: nome, operacao: 'extracao' as EtlArquivoOperacao, status: 'iniciando',
+    }));
+    try {
+      await this.extrair(zipPath);
+      const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
+      logEntry.status = 'concluido';
+      logEntry.tamanhoMb = fs.existsSync(csvPath)
+        ? +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1) : null;
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.concluidoEm = new Date();
+    } catch (err) {
+      logEntry.status = 'erro';
+      logEntry.detalhe = String(err);
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.concluidoEm = new Date();
+    }
+    await this.arquivoLogs.save(logEntry);
+  }
+
+  private async processarComLog(nome: string, csvPath: string, tabela: string, colunas: string[]): Promise<void> {
+    const inicio = Date.now();
+    const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+      etlLogId: null, arquivo: nome, operacao: 'carga' as EtlArquivoOperacao, status: 'iniciando',
+    }));
+    try {
+      const count = await this.carregarCsv(csvPath, tabela, colunas);
+      logEntry.status = 'concluido';
+      logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros → ${tabela}`;
+      logEntry.concluidoEm = new Date();
+    } catch (err) {
+      logEntry.status = 'erro';
+      logEntry.detalhe = String(err);
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.concluidoEm = new Date();
+    }
+    await this.arquivoLogs.save(logEntry);
+  }
+
+  private resolverTabelaColunas(nome: string): { tabela: string; colunas: string[] } {
+    const lookup = ARQUIVOS_LOOKUP.find((a) => a.nome.toLowerCase() === nome.toLowerCase());
+    if (lookup) {
+      if (lookup.tipo === 'simples') {
+        return {
+          tabela: 'simples',
+          colunas: ['cnpj_basico','opcao_pelo_simples','data_opcao_simples','data_exclusao_simples',
+            'opcao_pelo_mei','data_opcao_mei','data_exclusao_mei'],
+        };
+      }
+      return { tabela: lookup.tabela, colunas: lookup.colunas ?? [] };
+    }
+    const colunasMap: Record<string, string[]> = {
+      empresas_rfb:    this.colunasEmpresas(),
+      estabelecimentos: this.colunasEstabelecimentos(),
+      socios:          this.colunasSocios(),
+    };
+    for (const pd of PREFIXOS_DADOS) {
+      if (new RegExp(`^${pd.prefixo}\\d+\\.zip$`, 'i').test(nome)) {
+        return { tabela: pd.tabela, colunas: colunasMap[pd.tabela] ?? [] };
+      }
+    }
+    return { tabela: '', colunas: [] };
   }
 
   private extrair(zipPath: string): Promise<void> {

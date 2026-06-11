@@ -111,7 +111,26 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
       action: (row: ArquivoRfb) => this.baixarArquivoLinha(row),
     },
     {
-      label: 'Apagar',
+      label: 'Extrair',
+      icon: 'an an-arrows-down-up',
+      action: (row: ArquivoRfb) => this.extrairArquivoLinha(row),
+      visible: (row: ArquivoRfb) => row.status === 'baixado',
+    },
+    {
+      label: 'Processar',
+      icon: 'an an-arrow-down',
+      action: (row: ArquivoRfb) => this.processarArquivoLinha(row),
+      visible: (row: ArquivoRfb) => row.status === 'extraido',
+    },
+    {
+      label: 'Apagar CSV',
+      icon: 'an an-file-x',
+      type: 'danger',
+      action: (row: ArquivoRfb) => this.apagarCsvArquivoLinha(row),
+      visible: (row: ArquivoRfb) => row.status === 'extraido',
+    },
+    {
+      label: 'Apagar tudo',
       icon: 'an an-trash',
       type: 'danger',
       action: (row: ArquivoRfb) => this.apagarArquivoLinha(row),
@@ -443,11 +462,33 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     this.selecionados = [];
   }
 
+  extrairArquivoLinha(row: ArquivoRfb) {
+    this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/extrair-arquivo`, { nome: row.nome }).subscribe({
+      next: (res) => this.notif.information(res.mensagem),
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao extrair arquivo.'),
+    });
+  }
+
+  processarArquivoLinha(row: ArquivoRfb) {
+    this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/processar-arquivo`, { nome: row.nome }).subscribe({
+      next: (res) => this.notif.information(res.mensagem),
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao processar arquivo.'),
+    });
+  }
+
   baixarArquivoLinha(row: ArquivoRfb) {
     const payload = { nome: row.nome, competencia: this.competencia.trim() };
     this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/baixar-arquivo`, payload).subscribe({
       next: (res) => this.notif.information(res.mensagem),
       error: (err) => this.notif.error(err.error?.message ?? 'Erro ao iniciar download.'),
+    });
+  }
+
+  apagarCsvArquivoLinha(row: ArquivoRfb) {
+    if (!confirm(`Apagar o CSV de ${row.nome}?\nO arquivo ZIP será mantido.`)) return;
+    this.http.delete(`${environment.apiUrl}/etl/arquivo-csv?nome=${encodeURIComponent(row.nome)}`).subscribe({
+      next: () => { this.notif.success(`CSV de ${row.nome} apagado.`); this.carregarArquivos(); },
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao apagar CSV.'),
     });
   }
 
