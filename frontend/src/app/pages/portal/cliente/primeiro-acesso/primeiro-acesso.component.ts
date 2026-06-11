@@ -13,9 +13,11 @@ import { environment } from '../../../../../environments/environment';
   standalone: false,
   template: `
     <po-page-default p-title="Primeiro acesso">
-      <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+      @if (carregando) {
+        <po-loading-overlay></po-loading-overlay>
+      }
 
-      <ng-container *ngIf="!carregando">
+      @if (!carregando) {
         <div class="wizard-intro">
           <h2>Complete seu cadastro</h2>
           <p>São 4 etapas rápidas para liberar seu acesso completo à plataforma.</p>
@@ -30,9 +32,9 @@ import { environment } from '../../../../../environments/environment';
         </po-stepper>
 
         <div class="wizard-card">
-          <ng-container [ngSwitch]="stepAtual">
+          @switch (stepAtual) {
 
-            <div *ngSwitchCase="1">
+            @case (1) {
               <h3>Dados cadastrais</h3>
               <div class="po-row">
                 <po-input class="po-md-6" p-label="Nome" [(ngModel)]="form.nome" p-required="true"></po-input>
@@ -50,34 +52,49 @@ import { environment } from '../../../../../environments/environment';
                   [(ngModel)]="form.telefone" p-required="true">
                 </po-input>
               </div>
-              <div class="po-row" *ngIf="form.tipoPessoa === 'F'">
-                <po-input class="po-md-6" p-label="CPF" p-mask="999.999.999-99"
-                  [(ngModel)]="form.cpf" p-required="true">
-                </po-input>
-                <po-datepicker class="po-md-6" p-label="Data de nascimento"
-                  [(ngModel)]="form.dataNascimento" p-required="true">
-                </po-datepicker>
-              </div>
-              <div class="po-row" *ngIf="form.tipoPessoa === 'J'">
-                <po-input class="po-md-4" p-label="CNPJ" p-mask="99.999.999/9999-99"
-                  [(ngModel)]="form.cnpj" p-required="true"
-                  (p-blur)="buscarCnpj()">
-                </po-input>
-                <po-input class="po-md-8" p-label="Razão Social" [(ngModel)]="form.razaoSocial" p-required="true"></po-input>
-              </div>
-              <div class="po-row" *ngIf="form.tipoPessoa === 'J'">
-                <po-input class="po-md-6" p-label="Inscrição Estadual"
-                  [(ngModel)]="form.inscricaoEstadual"
-                  p-help="Opcional">
-                </po-input>
-                <po-input class="po-md-6" p-label="Inscrição Municipal"
-                  [(ngModel)]="form.inscricaoMunicipal"
-                  p-help="Opcional">
-                </po-input>
-              </div>
-            </div>
+              @if (form.tipoPessoa === 'F') {
+                <div class="po-row">
+                  <po-input class="po-md-6" p-label="CPF" p-mask="999.999.999-99"
+                    [(ngModel)]="form.cpf" p-required="true">
+                  </po-input>
+                  <po-datepicker class="po-md-6" p-label="Data de nascimento"
+                    [(ngModel)]="form.dataNascimento" p-required="true">
+                  </po-datepicker>
+                </div>
+              }
+              @if (form.tipoPessoa === 'J') {
+                <div class="po-row">
+                  <po-input class="po-md-4" p-label="CNPJ" p-mask="99.999.999/9999-99"
+                    [(ngModel)]="form.cnpj" p-required="true"
+                    (p-blur)="buscarCnpj()">
+                  </po-input>
+                  <po-input class="po-md-8" p-label="Razão Social" [(ngModel)]="form.razaoSocial" p-required="true"></po-input>
+                </div>
+                <div class="po-row">
+                  <po-input class="po-md-6" p-label="Nome Fantasia"
+                    [(ngModel)]="form.nomeFantasia"
+                    p-help="Opcional — preenchido automaticamente pelo CNPJ">
+                  </po-input>
+                  <po-input class="po-md-6" p-label="CNAE Principal"
+                    [(ngModel)]="form.cnaePrincipalDescricao"
+                    p-disabled="true"
+                    p-help="Preenchido automaticamente pelo CNPJ">
+                  </po-input>
+                </div>
+                <div class="po-row">
+                  <po-input class="po-md-6" p-label="Inscrição Estadual"
+                    [(ngModel)]="form.inscricaoEstadual"
+                    p-help="Opcional">
+                  </po-input>
+                  <po-input class="po-md-6" p-label="Inscrição Municipal"
+                    [(ngModel)]="form.inscricaoMunicipal"
+                    p-help="Opcional">
+                  </po-input>
+                </div>
+              }
+            }
 
-            <div *ngSwitchCase="2">
+            @case (2) {
               <h3>Endereço</h3>
               <div class="po-row">
                 <po-input class="po-md-3" p-label="CEP" p-mask="99999-999"
@@ -110,9 +127,9 @@ import { environment } from '../../../../../environments/environment';
                   (p-change)="onUfChange($event)">
                 </po-combo>
               </div>
-            </div>
+            }
 
-            <div *ngSwitchCase="3">
+            @case (3) {
               <h3>Plano</h3>
               <p class="wizard-sub">Selecione o plano que deseja ativar agora.</p>
 
@@ -123,29 +140,35 @@ import { environment } from '../../../../../environments/environment';
               </div>
 
               <div class="planos-grid">
-                <button
-                  type="button"
-                  class="plano-card"
-                  *ngFor="let plano of planos"
-                  [class.plano-card--selected]="planoSelecionado?.slug === plano.slug"
-                  (click)="selecionarPlano(plano)">
-                  <div class="plano-card__header">
-                    <strong>{{ plano.nome }}</strong>
-                    <po-tag *ngIf="planoSelecionado?.slug === plano.slug" p-value="Selecionado" p-color="color-10"></po-tag>
-                    <po-tag *ngIf="plano.maisPopular" p-value="Popular" p-color="color-08"></po-tag>
-                  </div>
-                  <p>{{ plano.descricao }}</p>
-                  <div class="plano-card__price" *ngIf="precoPlano(plano) === 0">
-                    <strong>Gratuito</strong>
-                  </div>
-                  <div class="plano-card__price" *ngIf="precoPlano(plano) > 0">
-                    R$ {{ precoPlano(plano) | number:'1.2-2' }}<span>/mês</span>
-                  </div>
-                </button>
+                @for (plano of planos; track plano.slug) {
+                  <button
+                    type="button"
+                    class="plano-card"
+                    [class.plano-card--selected]="planoSelecionado?.slug === plano.slug"
+                    (click)="selecionarPlano(plano)">
+                    <div class="plano-card__header">
+                      <strong>{{ plano.nome }}</strong>
+                      @if (planoSelecionado?.slug === plano.slug) {
+                        <po-tag p-value="Selecionado" p-color="color-10"></po-tag>
+                      }
+                      @if (plano.maisPopular) {
+                        <po-tag p-value="Popular" p-color="color-08"></po-tag>
+                      }
+                    </div>
+                    <p>{{ plano.descricao }}</p>
+                    @if (precoPlano(plano) === 0) {
+                      <div class="plano-card__price"><strong>Gratuito</strong></div>
+                    } @else {
+                      <div class="plano-card__price">
+                        R$ {{ precoPlano(plano) | number:'1.2-2' }}<span>/mês</span>
+                      </div>
+                    }
+                  </button>
+                }
               </div>
-            </div>
+            }
 
-            <div *ngSwitchCase="4">
+            @case (4) {
               <h3>Concluir</h3>
               <p class="wizard-sub">Revise os dados antes de finalizar.</p>
 
@@ -161,21 +184,29 @@ import { environment } from '../../../../../environments/environment';
               <div class="po-row">
                 <po-info class="po-md-12" p-label="Endereço" [p-value]="enderecoResumo"></po-info>
               </div>
+            }
+
+          }
+
+          @if (erro) {
+            <div class="wizard-error">
+              <span class="an an-warning-circle"></span> {{ erro }}
             </div>
-
-          </ng-container>
-
-          <div *ngIf="erro" class="wizard-error">
-            <span class="an an-warning-circle"></span> {{ erro }}
-          </div>
+          }
 
           <div class="wizard-actions">
-            <po-button *ngIf="stepAtual > 1" p-label="Voltar" p-kind="tertiary" (p-click)="voltar()"></po-button>
-            <po-button *ngIf="stepAtual < 4" p-label="Avançar" p-kind="primary" (p-click)="avancar()"></po-button>
-            <po-button *ngIf="stepAtual === 4" p-label="Finalizar" p-kind="primary" [p-loading]="salvando" (p-click)="finalizar()"></po-button>
+            @if (stepAtual > 1) {
+              <po-button p-label="Voltar" p-kind="tertiary" (p-click)="voltar()"></po-button>
+            }
+            @if (stepAtual < 4) {
+              <po-button p-label="Avançar" p-kind="primary" (p-click)="avancar()"></po-button>
+            }
+            @if (stepAtual === 4) {
+              <po-button p-label="Finalizar" p-kind="primary" [p-loading]="salvando" (p-click)="finalizar()"></po-button>
+            }
           </div>
         </div>
-      </ng-container>
+      }
     </po-page-default>
   `,
   styles: [`
@@ -306,8 +337,11 @@ export class PrimeiroAcessoComponent implements OnInit {
     dataNascimento: '',
     cnpj: '',
     razaoSocial: '',
+    nomeFantasia: '',
     inscricaoEstadual: '',
     inscricaoMunicipal: '',
+    cnaePrincipal: '',
+    cnaePrincipalDescricao: '',
     cep: '',
     logradouro: '',
     numero: '',
@@ -356,8 +390,11 @@ export class PrimeiroAcessoComponent implements OnInit {
           dataNascimento: perfil.dataNascimento ?? '',
           cnpj: perfil.cnpj ?? '',
           razaoSocial: perfil.razaoSocial ?? '',
+          nomeFantasia: (perfil.cliente as any)?.nomeFantasia ?? '',
           inscricaoEstadual: perfil.inscricaoEstadual ?? '',
           inscricaoMunicipal: perfil.inscricaoMunicipal ?? '',
+          cnaePrincipal: perfil.cliente?.cnaePrincipal ?? '',
+          cnaePrincipalDescricao: perfil.cliente?.cnaePrincipalDescricao ?? '',
           cep: perfil.cep ?? '',
           logradouro: perfil.logradouro ?? '',
           numero: perfil.numero ?? '',
@@ -432,7 +469,10 @@ export class PrimeiroAcessoComponent implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/portal/geocode/cnpj/${cnpj}`).subscribe({
       next: (d) => {
         if (!d) return;
-        if (!this.form.razaoSocial) this.form.razaoSocial = d.razaoSocial ?? '';
+        if (!this.form.razaoSocial)             this.form.razaoSocial             = d.razaoSocial             ?? '';
+        if (!this.form.nomeFantasia)            this.form.nomeFantasia            = d.nomeFantasia            ?? '';
+        if (!this.form.cnaePrincipal)           this.form.cnaePrincipal           = d.cnaePrincipal           ?? '';
+        if (!this.form.cnaePrincipalDescricao)  this.form.cnaePrincipalDescricao  = d.cnaePrincipalDescricao  ?? '';
         // Endereço — só preenche campos vazios
         if (!this.form.cep)         this.form.cep         = d.cep         ?? '';
         if (!this.form.logradouro)  this.form.logradouro  = d.logradouro  ?? '';
@@ -490,6 +530,9 @@ export class PrimeiroAcessoComponent implements OnInit {
       dataNascimento: this.form.tipoPessoa === 'F' ? this.form.dataNascimento : null,
       cnpj: this.form.tipoPessoa === 'J' ? this.form.cnpj : null,
       razaoSocial: this.form.tipoPessoa === 'J' ? this.form.razaoSocial : null,
+      nomeFantasia: this.form.tipoPessoa === 'J' ? (this.form.nomeFantasia || null) : null,
+      cnaePrincipal: this.form.tipoPessoa === 'J' ? (this.form.cnaePrincipal || null) : null,
+      cnaePrincipalDescricao: this.form.tipoPessoa === 'J' ? (this.form.cnaePrincipalDescricao || null) : null,
       inscricaoEstadual: this.form.inscricaoEstadual || null,
       inscricaoMunicipal: this.form.inscricaoMunicipal || null,
       cep: this.form.cep,

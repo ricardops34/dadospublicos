@@ -1,167 +1,184 @@
 <!-- ─── ADMIN ────────────────────────────────────────────────────── -->
-<po-page-default *ngIf="isAdmin" p-title="Dashboard">
-  <div class="dash-admin-welcome">
-    <div class="dash-admin-welcome__text">
-      <h2>Olá, {{ nome }}!</h2>
-      <p>Acesse as seções pelo menu lateral para gerenciar clientes, planos e configurações.</p>
+@if (isAdmin) {
+  <po-page-default p-title="Dashboard">
+    <div class="dash-admin-welcome">
+      <div class="dash-admin-welcome__text">
+        <h2>Olá, {{ nome }}!</h2>
+        <p>Acesse as seções pelo menu lateral para gerenciar clientes, planos e configurações.</p>
+      </div>
     </div>
-  </div>
 
-  <div class="dash-admin-atalhos">
-    <a routerLink="/portal/clientes"    class="dash-atalho">
-      <span class="an an-users"></span>
-      <strong>Clientes</strong>
-    </a>
-    <a routerLink="/portal/assinaturas" class="dash-atalho">
-      <span class="an an-tag"></span>
-      <strong>Assinaturas</strong>
-    </a>
-    <a routerLink="/portal/faturas"     class="dash-atalho">
-      <span class="an an-receipt"></span>
-      <strong>Faturas</strong>
-    </a>
-    <a routerLink="/portal/planos"      class="dash-atalho">
-      <span class="an an-stack"></span>
-      <strong>Planos</strong>
-    </a>
-    <a routerLink="/portal/consumo-admin" class="dash-atalho">
-      <span class="an an-chart-bar"></span>
-      <strong>Consumo</strong>
-    </a>
-    <a routerLink="/portal/parametros"  class="dash-atalho">
-      <span class="an an-gear"></span>
-      <strong>Parâmetros</strong>
-    </a>
-  </div>
-</po-page-default>
+    <div class="dash-admin-atalhos">
+      <a routerLink="/portal/clientes"    class="dash-atalho">
+        <span class="an an-users"></span>
+        <strong>Clientes</strong>
+      </a>
+      <a routerLink="/portal/assinaturas" class="dash-atalho">
+        <span class="an an-tag"></span>
+        <strong>Assinaturas</strong>
+      </a>
+      <a routerLink="/portal/faturas"     class="dash-atalho">
+        <span class="an an-receipt"></span>
+        <strong>Faturas</strong>
+      </a>
+      <a routerLink="/portal/planos"      class="dash-atalho">
+        <span class="an an-stack"></span>
+        <strong>Planos</strong>
+      </a>
+      <a routerLink="/portal/consumo-admin" class="dash-atalho">
+        <span class="an an-chart-bar"></span>
+        <strong>Consumo</strong>
+      </a>
+      <a routerLink="/portal/parametros"  class="dash-atalho">
+        <span class="an an-gear"></span>
+        <strong>Parâmetros</strong>
+      </a>
+    </div>
+  </po-page-default>
+}
 
 <!-- ─── CLIENTE ──────────────────────────────────────────────────── -->
-<po-page-default *ngIf="!isAdmin" [p-title]="'Olá, ' + nome + '!'">
+@if (!isAdmin) {
+  <po-page-default [p-title]="'Olá, ' + nome + '!'">
 
-  <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+    @if (carregando) {
+      <po-loading-overlay></po-loading-overlay>
+    }
 
-  <ng-container *ngIf="!carregando">
+    @if (!carregando) {
 
-    <!-- Sem assinatura -->
-    <div *ngIf="!assinatura" class="dash-empty">
-      <span class="an an-rocket-launch"></span>
-      <h3>Você não tem assinatura ativa</h3>
-      <p>Contrate um plano para começar a usar a API de dados da Receita Federal.</p>
-      <po-button p-label="Ver planos" p-kind="primary" p-url="/portal/meu-plano"></po-button>
-    </div>
-
-    <ng-container *ngIf="assinatura">
-
-      <!-- KPI Cards -->
-      <div class="dash-cards">
-
-        <!-- Plano -->
-        <div class="dash-card dash-card--accent">
-          <div class="dash-card__header">
-            <div class="dash-card__icon dash-card__icon--primary">
-              <span class="an an-tag"></span>
-            </div>
-            <po-tag [p-value]="assinatura.status === 'ativa' ? 'Ativa' : assinatura.status"
-              [p-color]="assinatura.status === 'ativa' ? 'color-10' : 'color-07'">
-            </po-tag>
-          </div>
-          <span class="dash-card__label">Plano ativo</span>
-          <span class="dash-card__value">{{ assinatura.plano }}</span>
-          <a routerLink="/portal/meu-plano" class="dash-card__link">Ver plano →</a>
+      @if (!assinatura) {
+        <div class="dash-empty">
+          <span class="an an-rocket-launch"></span>
+          <h3>Você não tem assinatura ativa</h3>
+          <p>Contrate um plano para começar a usar a API de dados da Receita Federal.</p>
+          <po-button p-label="Ver planos" p-kind="primary" p-url="/portal/meu-plano"></po-button>
         </div>
+      }
 
-        <!-- Requisições -->
-        <div class="dash-card">
-          <div class="dash-card__header">
-            <div class="dash-card__icon dash-card__icon--blue">
-              <span class="an an-chart-bar"></span>
-            </div>
-          </div>
-          <span class="dash-card__label">Requisições este mês</span>
-          <span class="dash-card__value">{{ (consumoAtual?.quantidade ?? 0) | number }}</span>
-          <span class="dash-card__sub" *ngIf="assinatura.limite_mensal">
-            de {{ assinatura.limite_mensal | number }}
-          </span>
-          <a routerLink="/portal/consumo" class="dash-card__link">Ver consumo →</a>
-        </div>
+      @if (assinatura) {
 
-        <!-- Token -->
-        <div class="dash-card">
-          <div class="dash-card__header">
-            <div class="dash-card__icon dash-card__icon--purple">
-              <span class="an an-key"></span>
-            </div>
-          </div>
-          <span class="dash-card__label">Token de API</span>
-          <code *ngIf="tokenMascarado" class="dash-token">{{ tokenMascarado }}</code>
-          <span *ngIf="!tokenMascarado" class="dash-card__sub">—</span>
-          <a routerLink="/portal/meu-token" class="dash-card__link">Gerenciar →</a>
-        </div>
+        <!-- KPI Cards -->
+        <div id="dash-cards" class="dash-cards">
 
-        <!-- Vencimento -->
-        <div class="dash-card">
-          <div class="dash-card__header">
-            <div class="dash-card__icon dash-card__icon--green">
-              <span class="an an-calendar"></span>
-            </div>
-          </div>
-          <span class="dash-card__label">Próx. vencimento</span>
-          <span class="dash-card__value">{{ assinatura.proximo_vencimento | date:'dd/MM/yyyy' }}</span>
-          <span class="dash-card__sub">{{ assinatura.rate_limit }} req/min</span>
-        </div>
-
-      </div>
-
-      <!-- Barra de uso -->
-      <div *ngIf="assinatura.limite_mensal" class="dash-progresso">
-        <div class="dash-progresso__header">
-          <span>Uso do limite mensal</span>
-          <strong [class.dash-progresso__alerta]="percentualUso >= 90">{{ percentualUso }}%</strong>
-        </div>
-        <po-progress [p-value]="percentualUso" [p-info]="''"></po-progress>
-      </div>
-
-      <!-- Gráfico + Faturas -->
-      <div class="dash-row">
-
-        <div class="dash-col--large">
-          <h3 class="dash-section-title">Consumo recente</h3>
-          <po-chart *ngIf="chartCategories.length"
-            [p-type]="chartTypeBar"
-            [p-series]="chartConsumo"
-            [p-categories]="chartCategories"
-            [p-height]="220">
-          </po-chart>
-          <div *ngIf="!chartCategories.length" class="dash-empty-chart">
-            <span class="an an-chart-bar"></span>
-            <p>Sem histórico de consumo ainda.</p>
-          </div>
-        </div>
-
-        <div class="dash-col--small">
-          <h3 class="dash-section-title">Últimas faturas</h3>
-          <div *ngFor="let f of ultimasFaturas" class="dash-fatura">
-            <div class="dash-fatura__info">
-              <strong>{{ f.competencia }}</strong>
-              <span>{{ f.plano }}</span>
-            </div>
-            <div class="dash-fatura__direita">
-              <span class="dash-fatura__valor">R$ {{ f.valor | number:'1.2-2' }}</span>
-              <po-tag [p-value]="f.status | titlecase"
-                [p-color]="f.status === 'paga' ? 'color-10' : f.status === 'vencida' ? 'color-05' : 'color-07'"
-                p-small="true">
+          <!-- Plano -->
+          <div id="dash-card-plano" class="dash-card dash-card--accent">
+            <div class="dash-card__header">
+              <div class="dash-card__icon dash-card__icon--primary">
+                <span class="an an-tag"></span>
+              </div>
+              <po-tag [p-value]="assinatura.status === 'ativa' ? 'Ativa' : assinatura.status"
+                [p-color]="assinatura.status === 'ativa' ? 'color-10' : 'color-07'">
               </po-tag>
             </div>
+            <span class="dash-card__label">Plano ativo</span>
+            <span class="dash-card__value">{{ assinatura.plano }}</span>
+            <a routerLink="/portal/meu-plano" class="dash-card__link">Ver plano →</a>
           </div>
-          <p *ngIf="!ultimasFaturas.length" class="dash-empty-text">
-            Nenhuma fatura ainda.
-          </p>
-          <a routerLink="/portal/minhas-faturas" class="dash-ver-todas">Ver todas →</a>
+
+          <!-- Requisições -->
+          <div id="dash-card-consumo" class="dash-card">
+            <div class="dash-card__header">
+              <div class="dash-card__icon dash-card__icon--blue">
+                <span class="an an-chart-bar"></span>
+              </div>
+            </div>
+            <span class="dash-card__label">Requisições este mês</span>
+            <span class="dash-card__value">{{ (consumoAtual?.quantidade ?? 0) | number }}</span>
+            @if (assinatura.limite_mensal) {
+              <span class="dash-card__sub">de {{ assinatura.limite_mensal | number }}</span>
+            }
+            <a routerLink="/portal/consumo" class="dash-card__link">Ver consumo →</a>
+          </div>
+
+          <!-- Token -->
+          <div id="dash-card-token" class="dash-card">
+            <div class="dash-card__header">
+              <div class="dash-card__icon dash-card__icon--purple">
+                <span class="an an-key"></span>
+              </div>
+            </div>
+            <span class="dash-card__label">Token de API</span>
+            @if (tokenMascarado) {
+              <code class="dash-token">{{ tokenMascarado }}</code>
+            } @else {
+              <span class="dash-card__sub">—</span>
+            }
+            <a routerLink="/portal/meu-token" class="dash-card__link">Gerenciar →</a>
+          </div>
+
+          <!-- Vencimento -->
+          <div class="dash-card">
+            <div class="dash-card__header">
+              <div class="dash-card__icon dash-card__icon--green">
+                <span class="an an-calendar"></span>
+              </div>
+            </div>
+            <span class="dash-card__label">Próx. vencimento</span>
+            <span class="dash-card__value">{{ assinatura.proximo_vencimento | date:'dd/MM/yyyy' }}</span>
+            <span class="dash-card__sub">{{ assinatura.rate_limit }} req/min</span>
+          </div>
+
         </div>
 
-      </div>
+        <!-- Barra de uso -->
+        @if (assinatura.limite_mensal) {
+          <div id="dash-progresso" class="dash-progresso">
+            <div class="dash-progresso__header">
+              <span>Uso do limite mensal</span>
+              <strong [class.dash-progresso__alerta]="percentualUso >= 90">{{ percentualUso }}%</strong>
+            </div>
+            <po-progress [p-value]="percentualUso" [p-info]="''"></po-progress>
+          </div>
+        }
 
-    </ng-container>
-  </ng-container>
+        <!-- Gráfico + Faturas -->
+        <div class="dash-row">
 
-</po-page-default>
+          <div id="dash-grafico" class="dash-col--large">
+            <h3 class="dash-section-title">Consumo recente</h3>
+            @if (chartCategories.length) {
+              <po-chart
+                [p-type]="chartTypeBar"
+                [p-series]="chartConsumo"
+                [p-categories]="chartCategories"
+                [p-height]="220">
+              </po-chart>
+            } @else {
+              <div class="dash-empty-chart">
+                <span class="an an-chart-bar"></span>
+                <p>Sem histórico de consumo ainda.</p>
+              </div>
+            }
+          </div>
+
+          <div id="dash-faturas" class="dash-col--small">
+            <h3 class="dash-section-title">Últimas faturas</h3>
+            @for (f of ultimasFaturas; track f.id) {
+              <div class="dash-fatura">
+                <div class="dash-fatura__info">
+                  <strong>{{ f.competencia }}</strong>
+                  <span>{{ f.plano }}</span>
+                </div>
+                <div class="dash-fatura__direita">
+                  <span class="dash-fatura__valor">R$ {{ f.valor | number:'1.2-2' }}</span>
+                  <po-tag [p-value]="f.status | titlecase"
+                    [p-color]="f.status === 'paga' ? 'color-10' : f.status === 'vencida' ? 'color-05' : 'color-07'"
+                    p-small="true">
+                  </po-tag>
+                </div>
+              </div>
+            }
+            @if (!ultimasFaturas.length) {
+              <p class="dash-empty-text">Nenhuma fatura ainda.</p>
+            }
+            <a routerLink="/portal/minhas-faturas" class="dash-ver-todas">Ver todas →</a>
+          </div>
+
+        </div>
+
+      }
+    }
+
+  </po-page-default>
+}

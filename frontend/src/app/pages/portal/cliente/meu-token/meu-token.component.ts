@@ -1,6 +1,11 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { PoUserGuideService } from '@po-ui/ng-components';
 import { NotifService } from '../../../../services/notif.service';
 import { UsuarioPortalService } from '../usuario.service';
+import { environment } from '../../../../../environments/environment';
+
+const TOUR_KEY = 'meu_token_tour_visto';
 
 @Component({
   selector: 'app-meu-token',
@@ -16,7 +21,18 @@ export class MeuTokenComponent implements OnInit {
   regerando = false;
   novoToken: string | null = null;
 
-  constructor(private svc: UsuarioPortalService, private notif: NotifService, private cdr: ChangeDetectorRef) {}
+  testeCnpj = '';
+  testeCarregando = false;
+  testeResultado: any = null;
+  testeErro = '';
+
+  constructor(
+    private svc: UsuarioPortalService,
+    private notif: NotifService,
+    private cdr: ChangeDetectorRef,
+    private http: HttpClient,
+    private userGuide: PoUserGuideService,
+  ) {}
 
   ngOnInit() {
     this.svc.meuPerfil().subscribe({
@@ -24,6 +40,9 @@ export class MeuTokenComponent implements OnInit {
         this.perfil = p;
         this.carregando = false;
         this.cdr.detectChanges();
+        if (!localStorage.getItem(TOUR_KEY) && this.tokenAtivo) {
+          setTimeout(() => this.iniciarTour(), 400);
+        }
       },
       error: () => { this.carregando = false; this.cdr.detectChanges(); },
     });
@@ -53,6 +72,97 @@ export class MeuTokenComponent implements OnInit {
     navigator.clipboard.writeText(t).then(() => {
       this.notif.success('Token copiado para a área de transferência.');
     });
+  }
+
+  get testeCnpjNumeros(): string {
+    return this.testeCnpj.replace(/\D/g, '');
+  }
+
+  testarApi() {
+    const cnpj = this.testeCnpjNumeros;
+    const token = this.novoToken ?? this.tokenAtivo;
+    if (!token) return;
+
+    this.testeCarregando = true;
+    this.testeResultado = null;
+    this.testeErro = '';
+
+    const headers = new HttpHeaders({ 'x_api_token': token });
+    this.http.get(`${environment.apiUrl}/cnpj/${cnpj}`, { headers }).subscribe({
+      next: (res) => {
+        this.testeResultado = res;
+        this.testeCarregando = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.testeErro = err?.error?.message ?? `Erro ${err.status}: ${err.statusText}`;
+        this.testeCarregando = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  copiarResultado() {
+    if (!this.testeResultado) return;
+    navigator.clipboard.writeText(JSON.stringify(this.testeResultado, null, 2)).then(() => {
+      this.notif.success('JSON copiado para a área de transferência.');
+    });
+  }
+
+  private iniciarTour() {
+    this.userGuide
+      .setSteps([
+        {
+          element: '#token-box',
+          title: 'Seu token de API',
+          content: 'Este é o seu token de acesso. Ele identifica sua conta em todas as chamadas à API. Mantenha-o em segredo.',
+          position: 'bottom',
+          showButtons: ['next', 'close'],
+        },
+        {
+          element: '#token-box',
+          title: 'Mostrar e copiar',
+          content: 'Use os botões <strong>olho</strong> para revelar o token e <strong>copiar</strong> para enviá-lo para a área de transferência.',
+          position: 'bottom',
+        },
+        {
+          element: '#token-info',
+          title: 'Limites do seu plano',
+          content: 'Aqui você confere o <strong>rate limit</strong> (requisições por minuto) e o <strong>limite mensal</strong> do seu plano atual.',
+          position: 'top',
+        },
+        {
+          element: '#token-uso',
+          title: 'Como usar o token',
+          content: 'Você pode enviar o token via <strong>header HTTP</strong> (<code>x_api_token</code>) ou como <strong>query string</strong> (<code>?token=...</code>). Acesse a documentação completa pelo botão abaixo.',
+          position: 'top',
+        },
+        {
+          element: '#token-teste',
+          title: 'Teste sua integração',
+          content: 'Informe um CNPJ e clique em <strong>Consultar</strong> para fazer uma chamada real à API com seu token agora mesmo.',
+          position: 'top',
+        },
+        {
+          element: '#token-regenerar',
+          title: 'Regenerar token',
+          content: '<strong>Atenção:</strong> ao regenerar, o token anterior é invalidado imediatamente. Atualize todas as integrações que o utilizam antes de regenerar.',
+          position: 'top',
+          doneLabel: 'Entendido!',
+        },
+      ])
+      .setOptions({
+        showProgress: true,
+        allowClose: true,
+        progressTemplate: 'Passo {current} de {total}',
+        literals: { next: 'Próximo', previous: 'Anterior', done: 'Entendido!', close: 'Fechar' },
+      })
+      .start()
+      .then(() => {
+        this.userGuide.tourEnd$.subscribe(() => {
+          localStorage.setItem(TOUR_KEY, '1');
+        });
+      });
   }
 
   regerarToken() {

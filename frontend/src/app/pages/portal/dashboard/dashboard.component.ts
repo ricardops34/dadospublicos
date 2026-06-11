@@ -1,9 +1,11 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { PoChartSerie, PoChartType } from '@po-ui/ng-components';
+import { PoChartSerie, PoChartType, PoUserGuideService } from '@po-ui/ng-components';
 import { AuthService } from '../../../services/auth.service';
 import { UsuarioPortalService } from '../cliente/usuario.service';
+
+const TOUR_KEY = 'dashboard_tour_visto';
 
 @Component({
   selector: 'app-portal-dashboard',
@@ -26,7 +28,12 @@ export class DashboardComponent implements OnInit {
   chartConsumo: PoChartSerie[] = [];
   chartCategories: string[] = [];
 
-  constructor(private auth: AuthService, private clienteSvc: UsuarioPortalService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private auth: AuthService,
+    private clienteSvc: UsuarioPortalService,
+    private cdr: ChangeDetectorRef,
+    private userGuide: PoUserGuideService,
+  ) {}
 
   ngOnInit() {
     this.nome = this.auth.getNome();
@@ -64,7 +71,64 @@ export class DashboardComponent implements OnInit {
 
       this.carregando = false;
       this.cdr.detectChanges();
+
+      if (!localStorage.getItem(TOUR_KEY)) {
+        setTimeout(() => this.iniciarTour(), 400);
+      }
     });
+  }
+
+  private iniciarTour() {
+    this.userGuide
+      .setSteps([
+        {
+          title: 'Bem-vindo ao seu painel!',
+          content: 'Este é o seu dashboard. Aqui você acompanha tudo sobre sua conta em um só lugar.',
+        },
+        {
+          element: '#dash-card-plano',
+          title: 'Seu plano ativo',
+          content: 'Veja qual plano está ativo e acesse os detalhes para fazer upgrade ou cancelar.',
+          position: 'bottom',
+        },
+        {
+          element: '#dash-card-consumo',
+          title: 'Requisições do mês',
+          content: 'Acompanhe quantas consultas à API você já realizou neste mês e qual é o seu limite.',
+          position: 'bottom',
+        },
+        {
+          element: '#dash-card-token',
+          title: 'Token de API',
+          content: 'Este é o seu token de acesso. Use-o nas chamadas à API. Clique em "Gerenciar" para visualizar o token completo ou regenerá-lo.',
+          position: 'bottom',
+        },
+        {
+          element: '#dash-grafico',
+          title: 'Histórico de consumo',
+          content: 'O gráfico mostra a evolução das suas requisições nos últimos 6 meses.',
+          position: 'top',
+        },
+        {
+          element: '#dash-faturas',
+          title: 'Suas faturas',
+          content: 'As últimas faturas geradas aparecem aqui. Clique em "Ver todas" para o histórico completo.',
+          position: 'top',
+          doneLabel: 'Entendido!',
+        },
+      ])
+      .setOptions({
+        showProgress: true,
+        allowClose: true,
+        progressTemplate: 'Passo {current} de {total}',
+        literals: { next: 'Próximo', previous: 'Anterior', done: 'Entendido!', close: 'Fechar' },
+      })
+      .start()
+      .then(() => {
+        this.userGuide.tourEnd$.subscribe(() => {
+          localStorage.setItem(TOUR_KEY, '1');
+        });
+      });
   }
 
   get percentualUso(): number {

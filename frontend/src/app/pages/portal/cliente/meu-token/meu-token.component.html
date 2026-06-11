@@ -1,26 +1,30 @@
 <po-page-default p-title="Meu Token API">
 
-  <po-loading-overlay *ngIf="carregando"></po-loading-overlay>
+  @if (carregando) {
+    <po-loading-overlay></po-loading-overlay>
+  }
 
-  <ng-container *ngIf="!carregando">
+  @if (!carregando) {
 
-    <!-- Sem assinatura -->
-    <div *ngIf="!tokenAtivo && !novoToken" class="token-vazio">
-      <span class="an an-key" style="font-size:3rem; color:#9ca3af;"></span>
-      <h3>Sem token ativo</h3>
-      <p>Você precisa de uma assinatura ativa para ter um token de API.</p>
-      <po-button p-label="Ver planos" p-kind="primary" p-url="/portal/meu-plano"></po-button>
-    </div>
-
-    <!-- Token disponível -->
-    <ng-container *ngIf="tokenAtivo || novoToken">
-
-      <div *ngIf="novoToken" class="token-aviso">
-        <span class="an an-warning"></span>
-        <strong>Novo token gerado!</strong> Copie agora — ele não será exibido novamente após sair desta página.
+    @if (!tokenAtivo && !novoToken) {
+      <div class="token-vazio">
+        <span class="an an-key" style="font-size:3rem; color:#9ca3af;"></span>
+        <h3>Sem token ativo</h3>
+        <p>Você precisa de uma assinatura ativa para ter um token de API.</p>
+        <po-button p-label="Ver planos" p-kind="primary" p-url="/portal/meu-plano"></po-button>
       </div>
+    }
 
-      <div class="token-box">
+    @if (tokenAtivo || novoToken) {
+
+      @if (novoToken) {
+        <div class="token-aviso">
+          <span class="an an-warning"></span>
+          <strong>Novo token gerado!</strong> Copie agora — ele não será exibido novamente após sair desta página.
+        </div>
+      }
+
+      <div id="token-box" class="token-box">
         <div class="token-box__label">Seu token de API</div>
         <div class="token-box__valor">
           <code>{{ tokenExibido }}</code>
@@ -41,36 +45,96 @@
         </div>
       </div>
 
-      <div class="po-row" style="margin-top:24px;" *ngIf="assinatura">
-        <po-info class="po-md-3" p-label="Plano"          [p-value]="assinatura.plano"></po-info>
-        <po-info class="po-md-3" p-label="Rate limit"     [p-value]="assinatura.rate_limit + ' req/min'"></po-info>
-        <po-info class="po-md-3" p-label="Limite mensal"  [p-value]="assinatura.limite_mensal ? (assinatura.limite_mensal | number) + ' req' : 'Ilimitado'"></po-info>
-        <po-info class="po-md-3" p-label="Status"         [p-value]="assinatura.status | titlecase"></po-info>
-      </div>
+      @if (assinatura) {
+        <div id="token-info" class="po-row" style="margin-top:24px;">
+          <po-info class="po-md-3" p-label="Plano"         [p-value]="assinatura.plano"></po-info>
+          <po-info class="po-md-3" p-label="Rate limit"    [p-value]="assinatura.rate_limit + ' req/min'"></po-info>
+          <po-info class="po-md-3" p-label="Limite mensal" [p-value]="assinatura.limite_mensal ? (assinatura.limite_mensal | number) + ' req' : 'Ilimitado'"></po-info>
+          <po-info class="po-md-3" p-label="Status"        [p-value]="assinatura.status | titlecase"></po-info>
+        </div>
+      }
 
       <po-divider p-label="Como usar"></po-divider>
 
-      <div class="token-uso">
+      <div id="token-uso" class="token-uso">
         <p>Envie o token em todas as requisições via header:</p>
         <code class="token-uso__code">x_api_token: {{ tokenAtivo ? tokenAtivo.substring(0,16) + '...' : 'SEU_TOKEN' }}</code>
         <p style="margin-top:12px;">Ou via query string:</p>
         <code class="token-uso__code">GET /cnpj/12345678000195?token={{ tokenAtivo ? tokenAtivo.substring(0,8) + '...' : 'SEU_TOKEN' }}</code>
+        <div style="margin-top:16px;">
+          <po-button
+            p-label="Documentação da API"
+            p-kind="secondary"
+            p-icon="an an-book-open"
+            p-url="https://api.buscadados.bjsoft.com.br/docs"
+            p-target="_blank">
+          </po-button>
+        </div>
+      </div>
+
+      <po-divider p-label="Testar API"></po-divider>
+
+      <div id="token-teste" class="token-teste">
+        <p class="token-teste__desc">Consulte um CNPJ agora usando seu token para verificar que tudo está funcionando.</p>
+        <div class="token-teste__form">
+          <po-input
+            class="po-md-4"
+            p-label="CNPJ"
+            p-mask="99.999.999/9999-99"
+            p-placeholder="00.000.000/0000-00"
+            [(ngModel)]="testeCnpj"
+            p-clean="true">
+          </po-input>
+          <po-button
+            p-label="Consultar"
+            p-kind="primary"
+            p-icon="an an-magnifying-glass"
+            [p-loading]="testeCarregando"
+            [p-disabled]="testeCnpjNumeros.length !== 14"
+            (p-click)="testarApi()">
+          </po-button>
+        </div>
+
+        @if (testeErro) {
+          <div class="token-teste__erro">
+            <span class="an an-warning-circle"></span> {{ testeErro }}
+          </div>
+        }
+
+        @if (testeResultado) {
+          <div class="token-teste__resultado">
+            <div class="token-teste__resultado-header">
+              <span class="token-teste__status token-teste__status--ok">
+                <span class="an an-check-circle"></span> 200 OK
+              </span>
+              <po-button
+                p-label="Copiar JSON"
+                p-kind="tertiary"
+                p-icon="an an-copy"
+                (p-click)="copiarResultado()">
+              </po-button>
+            </div>
+            <pre class="token-teste__json">{{ testeResultado | json }}</pre>
+          </div>
+        }
       </div>
 
       <po-divider p-label="Ações"></po-divider>
 
-      <po-button
-        p-label="Regenerar token"
-        p-kind="danger"
-        p-icon="an an-arrows-clockwise"
-        [p-loading]="regerando"
-        (p-click)="regerarToken()">
-      </po-button>
-      <p style="color:#9ca3af; font-size:0.8rem; margin-top:8px;">
-        Gerar um novo token invalida o anterior imediatamente.
-      </p>
+      <div id="token-regenerar">
+        <po-button
+          p-label="Regenerar token"
+          p-kind="danger"
+          p-icon="an an-arrows-clockwise"
+          [p-loading]="regerando"
+          (p-click)="regerarToken()">
+        </po-button>
+        <p style="color:#9ca3af; font-size:0.8rem; margin-top:8px;">
+          Gerar um novo token invalida o anterior imediatamente.
+        </p>
+      </div>
 
-    </ng-container>
-  </ng-container>
+    }
+  }
 
 </po-page-default>
