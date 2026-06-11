@@ -10,7 +10,7 @@
       ├── GET /cnpj/:cnpj          → enriquece cadastro de empresa/cliente
       ├── GET /v2/pesquisa         → módulo de prospecção (Premium)
       ├── GET /mapa                → mapa Leaflet de prospects + carteira
-      └── GET /geocode/cep/:cep   → geocodificação de endereços
+      └── GET /cep/:cep           → geocodificação de endereços
 ```
 
 ---
@@ -32,7 +32,7 @@ O portal do cliente também é consumidor da API pública comercializada.
 Regras:
 
 - consultas de `CNPJ` no portal devem usar `GET /cnpj/:cnpj`
-- consultas de `CEP` no portal devem usar `GET /geocode/cep/:cep`
+- consultas de `CEP` no portal devem usar `GET /cep/:cep`
 - a autenticação deve ocorrer com o token do próprio cliente via header `x_api_token`
 - endpoints `/portal/*` devem ficar restritos a fluxos internos de sessão, onboarding e telas não cobertas pela API pública
 

@@ -445,7 +445,7 @@ export class MinhaContaComponent implements OnInit {
   buscarCep() {
     const cep = (this.formConta.cep ?? '').replace(/\D/g, '');
     if (cep.length !== 8) return;
-    this.http.get<any>(`${environment.apiUrl}/geocode/cep/${cep}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/cep/${cep}`).subscribe({
       next: (d) => {
         if (!this.formConta.logradouro)  this.formConta.logradouro  = d.logradouro  ?? '';
         if (!this.formConta.complemento) this.formConta.complemento = d.complemento ?? '';

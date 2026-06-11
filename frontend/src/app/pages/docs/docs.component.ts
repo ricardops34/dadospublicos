@@ -56,7 +56,7 @@ export class DocsComponent {
         'GET /v2/pesquisa: pesquisa avançada com filtros comerciais.',
         'POST /suframa: validação de inscrição Suframa.',
         'GET /consumo: consulta do consumo do token autenticado.',
-        'GET /geocode/cep/:cep: geocodificação por CEP.',
+        'GET /cep/:cep: geocodificação por CEP.',
         'GET /mapa: retorno GeoJSON para mapa e prospecção.',
         'GET /health: health check do serviço.',
       ],

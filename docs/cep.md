@@ -97,7 +97,7 @@ No cadastro de clientes, ao sair do campo CEP (evento `blur`) ou após digitaç�
 
 No portal do cliente, as telas devem consumir a **API pública de venda** usando o `x_api_token` do cliente autenticado:
 
-- `GET /geocode/cep/:cep` para CEP
+- `GET /cep/:cep` para CEP
 - `GET /cnpj/:cnpj` para CNPJ
 
 As APIs `/portal/*` devem existir apenas para necessidades específicas das telas do portal que não façam parte da superfície pública comercializada.
@@ -147,7 +147,7 @@ A base começa vazia e cresce organicamente conforme os CEPs são consultados.
 
 | Endpoint | Guarda | Uso |
 |---|---|---|
-| `GET /geocode/cep/:cep` | API token (plano free) | Clientes pagantes |
+| `GET /cep/:cep` | API token (plano free) | Clientes pagantes |
 | `POST /admin/clientes-poui/validate-cep` | JWT portal (admin) | Formulário admin de clientes |
 
 - Validade dos dados: parâmetro `CEP_CACHE_VALIDITY_DAYS` (padrão: 180 dias)

@@ -239,12 +239,12 @@ GET /consumo?ano=2024&mes=6
 
 ---
 
-## GET `/geocode/cep/:cep` — Básico
+## GET `/cep/:cep` — Básico
 
 Converte CEP em coordenadas geográficas (lat/lng). Resultado cacheado permanentemente.
 
 ```bash
-GET /geocode/cep/01310100
+GET /cep/01310100
 ```
 
 **Resposta:**

@@ -77,7 +77,7 @@ describe('Portal cliente consome API pública', () => {
     component.buscarCep();
     component.buscarCnpj();
 
-    expect(http.chamadas).toContain(`${environment.apiUrl}/geocode/cep/78000000`);
+    expect(http.chamadas).toContain(`${environment.apiUrl}/cep/78000000`);
     expect(http.chamadas).toContain(`${environment.apiUrl}/cnpj/12345678000199`);
   });
 
@@ -91,7 +91,7 @@ describe('Portal cliente consome API pública', () => {
     component.buscarCep();
     component.buscarCnpj();
 
-    expect(http.chamadas).toContain(`${environment.apiUrl}/geocode/cep/78000000`);
+    expect(http.chamadas).toContain(`${environment.apiUrl}/cep/78000000`);
     expect(http.chamadas).toContain(`${environment.apiUrl}/cnpj/12345678000199`);
   });
 });

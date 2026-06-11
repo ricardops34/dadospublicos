@@ -542,6 +542,19 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     });
   }
 
+  limparExtraidos() {
+    if (this.status.rodando) return;
+    if (!confirm('Limpar TUDO na pasta extraidos/?\nIsso remove CSVs, ZIPs e qualquer arquivo que esteja lá.')) return;
+    this.http.delete<{ apagados: number }>(`${environment.apiUrl}/etl/extraidos`).subscribe({
+      next: (res) => {
+        this.notif.success(`${res.apagados} arquivo(s) removido(s) de extraidos/.`);
+        this.carregarArquivos();
+        this.cdr.detectChanges();
+      },
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao limpar extraidos/.'),
+    });
+  }
+
   apagarZipArquivoLinha(row: ArquivoRfb) {
     if (!confirm(`Apagar o arquivo ${row.nome}?\nO CSV extraído será mantido.`)) return;
     this.http.delete(`${environment.apiUrl}/etl/arquivo-zip?nome=${encodeURIComponent(row.nome)}`).subscribe({

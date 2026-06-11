@@ -128,6 +128,7 @@
 .etl-card--extracao   { border-left-color: var(--color-warning-base); .etl-card__icon { color: var(--color-warning-base); } }
 .etl-card--carga      { border-left-color: var(--color-success-base); .etl-card__icon { color: var(--color-success-base); } }
 .etl-card--completo   { border-left-color: var(--color-brand-02-base); .etl-card__icon { color: var(--color-brand-02-base); } }
+.etl-card--danger     { border-left-color: var(--color-feedback-negative-base); .etl-card__icon { color: var(--color-feedback-negative-base); } }
 
 .etl-toolbar {
   align-items: end;

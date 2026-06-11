@@ -100,6 +100,12 @@ export class EtlController {
     return this.service.apagarTodosCsvs();
   }
 
+  @Delete('extraidos')
+  @ApiOperation({ summary: '[Admin] Limpa toda a pasta extraidos/ (CSVs, ZIPs perdidos e qualquer arquivo)' })
+  limparExtraidos() {
+    return this.service.limparExtraidos();
+  }
+
   @Delete('logs')
   @ApiOperation({ summary: '[Admin] Limpa o historico de execucoes do ETL' })
   limparLogs() {

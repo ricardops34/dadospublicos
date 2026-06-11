@@ -243,9 +243,11 @@ export class EtlService {
         this.logger.log(`ETL completo — ${primeiraUso ? 'primeira carga (tar.gz)' : 'atualização mensal (ZIPs)'}`);
         if (primeiraUso) {
           await this.faseDownloadBase(log);
-          await this.faseExtrairTarGz(log);  // tar.gz → zips em downloadDir
-          await this.faseExtracao(log);       // zips → CSVs em extrairDir
-          await this.faseCarga(log, true);   // base completa → truncate + insert
+          await this.faseExtrairTarGz(log);              // tar.gz → ZIPs em extraidos/
+          await this.faseExtrairZipsEmExtraidos(log);    // ZIPs em extraidos/ → CSVs
+          await this.faseCarga(log, true);               // carga base → truncate + insert
+          await this.faseExtracao(log);                  // ZIPs avulsos de downloads/ → CSVs (sobrescreve)
+          await this.faseCarga(log, false);              // carga incremental → upsert
         } else {
           await this.faseDownloadTabelas(log);
           await this.faseDownloadEmpresas(log);
@@ -269,9 +271,10 @@ export class EtlService {
       if (fase === 'extracao') {
         const tarPath = path.join(this.downloadDir, 'cnpj.tar.gz');
         if (fs.existsSync(tarPath)) {
-          await this.faseExtrairTarGz(log);  // tar.gz → zips em downloadDir
+          await this.faseExtrairTarGz(log);           // tar.gz → ZIPs em extraidos/
+          await this.faseExtrairZipsEmExtraidos(log); // ZIPs em extraidos/ → CSVs (remove ZIPs)
         }
-        await this.faseExtracao(log);         // zips (sejam do tar ou avulsos) → CSVs
+        await this.faseExtracao(log); // ZIPs avulsos em downloads/ → CSVs (Cnaes.zip, incrementais etc.)
       }
       if (fase === 'carga') {
         const truncar = await this.isPrimeiraUso();
@@ -307,6 +310,48 @@ export class EtlService {
     }
   }
 
+  /**
+   * Extrai os ZIPs que o tar.gz deixou em extrairDir, gerando os CSVs no mesmo diretório.
+   * Após extração bem-sucedida de cada ZIP, remove o ZIP intermediário.
+   */
+  private async faseExtrairZipsEmExtraidos(log: EtlLog) {
+    log.status = 'extracao';
+    await this.logs.save(log);
+
+    const zips = fs.readdirSync(this.extrairDir).filter((f) => /\.zip$/i.test(f));
+    this.progresso.fase = 'Extraindo ZIPs em extraidos/';
+    this.progresso.total = zips.length;
+    this.progresso.feitos = 0;
+
+    for (const nome of zips) {
+      const zipPath = path.join(this.extrairDir, nome);
+      this.progresso.arquivoAtual = nome;
+      this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
+
+      const inicio = Date.now();
+      const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+        etlLogId: this.currentLogId, arquivo: nome, operacao: 'extracao', status: 'iniciando',
+      }));
+      try {
+        await this.extrairParaDiretorio(zipPath, this.extrairDir);
+        fs.unlinkSync(zipPath); // remove o ZIP intermediário
+        const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
+        logEntry.status = 'concluido';
+        logEntry.tamanhoMb = fs.existsSync(csvPath)
+          ? +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1) : null;
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.concluidoEm = new Date();
+      } catch (err) {
+        logEntry.status = 'erro';
+        logEntry.detalhe = String(err);
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.concluidoEm = new Date();
+      }
+      await this.arquivoLogs.save(logEntry);
+      this.progresso.feitos++;
+    }
+  }
+
   /** Extrai cnpj.tar.gz do downloadDir para o extrairDir (usado na primeira carga). */
   private async faseExtrairTarGz(log: EtlLog) {
     log.status = 'extracao';
@@ -324,9 +369,9 @@ export class EtlService {
       );
     }
 
-    this.logger.log(`Extraindo cnpj.tar.gz → ${this.downloadDir}...`);
-    await tar.x({ file: tarPath, cwd: this.downloadDir, strip: 1 });
-    this.logger.log('Extração do cnpj.tar.gz concluída (ZIPs em downloads).');
+    this.logger.log(`Extraindo cnpj.tar.gz → ${this.extrairDir}...`);
+    await tar.x({ file: tarPath, cwd: this.extrairDir, strip: 1 });
+    this.logger.log('Extração do cnpj.tar.gz concluída (ZIPs em extraidos/).');
 
     this.progresso.feitos = 1;
     this.progresso.percentual = 100;
@@ -598,6 +643,14 @@ export class EtlService {
     return { apagados: csvs.length };
   }
 
+  async limparExtraidos(): Promise<{ apagados: number }> {
+    if (this.rodando) throw new ConflictException('Nao e possivel limpar enquanto o ETL estiver em execucao.');
+    fs.mkdirSync(this.extrairDir, { recursive: true });
+    const arquivos = fs.readdirSync(this.extrairDir).filter((f) => fs.statSync(path.join(this.extrairDir, f)).isFile());
+    for (const f of arquivos) fs.unlinkSync(path.join(this.extrairDir, f));
+    return { apagados: arquivos.length };
+  }
+
   async apagarCsvArquivo(nome: string): Promise<{ apagados: string[] }> {
     if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
     const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
@@ -633,10 +686,10 @@ export class EtlService {
         etlLogId: null, arquivo: nome, operacao: 'extracao' as EtlArquivoOperacao, status: 'iniciando',
       }));
       try {
-        fs.mkdirSync(this.downloadDir, { recursive: true });
-        this.logger.log(`Extraindo ${nome} → ${this.downloadDir}...`);
-        await tar.x({ file: filePath, cwd: this.downloadDir, strip: 1 });
-        this.logger.log(`Extração de ${nome} concluída (ZIPs em downloads).`);
+        fs.mkdirSync(this.extrairDir, { recursive: true });
+        this.logger.log(`Extraindo ${nome} → ${this.extrairDir}...`);
+        await tar.x({ file: filePath, cwd: this.extrairDir, strip: 1 });
+        this.logger.log(`Extração de ${nome} concluída (ZIPs em extraidos/).`);
         logEntry.status = 'concluido';
         logEntry.tamanhoMb = +(fs.statSync(filePath).size / 1024 / 1024).toFixed(1);
         logEntry.duracaoMs = Date.now() - inicio;
@@ -696,11 +749,11 @@ export class EtlService {
     if (!fs.existsSync(tarPath)) {
       throw new Error(`Arquivo não encontrado: ${tarPath}. Coloque o .tar.gz em ${this.downloadDir}.`);
     }
-    fs.mkdirSync(this.downloadDir, { recursive: true });
-    this.logger.log(`Extraindo ${nomeArquivo} para ${this.downloadDir}...`);
-    await tar.x({ file: tarPath, cwd: this.downloadDir, strip: 1 });
-    this.logger.log(`Extração de ${nomeArquivo} concluída (ZIPs em downloads).`);
-    return { mensagem: `${nomeArquivo} extraído. Execute fase=extracao para gerar CSVs, depois fase=carga.` };
+    fs.mkdirSync(this.extrairDir, { recursive: true });
+    this.logger.log(`Extraindo ${nomeArquivo} para ${this.extrairDir}...`);
+    await tar.x({ file: tarPath, cwd: this.extrairDir, strip: 1 });
+    this.logger.log(`Extração de ${nomeArquivo} concluída (ZIPs em extraidos/).`);
+    return { mensagem: `${nomeArquivo} extraído. Execute fase=carga para carregar no banco.` };
   }
 
   /**
@@ -818,12 +871,16 @@ export class EtlService {
   }
 
   private extrair(zipPath: string): Promise<void> {
+    return this.extrairParaDiretorio(zipPath, this.extrairDir);
+  }
+
+  private extrairParaDiretorio(zipPath: string, destDir: string): Promise<void> {
     return new Promise((resolve, reject) => {
       yauzl.open(zipPath, { lazyEntries: true }, (err, zipfile) => {
         if (err) return reject(err);
         zipfile.readEntry();
         zipfile.on('entry', (entry) => {
-          const dest = path.join(this.extrairDir, entry.fileName);
+          const dest = path.join(destDir, entry.fileName);
           if (/\/$/.test(entry.fileName)) {
             fs.mkdirSync(dest, { recursive: true });
             zipfile.readEntry();

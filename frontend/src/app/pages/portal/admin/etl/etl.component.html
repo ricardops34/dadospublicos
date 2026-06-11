@@ -157,6 +157,24 @@
             </div>
           </div>
 
+          <!-- Limpar extraidos -->
+          <div class="po-lg-4 po-sm-12 etl-grid-item">
+            <div class="etl-card etl-card--danger">
+              <span class="an an-folder-open etl-card__icon"></span>
+              <div class="etl-card__body">
+                <strong class="etl-card__title">Limpar extraidos/</strong>
+                <span class="etl-card__desc">Remove todos os arquivos da pasta extraidos/ (CSVs, ZIPs perdidos etc.).</span>
+              </div>
+              <po-button
+                p-label="Limpar tudo"
+                p-kind="danger"
+                p-icon="an an-trash"
+                [p-disabled]="status.rodando"
+                (p-click)="limparExtraidos()">
+              </po-button>
+            </div>
+          </div>
+
           <!-- Aplicar -->
           <div class="po-lg-4 po-sm-12 etl-grid-item">
             <div class="etl-card etl-card--carga">

@@ -23,7 +23,7 @@
 | `GET /cnpj-raiz/:cnpj_raiz` | ❌ | ✅ | ✅ |
 | `POST /suframa` | ❌ | ✅ | ✅ |
 | `GET /consumo` | ❌ | ✅ | ✅ |
-| `GET /geocode/cep/:cep` | ❌ | ✅ | ✅ |
+| `GET /cep/:cep` | ❌ | ✅ | ✅ |
 | `GET /v2/pesquisa` | ❌ | ❌ | ✅ |
 | `GET /mapa` | ❌ | ❌ | ✅ |
 

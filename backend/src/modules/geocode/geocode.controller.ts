@@ -7,13 +7,13 @@ import { Post } from '@nestjs/common';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { Perfil } from '../portal/perfil.decorator';
 
-@ApiTags('Geocode')
-@Controller('geocode')
+@ApiTags('CEP')
+@Controller('cep')
 @UseGuards(AuthGuard)
 export class GeocodeController {
   constructor(private readonly service: GeocodeService) { }
 
-  @Get('cep/:cep')
+  @Get(':cep')
   @PlanoMinimo('gratuito')
   @ApiSecurity('token')
   @ApiOperation({ summary: 'Retorna dados de endereço e coordenadas de um CEP (cache permanente)' })
