@@ -567,6 +567,13 @@ export class EtlService {
     }
   }
 
+  async apagarTodosCsvs(): Promise<{ apagados: number }> {
+    fs.mkdirSync(this.extrairDir, { recursive: true });
+    const csvs = fs.readdirSync(this.extrairDir).filter((f) => /\.csv$/i.test(f));
+    for (const f of csvs) fs.unlinkSync(path.join(this.extrairDir, f));
+    return { apagados: csvs.length };
+  }
+
   async apagarCsvArquivo(nome: string): Promise<{ apagados: string[] }> {
     if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
     const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
@@ -597,8 +604,29 @@ export class EtlService {
     if (!fs.existsSync(filePath)) throw new NotFoundException(`Arquivo não encontrado: ${filePath}`);
 
     if (/\.tar\.gz$/i.test(nome)) {
-      // Delega para o método existente que extrai tar.gz
-      return this.extrairTarGz(nome);
+      const inicio = Date.now();
+      const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+        etlLogId: null, arquivo: nome, operacao: 'extracao' as EtlArquivoOperacao, status: 'iniciando',
+      }));
+      try {
+        fs.mkdirSync(this.extrairDir, { recursive: true });
+        this.logger.log(`Extraindo ${nome} → ${this.extrairDir}...`);
+        await tar.x({ file: filePath, cwd: this.extrairDir, strip: 1 });
+        this.logger.log(`Extração de ${nome} concluída.`);
+        logEntry.status = 'concluido';
+        logEntry.tamanhoMb = +(fs.statSync(filePath).size / 1024 / 1024).toFixed(1);
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.concluidoEm = new Date();
+      } catch (err) {
+        logEntry.status = 'erro';
+        logEntry.detalhe = String(err);
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.concluidoEm = new Date();
+        await this.arquivoLogs.save(logEntry);
+        throw err;
+      }
+      await this.arquivoLogs.save(logEntry);
+      return { mensagem: `${nome} extraído com sucesso.` };
     }
 
     this.extrairComLog(nome, filePath).catch((err) =>

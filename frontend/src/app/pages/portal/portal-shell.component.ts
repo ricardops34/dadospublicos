@@ -28,7 +28,7 @@ export class PortalShellComponent implements OnInit {
 
   headerUser: PoHeaderUser = {
     avatar: 'avatar/avatar_01.png',
-    customerBrand: '',
+    customerBrand: 'logo_bj.png',
     items: [
       {
         label: 'Minha Conta',
@@ -61,7 +61,7 @@ export class PortalShellComponent implements OnInit {
     private notifSvc: NotificacoesService,
     private menuService: MenuService,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit() {
     const perfil = this.auth.getPerfil();
@@ -77,7 +77,7 @@ export class PortalShellComponent implements OnInit {
         { icon: 'an an-gear', tooltip: 'Configuração de E-mail', action: () => this.router.navigate(['/portal/config-email']) },
       ];
       // Para cliente o perfil é carregado no fluxo de menu; para admin busca aqui o avatar salvo
-      this.clienteService.meuPerfil().subscribe({ error: () => {} });
+      this.clienteService.meuPerfil().subscribe({ error: () => { } });
       this.carregarMenuDinamico();
       return;
     }
@@ -133,7 +133,7 @@ export class PortalShellComponent implements OnInit {
         this.menuItems = this.processarMenuDinamico(items);
         this.cdr.detectChanges();
       },
-      error: () => {},
+      error: () => { },
     });
   }
 
@@ -158,7 +158,7 @@ export class PortalShellComponent implements OnInit {
     this.notifSvc.carregarContagem();
     this.notifSvc.listar().subscribe({
       next: (lista) => { this.notificacoes = lista; this.cdr.detectChanges(); },
-      error: () => {},
+      error: () => { },
     });
     this.notifSvc.naoLidas.subscribe((total) => {
       this.atualizarBadgeNotif(total);

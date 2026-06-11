@@ -87,6 +87,12 @@ export class EtlController {
     return this.service.apagarCsvArquivo(nome);
   }
 
+  @Delete('arquivos-csv')
+  @ApiOperation({ summary: '[Admin] Apaga todos os CSVs extraídos (mantém os ZIPs)' })
+  apagarTodosCsvs() {
+    return this.service.apagarTodosCsvs();
+  }
+
   @Delete('logs')
   @ApiOperation({ summary: '[Admin] Limpa o historico de execucoes do ETL' })
   limparLogs() {

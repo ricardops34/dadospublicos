@@ -463,15 +463,28 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   }
 
   extrairArquivoLinha(row: ArquivoRfb) {
+    const isTarGz = row.nome.endsWith('.tar.gz');
     this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/extrair-arquivo`, { nome: row.nome }).subscribe({
-      next: (res) => this.notif.information(res.mensagem),
+      next: (res) => {
+        this.notif.information(res.mensagem);
+        // tar.gz é síncrono: recarrega imediatamente. .zip é async: recarrega após delay.
+        if (isTarGz) {
+          this.carregarArquivos();
+          this.carregarLogArquivos();
+        } else {
+          setTimeout(() => { this.carregarArquivos(); this.carregarLogArquivos(); }, 4000);
+        }
+      },
       error: (err) => this.notif.error(err.error?.message ?? 'Erro ao extrair arquivo.'),
     });
   }
 
   processarArquivoLinha(row: ArquivoRfb) {
     this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/processar-arquivo`, { nome: row.nome }).subscribe({
-      next: (res) => this.notif.information(res.mensagem),
+      next: (res) => {
+        this.notif.information(res.mensagem);
+        setTimeout(() => { this.carregarArquivos(); this.carregarLogArquivos(); }, 4000);
+      },
       error: (err) => this.notif.error(err.error?.message ?? 'Erro ao processar arquivo.'),
     });
   }
@@ -481,6 +494,20 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/baixar-arquivo`, payload).subscribe({
       next: (res) => this.notif.information(res.mensagem),
       error: (err) => this.notif.error(err.error?.message ?? 'Erro ao iniciar download.'),
+    });
+  }
+
+  apagarTodosExtraidos() {
+    const total = this.arquivos.filter((a) => a.status === 'extraido').length;
+    if (!total) { this.notif.information('Nenhum arquivo extraído para apagar.'); return; }
+    if (!confirm(`Apagar todos os ${total} CSV(s) extraídos?\nOs arquivos ZIP serão mantidos.`)) return;
+    this.http.delete<{ apagados: number }>(`${environment.apiUrl}/etl/arquivos-csv`).subscribe({
+      next: (res) => {
+        this.notif.success(`${res.apagados} CSV(s) apagado(s).`);
+        this.carregarArquivos();
+        this.carregarLogArquivos();
+      },
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao apagar CSVs.'),
     });
   }
 
@@ -563,7 +590,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     return rem ? `${m}m ${rem}s` : `${m}m`;
   }
 
-  private carregarArquivos() {
+  carregarArquivos() {
     this.http.get<ArquivoRfb[]>(`${environment.apiUrl}/etl/arquivos`).subscribe({
       next: (a) => {
         this.arquivos = a.map((arq) => ({
