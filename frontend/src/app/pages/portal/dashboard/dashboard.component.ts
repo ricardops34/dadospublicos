@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { PoChartSerie, PoChartType, PoUserGuideService } from '@po-ui/ng-components';
+import { PoChartSerie, PoChartType, PoUserGuidePosition, PoUserGuideService } from '@po-ui/ng-components';
 import { AuthService } from '../../../services/auth.service';
 import { UsuarioPortalService } from '../cliente/usuario.service';
 
@@ -89,31 +89,31 @@ export class DashboardComponent implements OnInit {
           element: '#dash-card-plano',
           title: 'Seu plano ativo',
           content: 'Veja qual plano está ativo e acesse os detalhes para fazer upgrade ou cancelar.',
-          position: 'bottom',
+          position: PoUserGuidePosition.Bottom,
         },
         {
           element: '#dash-card-consumo',
           title: 'Requisições do mês',
           content: 'Acompanhe quantas consultas à API você já realizou neste mês e qual é o seu limite.',
-          position: 'bottom',
+          position: PoUserGuidePosition.Bottom,
         },
         {
           element: '#dash-card-token',
           title: 'Token de API',
           content: 'Este é o seu token de acesso. Use-o nas chamadas à API. Clique em "Gerenciar" para visualizar o token completo ou regenerá-lo.',
-          position: 'bottom',
+          position: PoUserGuidePosition.Bottom,
         },
         {
           element: '#dash-grafico',
           title: 'Histórico de consumo',
           content: 'O gráfico mostra a evolução das suas requisições nos últimos 6 meses.',
-          position: 'top',
+          position: PoUserGuidePosition.Top,
         },
         {
           element: '#dash-faturas',
           title: 'Suas faturas',
           content: 'As últimas faturas geradas aparecem aqui. Clique em "Ver todas" para o histórico completo.',
-          position: 'top',
+          position: PoUserGuidePosition.Top,
           doneLabel: 'Entendido!',
         },
       ])

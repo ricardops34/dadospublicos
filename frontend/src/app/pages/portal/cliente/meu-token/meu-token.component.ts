@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { PoUserGuideService } from '@po-ui/ng-components';
+import { PoUserGuidePosition, PoUserGuideService } from '@po-ui/ng-components';
 import { NotifService } from '../../../../services/notif.service';
 import { UsuarioPortalService } from '../usuario.service';
 import { environment } from '../../../../../environments/environment';
@@ -116,38 +116,38 @@ export class MeuTokenComponent implements OnInit {
           element: '#token-box',
           title: 'Seu token de API',
           content: 'Este é o seu token de acesso. Ele identifica sua conta em todas as chamadas à API. Mantenha-o em segredo.',
-          position: 'bottom',
+          position: PoUserGuidePosition.Bottom,
           showButtons: ['next', 'close'],
         },
         {
           element: '#token-box',
           title: 'Mostrar e copiar',
           content: 'Use os botões <strong>olho</strong> para revelar o token e <strong>copiar</strong> para enviá-lo para a área de transferência.',
-          position: 'bottom',
+          position: PoUserGuidePosition.Bottom,
         },
         {
           element: '#token-info',
           title: 'Limites do seu plano',
           content: 'Aqui você confere o <strong>rate limit</strong> (requisições por minuto) e o <strong>limite mensal</strong> do seu plano atual.',
-          position: 'top',
+          position: PoUserGuidePosition.Top,
         },
         {
           element: '#token-uso',
           title: 'Como usar o token',
           content: 'Você pode enviar o token via <strong>header HTTP</strong> (<code>x_api_token</code>) ou como <strong>query string</strong> (<code>?token=...</code>). Acesse a documentação completa pelo botão abaixo.',
-          position: 'top',
+          position: PoUserGuidePosition.Top,
         },
         {
           element: '#token-teste',
           title: 'Teste sua integração',
           content: 'Informe um CNPJ e clique em <strong>Consultar</strong> para fazer uma chamada real à API com seu token agora mesmo.',
-          position: 'top',
+          position: PoUserGuidePosition.Top,
         },
         {
           element: '#token-regenerar',
           title: 'Regenerar token',
           content: '<strong>Atenção:</strong> ao regenerar, o token anterior é invalidado imediatamente. Atualize todas as integrações que o utilizam antes de regenerar.',
-          position: 'top',
+          position: PoUserGuidePosition.Top,
           doneLabel: 'Entendido!',
         },
       ])
