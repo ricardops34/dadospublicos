@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { PoModalAction, PoModalComponent, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
 import { environment } from '../../../../../environments/environment';
 import { NotifService } from '../../../../services/notif.service';
+import { forkJoin } from 'rxjs';
 
 interface Progresso {
   fase: string;
@@ -21,6 +22,20 @@ interface EtlStatus {
   total: number;
 }
 
+interface EtlArquivoLogItem {
+  id: string;
+  etlLogId: string | null;
+  arquivo: string;
+  operacao: 'download' | 'extracao' | 'carga';
+  status: 'iniciando' | 'ja_existe' | 'concluido' | 'erro';
+  tamanhoMb: number | null;
+  duracaoMs: number | null;
+  detalhe: string | null;
+  competencia: string | null;
+  iniciadoEm: string;
+  concluidoEm: string | null;
+}
+
 interface ArquivoRfb {
   nome: string;
   grupo: string;
@@ -28,6 +43,8 @@ interface ArquivoRfb {
   status: 'nao_baixado' | 'baixado' | 'extraido';
   zip: { existe: boolean; tamanhoMb: number | null; modificadoEm: string | null };
   csv: { existe: boolean; tamanhoMb: number | null; modificadoEm: string | null };
+  zipTamanho?: string;
+  csvTamanho?: string;
 }
 
 @Component({
@@ -41,6 +58,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
 
   status: EtlStatus = { rodando: false, progresso: null, historico: [], page: 1, pageSize: 10, total: 0 };
   arquivos: ArquivoRfb[] = [];
+  selecionados: ArquivoRfb[] = [];
   historicoItens: any[] = [];
   carregando = true;
   carregandoHistorico = false;
@@ -51,6 +69,54 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   historicoPage = 1;
   readonly historicoPageSize = 10;
   private intervalo: any;
+
+  logArquivosItens: EtlArquivoLogItem[] = [];
+  logArquivosTotal = 0;
+  logArquivosPage = 1;
+  readonly logArquivosPageSize = 30;
+  carregandoLogArquivos = false;
+  carregandoMaisLogArquivos = false;
+  limpandoLogArquivos = false;
+
+  colunasLogArquivos: PoTableColumn[] = [
+    { property: 'arquivo',    label: 'Arquivo',    width: '22%' },
+    {
+      property: 'operacao', label: 'Operação', type: 'label', width: '11%',
+      labels: [
+        { value: 'download', label: 'Download', color: 'color-01' },
+        { value: 'extracao', label: 'Extração', color: 'color-08' },
+        { value: 'carga',    label: 'Carga',    color: 'color-10' },
+      ],
+    },
+    {
+      property: 'status', label: 'Status', type: 'label', width: '12%',
+      labels: [
+        { value: 'iniciando', label: 'Iniciando', color: 'color-08' },
+        { value: 'ja_existe', label: 'Já existe', color: 'color-06' },
+        { value: 'concluido', label: 'Concluído', color: 'color-10' },
+        { value: 'erro',      label: 'Erro',      color: 'color-07' },
+      ],
+    },
+    { property: 'competencia',  label: 'Competência', width: '10%' },
+    { property: 'tamanhoFmt',   label: 'Tamanho',     width: '10%' },
+    { property: 'duracaoFmt',   label: 'Duração',     width: '10%' },
+    { property: 'detalhe',      label: 'Detalhe',     width: '15%' },
+    { property: 'iniciadoEm',   label: 'Início',      type: 'dateTime', width: '10%' },
+  ];
+
+  acoesArquivos: PoTableAction[] = [
+    {
+      label: 'Baixar',
+      icon: 'an an-download',
+      action: (row: ArquivoRfb) => this.baixarArquivoLinha(row),
+    },
+    {
+      label: 'Apagar',
+      icon: 'an an-trash',
+      type: 'danger',
+      action: (row: ArquivoRfb) => this.apagarArquivoLinha(row),
+    },
+  ];
 
   colunasArquivos: PoTableColumn[] = [
     { property: 'nome', label: 'Arquivo', width: '28%' },
@@ -71,8 +137,8 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
         { value: 'extraido',    label: 'Extraido',    color: 'color-10' },
       ],
     },
-    { property: 'zip.tamanhoMb', label: 'ZIP (MB)', width: '12%' },
-    { property: 'csv.tamanhoMb', label: 'CSV (MB)', width: '13%' },
+    { property: 'zipTamanho', label: 'ZIP', width: '12%' },
+    { property: 'csvTamanho', label: 'CSV', width: '13%' },
   ];
 
   colunasHistorico: PoTableColumn[] = [
@@ -168,6 +234,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     this.carregando = true;
     this.carregarStatus(true, false, false);
     this.carregarArquivos();
+    this.carregarLogArquivos();
   }
 
   limparLogs() {
@@ -275,6 +342,11 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
           this.historicoPage = 1;
           this.historicoItens = s.historico;
           this.carregarArquivos();
+          this.carregarLogArquivos();
+        }
+
+        if (origemPolling && s.rodando) {
+          this.carregarLogArquivos();
         }
       },
       error: () => {
@@ -287,9 +359,180 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     });
   }
 
+  carregarLogArquivos(reset = true) {
+    const page = reset ? 1 : this.logArquivosPage + 1;
+    if (reset) {
+      this.carregandoLogArquivos = true;
+    } else {
+      this.carregandoMaisLogArquivos = true;
+    }
+
+    this.http.get<{ logs: EtlArquivoLogItem[]; total: number; page: number }>(
+      `${environment.apiUrl}/etl/log-arquivos?page=${page}&pageSize=${this.logArquivosPageSize}`,
+    ).subscribe({
+      next: (res) => {
+        const formatados = res.logs.map((l) => ({
+          ...l,
+          tamanhoFmt: this.formatarTamanho(l.tamanhoMb),
+          duracaoFmt: this.formatarDuracao(l.duracaoMs),
+        }));
+        if (reset) {
+          this.logArquivosItens = formatados;
+          this.logArquivosPage = 1;
+        } else {
+          this.logArquivosItens = [...this.logArquivosItens, ...formatados];
+          this.logArquivosPage = page;
+        }
+        this.logArquivosTotal = res.total;
+        this.carregandoLogArquivos = false;
+        this.carregandoMaisLogArquivos = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.carregandoLogArquivos = false;
+        this.carregandoMaisLogArquivos = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  carregarMaisLogArquivos() {
+    if (this.logArquivosItens.length >= this.logArquivosTotal || this.carregandoMaisLogArquivos) return;
+    this.carregarLogArquivos(false);
+  }
+
+  limparLogArquivos() {
+    if (this.limpandoLogArquivos) return;
+    if (!confirm('Limpar todo o log de arquivos?')) return;
+    this.limpandoLogArquivos = true;
+    this.http.delete<{ removidos: number }>(`${environment.apiUrl}/etl/log-arquivos`).subscribe({
+      next: (res) => {
+        this.notif.success(`${res.removidos} registros removidos.`);
+        this.logArquivosItens = [];
+        this.logArquivosTotal = 0;
+        this.limpandoLogArquivos = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.limpandoLogArquivos = false;
+        this.notif.error(err.error?.message ?? 'Erro ao limpar log.');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  get showMoreLogArquivosDisabled(): boolean {
+    return this.logArquivosItens.length >= this.logArquivosTotal;
+  }
+
+  onSelecionado(row: ArquivoRfb) {
+    if (!this.selecionados.find((s) => s.nome === row.nome)) {
+      this.selecionados = [...this.selecionados, row];
+    }
+  }
+
+  onDeselecionado(row: ArquivoRfb) {
+    this.selecionados = this.selecionados.filter((s) => s.nome !== row.nome);
+  }
+
+  onTodosSelecionados() {
+    this.selecionados = [...this.arquivos];
+  }
+
+  onTodosDeselecionados() {
+    this.selecionados = [];
+  }
+
+  baixarArquivoLinha(row: ArquivoRfb) {
+    const payload = { nome: row.nome, competencia: this.competencia.trim() };
+    this.http.post<{ mensagem: string }>(`${environment.apiUrl}/etl/baixar-arquivo`, payload).subscribe({
+      next: (res) => this.notif.information(res.mensagem),
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao iniciar download.'),
+    });
+  }
+
+  apagarArquivoLinha(row: ArquivoRfb) {
+    if (!confirm(`Apagar ${row.nome}?\nEsta ação remove o ZIP e o CSV do disco.`)) return;
+    this.http.delete(`${environment.apiUrl}/etl/arquivo?nome=${encodeURIComponent(row.nome)}`).subscribe({
+      next: () => { this.notif.success(`${row.nome} apagado.`); this.carregarArquivos(); },
+      error: (err) => this.notif.error(err.error?.message ?? 'Erro ao apagar arquivo.'),
+    });
+  }
+
+  baixarLote() {
+    const arqs = [...this.selecionados];
+    if (!arqs.length) return;
+    const competencia = this.competencia.trim();
+    for (const arq of arqs) {
+      this.http.post<{ mensagem: string }>(
+        `${environment.apiUrl}/etl/baixar-arquivo`,
+        { nome: arq.nome, competencia },
+      ).subscribe({ error: (err) => this.notif.error(`${arq.nome}: ${err.error?.message ?? 'Erro'}`) });
+    }
+    this.notif.information(`Download iniciado para ${arqs.length} arquivo(s).`);
+  }
+
+  apagarLote() {
+    const arqs = [...this.selecionados];
+    if (!arqs.length) return;
+    if (!confirm(`Apagar ${arqs.length} arquivo(s)?\nEsta ação remove o ZIP e o CSV de cada um.`)) return;
+
+    const total = arqs.length;
+    let concluidos = 0;
+    let erros = 0;
+
+    for (const arq of arqs) {
+      this.http.delete(`${environment.apiUrl}/etl/arquivo?nome=${encodeURIComponent(arq.nome)}`).subscribe({
+        next: () => {
+          concluidos++;
+          if (concluidos + erros === total) this.finalizarLoteApagar(concluidos, erros);
+        },
+        error: () => {
+          erros++;
+          if (concluidos + erros === total) this.finalizarLoteApagar(concluidos, erros);
+        },
+      });
+    }
+  }
+
+  private finalizarLoteApagar(concluidos: number, erros: number) {
+    this.selecionados = [];
+    if (erros) {
+      this.notif.error(`${concluidos} apagado(s), ${erros} com erro.`);
+    } else {
+      this.notif.success(`${concluidos} arquivo(s) apagado(s).`);
+    }
+    this.carregarArquivos();
+  }
+
+  private formatarTamanho(mb: number | null): string {
+    if (mb === null || mb === undefined) return '-';
+    if (mb < 1) return `${(mb * 1024).toFixed(0)} KB`;
+    if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
+    return `${mb.toFixed(1)} MB`;
+  }
+
+  private formatarDuracao(ms: number | null): string {
+    if (ms === null || ms === undefined) return '-';
+    if (ms < 1000) return `${ms}ms`;
+    const s = Math.floor(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return rem ? `${m}m ${rem}s` : `${m}m`;
+  }
+
   private carregarArquivos() {
     this.http.get<ArquivoRfb[]>(`${environment.apiUrl}/etl/arquivos`).subscribe({
-      next: (a) => { this.arquivos = a; },
+      next: (a) => {
+        this.arquivos = a.map((arq) => ({
+          ...arq,
+          zipTamanho: this.formatarTamanho(arq.zip.tamanhoMb),
+          csvTamanho: this.formatarTamanho(arq.csv.tamanhoMb),
+        }));
+        this.selecionados = [];
+        this.cdr.detectChanges();
+      },
     });
   }
 }
