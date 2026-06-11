@@ -294,7 +294,11 @@ export class EtlService {
         await this.faseExtracao(log); // ZIPs avulsos em downloads/ → CSVs (Cnaes.zip, incrementais etc.)
       }
       if (fase === 'extracao-base') {
-        await this.faseExtrairZipsEmExtraidos(log); // ZIPs em extraidos/ → CSVs
+        const tarPath = path.join(this.downloadDir, 'cnpj.tar.gz');
+        if (fs.existsSync(tarPath)) {
+          await this.faseExtrairTarGz(log);           // tar.gz → ZIPs em extraidos/
+        }
+        await this.faseExtrairZipsEmExtraidos(log);   // ZIPs em extraidos/ → CSVs
       }
       if (fase === 'extracao-incrementais') {
         await this.faseExtracao(log); // ZIPs em downloads/ → CSVs
