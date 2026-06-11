@@ -109,29 +109,29 @@
 
         <ng-container *ngIf="!editandoConta">
           <div class="po-row">
-            <po-info class="po-md-4" p-label="Telefone" [p-value]="conta?.telefone || '—'"></po-info>
-            <po-info class="po-md-4" p-label="CNPJ" [p-value]="conta?.cnpj || '—'"></po-info>
-            <po-info class="po-md-4" p-label="Razão social" [p-value]="conta?.razaoSocial || '—'"></po-info>
+            <po-info class="po-md-4" p-label="Telefone" [p-value]="cliente?.telefone || '—'"></po-info>
+            <po-info class="po-md-4" p-label="CNPJ" [p-value]="cliente?.cnpj || '—'"></po-info>
+            <po-info class="po-md-4" p-label="Razão social" [p-value]="cliente?.razaoSocial || '—'"></po-info>
           </div>
           <div class="po-row">
-            <po-info class="po-md-6" p-label="Inscrição Estadual" [p-value]="conta?.inscricaoEstadual || '—'"></po-info>
-            <po-info class="po-md-6" p-label="Inscrição Municipal" [p-value]="conta?.inscricaoMunicipal || '—'"></po-info>
+            <po-info class="po-md-6" p-label="Inscrição Estadual" [p-value]="cliente?.inscricaoEstadual || '—'"></po-info>
+            <po-info class="po-md-6" p-label="Inscrição Municipal" [p-value]="cliente?.inscricaoMunicipal || '—'"></po-info>
           </div>
           <div class="po-row">
-            <po-info class="po-md-8" p-label="Endereço" [p-value]="conta?.logradouro ? (conta.logradouro + ', ' + conta.numero + ' ' + (conta.complemento || '')) : '—'"></po-info>
-            <po-info class="po-md-4" p-label="Bairro" [p-value]="conta?.bairro || '—'"></po-info>
+            <po-info class="po-md-8" p-label="Endereço" [p-value]="cliente?.logradouro ? (cliente.logradouro + ', ' + cliente.numero + ' ' + (cliente.complemento || '')) : '—'"></po-info>
+            <po-info class="po-md-4" p-label="Bairro" [p-value]="cliente?.bairro || '—'"></po-info>
           </div>
           <div class="po-row">
-            <po-info class="po-md-4" p-label="CEP" [p-value]="conta?.cep || '—'"></po-info>
-            <po-info class="po-md-6" p-label="Município" [p-value]="conta?.municipio || '—'"></po-info>
-            <po-info class="po-md-2" p-label="UF" [p-value]="conta?.uf || '—'"></po-info>
+            <po-info class="po-md-4" p-label="CEP" [p-value]="cliente?.cep || '—'"></po-info>
+            <po-info class="po-md-6" p-label="Município" [p-value]="cliente?.municipio || '—'"></po-info>
+            <po-info class="po-md-2" p-label="UF" [p-value]="cliente?.uf || '—'"></po-info>
           </div>
 
           <ng-container *ngIf="ehPessoaJuridica">
             <po-divider p-label="Atividade econômica (CNAE)"></po-divider>
             <div class="po-row">
               <po-info class="po-md-12" p-label="CNAE Principal"
-                [p-value]="conta?.cnaePrincipal ? (conta.cnaePrincipal + ' - ' + (conta.cnaePrincipalDescricao || '')) : '—'">
+                [p-value]="cliente?.cnaePrincipal ? (cliente.cnaePrincipal + ' - ' + (cliente.cnaePrincipalDescricao || '')) : '—'">
               </po-info>
             </div>
             <div class="po-row" *ngIf="cnaesSecundarios.length">
@@ -235,7 +235,7 @@
       </po-tab>
 
       <!-- ─── ABA 3: Usuários da conta ───────────────────────────────── -->
-      <po-tab *ngIf="conta" p-label="Usuários" p-icon="an an-users">
+      <po-tab *ngIf="cliente" p-label="Usuários" p-icon="an an-users">
 
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
           <p style="margin: 0; color: #6b7280; font-size: 0.85rem;">

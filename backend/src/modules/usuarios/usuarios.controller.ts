@@ -93,6 +93,14 @@ export class UsuariosController {
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Atualiza dados de negócio do Cliente do usuário logado' })
   atualizarCliente(@Req() req: any, @Body() dto: any) {
+    return this.atualizarMeuCliente(req, dto);
+  }
+
+  @Patch('me/cliente')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Atualiza dados de negócio do Cliente do usuário logado' })
+  atualizarMeuCliente(@Req() req: any, @Body() dto: any) {
     // JWT antigo usa contaId; o novo usa clienteId
     const clienteId = req['usuario'].clienteId ?? req['usuario'].contaId;
     if (!clienteId) return { mensagem: 'Sem cliente vinculado.' };
@@ -106,6 +114,14 @@ export class UsuariosController {
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Lista os usuários do Cliente do usuário logado' })
   listarUsuariosCliente(@Req() req: any) {
+    return this.listarUsuariosMeuCliente(req);
+  }
+
+  @Get('me/cliente/usuarios')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Lista os usuários do Cliente do usuário logado' })
+  listarUsuariosMeuCliente(@Req() req: any) {
     return this.service.listarUsuariosDoCliente(req['usuario'].sub);
   }
 
@@ -114,6 +130,14 @@ export class UsuariosController {
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Cria usuário adicional do Cliente (somente usuário principal)' })
   criarUsuarioCliente(@Req() req: any, @Body() dto: CriarUsuarioClienteDto) {
+    return this.criarUsuarioMeuCliente(req, dto);
+  }
+
+  @Post('me/cliente/usuarios')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Cria usuário adicional do Cliente (somente usuário principal)' })
+  criarUsuarioMeuCliente(@Req() req: any, @Body() dto: CriarUsuarioClienteDto) {
     return this.service.criarUsuarioDoCliente(req['usuario'].sub, dto);
   }
 
@@ -122,6 +146,14 @@ export class UsuariosController {
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Edita usuário do Cliente (somente usuário principal)' })
   editarUsuarioCliente(@Req() req: any, @Param('id') id: string, @Body() dto: EditarUsuarioClienteDto) {
+    return this.editarUsuarioMeuCliente(req, id, dto);
+  }
+
+  @Patch('me/cliente/usuarios/:id')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Edita usuário do Cliente (somente usuário principal)' })
+  editarUsuarioMeuCliente(@Req() req: any, @Param('id') id: string, @Body() dto: EditarUsuarioClienteDto) {
     return this.service.editarUsuarioDoCliente(req['usuario'].sub, id, dto);
   }
 
@@ -130,14 +162,30 @@ export class UsuariosController {
   @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Bloqueia/desbloqueia usuário do Cliente (somente usuário principal; não há exclusão)' })
   ativarUsuarioCliente(@Req() req: any, @Param('id') id: string, @Body('ativo') ativo: boolean) {
+    return this.ativarUsuarioMeuCliente(req, id, ativo);
+  }
+
+  @Patch('me/cliente/usuarios/:id/ativo')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Bloqueia/desbloqueia usuário do Cliente (somente usuário principal; não há exclusão)' })
+  ativarUsuarioMeuCliente(@Req() req: any, @Param('id') id: string, @Body('ativo') ativo: boolean) {
     return this.service.ativarUsuarioDoCliente(req['usuario'].sub, id, ativo);
   }
 
   @Post('me/conta/usuarios/:id/transferir-principal')
   @UseGuards(JwtPortalGuard)
   @ApiSecurity('bearer')
-  @ApiOperation({ summary: 'Transfere a função de usuário principal para outro usuário da conta' })
+  @ApiOperation({ summary: 'Transfere a função de usuário principal para outro usuário do Cliente' })
   transferirPrincipal(@Req() req: any, @Param('id') id: string) {
+    return this.transferirPrincipalMeuCliente(req, id);
+  }
+
+  @Post('me/cliente/usuarios/:id/transferir-principal')
+  @UseGuards(JwtPortalGuard)
+  @ApiSecurity('bearer')
+  @ApiOperation({ summary: 'Transfere a função de usuário principal para outro usuário do Cliente' })
+  transferirPrincipalMeuCliente(@Req() req: any, @Param('id') id: string) {
     return this.service.transferirPrincipal(req['usuario'].sub, id);
   }
 
@@ -152,7 +200,7 @@ export class UsuariosController {
   @Post('me/cancelar-exclusao')
   @UseGuards(JwtPortalGuard)
   @ApiSecurity('bearer')
-  @ApiOperation({ summary: 'Cancela exclusão agendada da própria conta' })
+  @ApiOperation({ summary: 'Cancela exclusão agendada do próprio cadastro' })
   cancelarExclusao(@Req() req: any) {
     return this.service.cancelarExclusao(req['usuario'].sub);
   }

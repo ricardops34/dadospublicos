@@ -6,11 +6,11 @@
 -- Banco alvo: buscadados
 --
 -- Aplicar com:
---   docker compose exec -T postgres psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_manutencao-usuarios.sql
+--   docker compose exec -T postgres psql -U rfb_user -d buscadados < historico/sql/2026-06-10_manutencao-usuarios.sql
 --
 -- Obs.: não há mudança de schema (contas.proprietario_id já existe). Este
 -- script apenas insere a rotina de menu do admin (mesmo conteúdo adicionado
--- ao backend/scripts/seed-menu.sql para instalações novas).
+-- ao historico/backend-scripts/seed-menu.sql para instalações novas).
 -- ============================================================================
 
 -- Rotina "Usuários" no módulo Configurações (admin)

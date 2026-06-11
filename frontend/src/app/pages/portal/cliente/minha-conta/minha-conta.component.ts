@@ -19,7 +19,7 @@ export class MinhaContaComponent implements OnInit {
   @ViewChild('modalUsuario') modalUsuario!: PoModalComponent;
 
   perfil: any = null;
-  conta: any = null;
+  cliente: any = null;
   carregando = true;
   salvando = false;
   salvandoConta = false;
@@ -173,7 +173,7 @@ export class MinhaContaComponent implements OnInit {
   };
 
   get ehPessoaJuridica(): boolean {
-    return (this.conta?.tipoPessoa ?? this.perfil?.tipoPessoa ?? 'J') !== 'F';
+    return (this.cliente?.tipoPessoa ?? this.perfil?.tipoPessoa ?? 'J') !== 'F';
   }
 
   constructor(
@@ -200,39 +200,39 @@ export class MinhaContaComponent implements OnInit {
     this.svc.meuPerfil().subscribe({
       next: (perfilData) => {
         this.perfil = perfilData;
-        this.conta = perfilData.conta ?? null;
+        this.cliente = perfilData.cliente ?? null;
 
         this.form = {
           nome: perfilData.nome ?? '',
           telefone: perfilData.telefone ?? '',
         };
 
-        if (this.conta) {
+        if (this.cliente) {
           this.formConta = {
-            cnpj: this.conta.cnpj ?? '',
-            razaoSocial: this.conta.razaoSocial ?? '',
-            telefone: this.conta.telefone ?? '',
-            cep: this.conta.cep ?? '',
-            logradouro: this.conta.logradouro ?? '',
-            numero: this.conta.numero ?? '',
-            complemento: this.conta.complemento ?? '',
-            bairro: this.conta.bairro ?? '',
-            municipio: this.conta.municipio ?? '',
-            uf: this.conta.uf ?? '',
-            inscricaoEstadual: this.conta.inscricaoEstadual ?? '',
-            inscricaoMunicipal: this.conta.inscricaoMunicipal ?? '',
-            cnaePrincipal: this.conta.cnaePrincipal ?? '',
+            cnpj: this.cliente.cnpj ?? '',
+            razaoSocial: this.cliente.razaoSocial ?? '',
+            telefone: this.cliente.telefone ?? '',
+            cep: this.cliente.cep ?? '',
+            logradouro: this.cliente.logradouro ?? '',
+            numero: this.cliente.numero ?? '',
+            complemento: this.cliente.complemento ?? '',
+            bairro: this.cliente.bairro ?? '',
+            municipio: this.cliente.municipio ?? '',
+            uf: this.cliente.uf ?? '',
+            inscricaoEstadual: this.cliente.inscricaoEstadual ?? '',
+            inscricaoMunicipal: this.cliente.inscricaoMunicipal ?? '',
+            cnaePrincipal: this.cliente.cnaePrincipal ?? '',
           };
-          this.cnaesSecundarios = (this.conta.cnaesSecundarios ?? []).map((c: CnaeSecundario) => ({ ...c }));
+          this.cnaesSecundarios = (this.cliente.cnaesSecundarios ?? []).map((c: CnaeSecundario) => ({ ...c }));
 
-          if (this.conta.uf) {
-            this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${this.conta.uf}`;
+          if (this.cliente.uf) {
+            this.municipioFilterService = `${environment.apiUrl}/geocode/municipios/${this.cliente.uf}`;
             this.municipioDisabled = false;
           }
         }
 
         this.souPrincipal = !!(perfilData as any).usuarioPrincipal;
-        if (this.conta) {
+        if (this.cliente) {
           this.carregarUsuariosConta();
         }
 
@@ -334,21 +334,21 @@ export class MinhaContaComponent implements OnInit {
     this.editandoConta = false;
     this.formCnaesSecundarios = [];
     this.novoCnaeSecundario = null;
-    if (this.conta) {
+    if (this.cliente) {
       this.formConta = {
-        cnpj: this.conta.cnpj ?? '',
-        razaoSocial: this.conta.razaoSocial ?? '',
-        telefone: this.conta.telefone ?? '',
-        cep: this.conta.cep ?? '',
-        logradouro: this.conta.logradouro ?? '',
-        numero: this.conta.numero ?? '',
-        complemento: this.conta.complemento ?? '',
-        bairro: this.conta.bairro ?? '',
-        municipio: this.conta.municipio ?? '',
-        uf: this.conta.uf ?? '',
-        inscricaoEstadual: this.conta.inscricaoEstadual ?? '',
-        inscricaoMunicipal: this.conta.inscricaoMunicipal ?? '',
-        cnaePrincipal: this.conta.cnaePrincipal ?? '',
+        cnpj: this.cliente.cnpj ?? '',
+        razaoSocial: this.cliente.razaoSocial ?? '',
+        telefone: this.cliente.telefone ?? '',
+        cep: this.cliente.cep ?? '',
+        logradouro: this.cliente.logradouro ?? '',
+        numero: this.cliente.numero ?? '',
+        complemento: this.cliente.complemento ?? '',
+        bairro: this.cliente.bairro ?? '',
+        municipio: this.cliente.municipio ?? '',
+        uf: this.cliente.uf ?? '',
+        inscricaoEstadual: this.cliente.inscricaoEstadual ?? '',
+        inscricaoMunicipal: this.cliente.inscricaoMunicipal ?? '',
+        cnaePrincipal: this.cliente.cnaePrincipal ?? '',
       };
     }
   }
@@ -395,9 +395,9 @@ export class MinhaContaComponent implements OnInit {
       ...this.formConta,
       cnaesSecundarios: this.formCnaesSecundarios.map((c) => ({ codigo: c.codigo, descricao: c.descricao ?? null })),
     };
-    this.http.patch<any>(`${environment.apiUrl}/usuarios/me/conta`, payload).subscribe({
+    this.http.patch<any>(`${environment.apiUrl}/usuarios/me/cliente`, payload).subscribe({
       next: (contaAtualizada) => {
-        this.conta = { ...this.conta, ...contaAtualizada };
+        this.cliente = { ...this.cliente, ...contaAtualizada };
         this.cnaesSecundarios = (contaAtualizada?.cnaesSecundarios ?? this.formCnaesSecundarios).map((c: CnaeSecundario) => ({ ...c }));
         this.svc.invalidarPerfilCache();
         this.editandoConta = false;
@@ -476,7 +476,7 @@ export class MinhaContaComponent implements OnInit {
 
   carregarUsuariosConta() {
     this.carregandoUsuarios = true;
-    this.http.get<any[]>(`${environment.apiUrl}/usuarios/me/conta/usuarios`).subscribe({
+    this.http.get<any[]>(`${environment.apiUrl}/usuarios/me/cliente/usuarios`).subscribe({
       next: (usuarios) => {
         this.usuariosConta = (usuarios ?? []).map((u) => ({
           ...u,
@@ -522,13 +522,13 @@ export class MinhaContaComponent implements OnInit {
     this.acaoSalvarUsuario = { ...this.acaoSalvarUsuario, loading: true };
 
     const request = this.editandoUsuarioId
-      ? this.http.patch(`${environment.apiUrl}/usuarios/me/conta/usuarios/${this.editandoUsuarioId}`, {
+      ? this.http.patch(`${environment.apiUrl}/usuarios/me/cliente/usuarios/${this.editandoUsuarioId}`, {
           nome: this.formUsuario.nome,
           email: this.formUsuario.email,
           telefone: this.formUsuario.telefone,
           ...(this.formUsuario.senha ? { senha: this.formUsuario.senha } : {}),
         })
-      : this.http.post(`${environment.apiUrl}/usuarios/me/conta/usuarios`, this.formUsuario);
+      : this.http.post(`${environment.apiUrl}/usuarios/me/cliente/usuarios`, this.formUsuario);
 
     request.subscribe({
       next: () => {
@@ -549,7 +549,7 @@ export class MinhaContaComponent implements OnInit {
     const acao = ativo ? 'desbloquear' : 'bloquear';
     if (!window.confirm(`Confirma ${acao} o usuário ${item.nome}?`)) return;
 
-    this.http.patch(`${environment.apiUrl}/usuarios/me/conta/usuarios/${item.id}/ativo`, { ativo }).subscribe({
+    this.http.patch(`${environment.apiUrl}/usuarios/me/cliente/usuarios/${item.id}/ativo`, { ativo }).subscribe({
       next: (res: any) => {
         this.notif.success(res?.mensagem ?? 'Status atualizado.');
         this.carregarUsuariosConta();
@@ -561,7 +561,7 @@ export class MinhaContaComponent implements OnInit {
   transferirPrincipal(item: any) {
     if (!window.confirm(`Transferir a função de usuário principal para ${item.nome}? Você deixará de ser o principal da conta.`)) return;
 
-    this.http.post(`${environment.apiUrl}/usuarios/me/conta/usuarios/${item.id}/transferir-principal`, {}).subscribe({
+    this.http.post(`${environment.apiUrl}/usuarios/me/cliente/usuarios/${item.id}/transferir-principal`, {}).subscribe({
       next: (res: any) => {
         this.notif.success(res?.mensagem ?? 'Função transferida.');
         this.souPrincipal = false;

@@ -9,9 +9,9 @@
 -- Idempotente: pode ser executado mais de uma vez sem efeito colateral.
 --
 -- Aplicar com:
---   docker compose exec -T postgres psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_ajustes-completos.sql
+--   docker compose exec -T postgres psql -U rfb_user -d buscadados < historico/sql/2026-06-10_ajustes-completos.sql
 -- (Swarm/Portainer):
---   docker exec -i <container_postgres> psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_ajustes-completos.sql
+--   docker exec -i <container_postgres> psql -U rfb_user -d buscadados < historico/sql/2026-06-10_ajustes-completos.sql
 --
 -- Obs.: o backend (TypeORM synchronize=true) cria colunas/FKs no próximo
 -- restart, mas NÃO faz os backfills nem insere o menu — por isso este script.

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Painel360Service } from '../painel-360/painel-360.service';
 import {
@@ -47,8 +47,7 @@ export interface UsuarioPerfil {
   agendarExclusaoEm?: Date | string | null;
   onboardingPendente?: boolean;
   assinaturas?: any[];
-  /** Dados da empresa/tenant separados dos dados pessoais */
-  conta?: {
+  cliente?: {
     id: string;
     tipoPessoa?: 'F' | 'J';
     cnpj?: string | null;
@@ -73,7 +72,6 @@ export interface UsuarioPerfil {
 export class UsuarioPortalService {
   private _perfilCache: UsuarioPerfil | null = null;
 
-  /** Avatar do usuário logado (nome do arquivo) — consumido pelo header do portal */
   private _avatar$ = new BehaviorSubject<string | null>(null);
   readonly avatar$ = this._avatar$.asObservable();
 
@@ -82,12 +80,19 @@ export class UsuarioPortalService {
     private painel360Service: Painel360Service,
   ) {}
 
+  private normalizarPerfil(perfil: UsuarioPerfil): UsuarioPerfil {
+    const { conta, ...perfilSemConta } = perfil as UsuarioPerfil & { conta?: UsuarioPerfil['cliente'] };
+    const cliente = perfilSemConta.cliente ?? conta ?? null;
+    return { ...perfilSemConta, cliente };
+  }
+
   meuPerfil(): Observable<UsuarioPerfil> {
     if (this._perfilCache) return of(this._perfilCache);
     return this.http.get<UsuarioPerfil>(`${API}/usuarios/me`).pipe(
-      tap(p => {
-        this._perfilCache = p;
-        this._avatar$.next(p.avatar ?? null);
+      map((perfil) => this.normalizarPerfil(perfil)),
+      tap((perfil) => {
+        this._perfilCache = perfil;
+        this._avatar$.next(perfil.avatar ?? null);
       }),
     );
   }

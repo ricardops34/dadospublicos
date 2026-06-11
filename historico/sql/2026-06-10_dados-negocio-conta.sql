@@ -11,7 +11,7 @@
 -- Idempotente. Executar APÓS o 2026-06-10_ajustes-completos.sql.
 --
 -- Aplicar com:
---   docker compose exec -T postgres psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_dados-negocio-conta.sql
+--   docker compose exec -T postgres psql -U rfb_user -d buscadados < historico/sql/2026-06-10_dados-negocio-conta.sql
 -- ============================================================================
 
 BEGIN;

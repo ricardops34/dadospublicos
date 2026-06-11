@@ -3,8 +3,8 @@
 -- Banco alvo: buscadados
 --
 -- Aplicar com:
---   docker compose exec -T postgres psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_cnae-cliente.sql
--- (Swarm/Portainer: docker exec -i <container_postgres> psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_cnae-cliente.sql)
+--   docker compose exec -T postgres psql -U rfb_user -d buscadados < historico/sql/2026-06-10_cnae-cliente.sql
+-- (Swarm/Portainer: docker exec -i <container_postgres> psql -U rfb_user -d buscadados < historico/sql/2026-06-10_cnae-cliente.sql)
 --
 -- Obs.: o backend roda TypeORM com synchronize=true, então em instalações novas
 -- estas estruturas são criadas automaticamente. Este script serve para aplicar

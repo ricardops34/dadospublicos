@@ -41,8 +41,7 @@ export interface ClientePerfil {
   agendarExclusaoEm?: Date | string | null;
   onboardingPendente?: boolean;
   assinaturas?: any[];
-  /** Dados da empresa/tenant separados dos dados pessoais */
-  conta?: {
+  cliente?: {
     id: string;
     tipoPessoa?: 'F' | 'J';
     cnpj?: string | null;
@@ -74,8 +73,8 @@ export class ClientePortalService {
 
   meuPerfil(): Observable<ClientePerfil> {
     if (this._perfilCache) return of(this._perfilCache);
-    return this.http.get<ClientePerfil>(`${API}/clientes/me`).pipe(
-      tap(p => (this._perfilCache = p)),
+    return this.http.get<ClientePerfil>(`${API}/usuarios/me`).pipe(
+      tap((perfil) => (this._perfilCache = perfil)),
     );
   }
 
@@ -84,7 +83,7 @@ export class ClientePortalService {
   }
 
   atualizarPerfil(dto: Partial<ClientePerfil> & { senha?: string }) {
-    return this.http.patch<ClientePerfil>(`${API}/clientes/me`, dto).pipe(
+    return this.http.patch<ClientePerfil>(`${API}/usuarios/me`, dto).pipe(
       tap(() => this.invalidarPerfilCache()),
     );
   }
@@ -98,11 +97,11 @@ export class ClientePortalService {
   }
 
   agendarExclusao(agendarPara: 'agora' | 'fim-plano') {
-    return this.http.post<ClienteExclusaoResponse>(`${API}/clientes/me/agendar-exclusao`, { agendarPara });
+    return this.http.post<ClienteExclusaoResponse>(`${API}/usuarios/me/agendar-exclusao`, { agendarPara });
   }
 
   cancelarExclusao() {
-    return this.http.post<ClienteExclusaoResponse>(`${API}/clientes/me/cancelar-exclusao`, {});
+    return this.http.post<ClienteExclusaoResponse>(`${API}/usuarios/me/cancelar-exclusao`, {});
   }
 
   minhaAssinatura() {

@@ -34,8 +34,13 @@ export class RecursoGuard implements CanActivate {
       return true;
     }
 
+    const clienteId = usuario.clienteId ?? usuario.contaId ?? null;
+    if (!clienteId) {
+      throw new ForbiddenException('Nenhum cliente vinculado encontrado para este usuário.');
+    }
+
     const assinatura = await this.assinaturas.findOne({
-      where: { clienteId: usuario.sub, status: 'ativa' },
+      where: { clienteId, status: 'ativa' },
       relations: ['plano', 'plano.recursos', 'plano.recursos.recurso'],
     });
 

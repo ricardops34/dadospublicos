@@ -1,18 +1,18 @@
 # Regra de Negócio — Cadastro de Clientes e Usuários
 
 > **IMPORTANTE:** O sistema deve tratar CLIENTE e USUÁRIO como entidades distintas.
-> No código atual: **Cliente = tabela `contas`** (tenant) e **Usuário = tabela `usuarios`**.
+> No código atual: **Cliente = tabela `clientes`** (tenant) e **Usuário = tabela `usuarios`**.
 
 ## Conceitos
 
-### Cliente (`contas`)
+### Cliente (`clientes`)
 Cliente é a pessoa física ou jurídica que contrata os serviços da plataforma.
 
 A entidade Cliente deve possuir:
 - Identificador único
 - Dados cadastrais (PF ou PJ) — incl. CNAE principal e secundários quando PJ
 - Plano contratado
-- Status da conta
+- Status do cliente
 - Token de API único
 - Data de cadastro
 - Lista de usuários vinculados
@@ -26,7 +26,7 @@ A entidade Usuário deve possuir:
 - E-mail
 - Senha/credenciais de acesso
 - Status (ativo/inativo)
-- Cliente ao qual pertence (`conta_id`)
+- Cliente ao qual pertence (`cliente_id`)
 - Data de criação
 
 ## Relacionamento
@@ -67,7 +67,7 @@ Cliente (1) ──► (N) Usuários
 - Usuários comuns não podem gerenciar outros Usuários.
 
 > Obs.: não confundir com `usuarios.perfil = 'admin'`, que é o administrador **da plataforma**.
-> O Administrador do Cliente é um papel dentro da conta (hoje representado apenas por `contas.proprietario_id`).
+> O Administrador do Cliente é um papel dentro do cliente (hoje representado por `clientes.proprietario_id`).
 
 ## Fluxo de Cadastro
 
@@ -100,4 +100,4 @@ possuem acesso aos recursos disponibilizados pelo plano contratado.
 - **NUNCA** armazenar informações de negócio do Cliente dentro da entidade Usuário.
 - O Cliente é o contratante dos serviços.
 - O Usuário é apenas um operador autorizado a utilizar o sistema em nome do Cliente.
-- Novos campos de negócio (endereço, documentos, CNAE, inscrições) vão em `contas`, nunca em `usuarios`.
+- Novos campos de negócio (endereço, documentos, CNAE, inscrições) vão em `clientes`, nunca em `usuarios`.

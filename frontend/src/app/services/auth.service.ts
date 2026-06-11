@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 
 export interface JwtPayload {
   sub: string;
+  clienteId?: string | null;
   contaId: string | null;
   nome: string;
   email: string;
@@ -137,8 +138,13 @@ export class AuthService {
     return this.getPayload()?.nome ?? localStorage.getItem(this.CLIENTE_NOME) ?? '';
   }
 
+  getClienteId(): string | null {
+    const payload = this.getPayload();
+    return payload?.clienteId ?? payload?.contaId ?? null;
+  }
+
   getContaId(): string | null {
-    return this.getPayload()?.contaId ?? null;
+    return this.getClienteId();
   }
 
   isAdmin(): boolean {

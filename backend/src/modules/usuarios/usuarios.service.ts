@@ -484,9 +484,7 @@ export class UsuariosService {
       onboardingPendente,
       /** True quando o usuário logado é o principal (administrador) do Cliente */
       usuarioPrincipal: cliente ? cliente.proprietarioId === usuario.id : false,
-      // Dados do Cliente (a chave `conta` é alias legado e será removida)
       cliente: dadosCliente,
-      conta: dadosCliente,
     };
   }
 
@@ -638,7 +636,7 @@ export class UsuariosService {
     const usuario = await this.usuarios.findOne({ where: { id: usuarioId } });
     if (!usuario) throw new NotFoundException('Usuário não encontrado.');
     if (!usuario.agendarExclusaoEm) {
-      throw new BadRequestException('Nenhuma exclusão agendada para esta conta.');
+      throw new BadRequestException('Nenhuma exclusão agendada para este cadastro.');
     }
 
     usuario.agendarExclusaoEm = null;
@@ -884,7 +882,7 @@ export class UsuariosService {
     }
 
     if (pendentes.length) {
-      console.log(`[Cron] ${pendentes.length} conta(s) anonimizadas por agendamento.`);
+      console.log(`[Cron] ${pendentes.length} cadastro(s) anonimizados por agendamento.`);
     }
   }
 }

@@ -5,7 +5,7 @@
 -- Banco alvo: buscadados
 --
 -- Aplicar com:
---   docker compose exec -T postgres psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_token-por-cliente.sql
+--   docker compose exec -T postgres psql -U rfb_user -d buscadados < historico/sql/2026-06-10_token-por-cliente.sql
 -- (Swarm/Portainer: docker exec -i <container_postgres> psql -U rfb_user -d buscadados < ...)
 --
 -- Obs.: o backend roda TypeORM com synchronize=true; a coluna, FK e índice

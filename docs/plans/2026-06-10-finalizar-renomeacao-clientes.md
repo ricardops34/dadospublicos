@@ -168,10 +168,10 @@ git commit -m "refactor: align frontend with cliente naming"
 
 **Files:**
 - Modify: `backend/seed.js`
-- Modify: `backend/scripts/seed-menu.sql`
+- Modify: `historico/backend-scripts/seed-menu.sql`
 - Modify: `scripts/seed-vps.sh`
 - Modify: `scripts/seed-swarm.sh`
-- Modify: `scripts/sql/2026-06-10_rename-clientes.sql`
+- Modify: `historico/sql/2026-06-10_rename-clientes.sql`
 
 **Step 1: Write the failing validation checklist**
 
@@ -190,7 +190,7 @@ Expected: lista pequena e consciente das referências ainda necessárias.
 
 - Manter referências históricas apenas onde forem parte de migração ou compatibilidade deliberada.
 - Ajustar comentários e consultas shell que assumam semântica antiga para `assinaturas.cliente_id`.
-- Garantir que `backend/seed.js` e `backend/scripts/seed-menu.sql` continuem alinhados ao schema final.
+- Garantir que `backend/seed.js` e `historico/backend-scripts/seed-menu.sql` continuem alinhados ao schema final.
 
 **Step 4: Re-run search to verify cleanup**
 
@@ -201,7 +201,7 @@ Expected: apenas ocorrências intencionais em migração/backward compatibility.
 **Step 5: Commit**
 
 ```bash
-git add backend/seed.js backend/scripts/seed-menu.sql scripts/seed-vps.sh scripts/seed-swarm.sh scripts/sql/2026-06-10_rename-clientes.sql
+git add backend/seed.js historico/backend-scripts/seed-menu.sql scripts/seed-vps.sh scripts/seed-swarm.sh historico/sql/2026-06-10_rename-clientes.sql
 git commit -m "chore: align seeds and ops scripts with cliente rename"
 ```
 
@@ -255,7 +255,7 @@ git commit -m "docs: update docs for cliente rename"
 **Files:**
 - Verify: `backend/src/app.module.ts`
 - Verify: `frontend/src/app/services/auth.service.ts`
-- Verify: `scripts/sql/2026-06-10_rename-clientes.sql`
+- Verify: `historico/sql/2026-06-10_rename-clientes.sql`
 - Verify: `backend/test/*.spec.ts`
 
 **Step 1: Run backend test suite**
@@ -278,7 +278,7 @@ Expected: apenas ocorrências permitidas em migração, SQL histórico ou fallba
 
 **Step 4: Sanity-check migration order docs**
 
-Run: `Get-Content scripts/sql/2026-06-10_ajustes-completos.sql -TotalCount 40; Get-Content scripts/sql/2026-06-10_dados-negocio-conta.sql -TotalCount 30; Get-Content scripts/sql/2026-06-10_rename-clientes.sql -TotalCount 40`
+Run: `Get-Content historico/sql/2026-06-10_ajustes-completos.sql -TotalCount 40; Get-Content historico/sql/2026-06-10_dados-negocio-conta.sql -TotalCount 30; Get-Content historico/sql/2026-06-10_rename-clientes.sql -TotalCount 40`
 
 Expected: ordem e pré-requisitos coerentes.
 
@@ -288,4 +288,3 @@ Expected: ordem e pré-requisitos coerentes.
 git add -A
 git commit -m "chore: finalize cliente rename verification"
 ```
-

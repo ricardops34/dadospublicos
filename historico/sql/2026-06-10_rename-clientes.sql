@@ -17,7 +17,7 @@
 -- e 2026-06-10_dados-negocio-conta.sql (backfills) ANTES deste script.
 -- Aplicar com a API PARADA e subir a API nova em seguida.
 --
---   docker compose exec -T postgres psql -U rfb_user -d buscadados < scripts/sql/2026-06-10_rename-clientes.sql
+--   docker compose exec -T postgres psql -U rfb_user -d buscadados < historico/sql/2026-06-10_rename-clientes.sql
 -- ============================================================================
 
 BEGIN;

@@ -211,20 +211,25 @@ O projeto depende de dados mínimos para ficar funcional:
 - assinatura do admin
 - UFs e municípios do IBGE
 
-Há dois fluxos principais:
+Há um seed canônico e dois wrappers operacionais:
 
-- script Node: [backend/seed.js](/C:/Ricardo/dadospublicos/backend/seed.js:1)
-- script operacional de ambiente Docker: [scripts/seed-vps.sh](/C:/Ricardo/dadospublicos/scripts/seed-vps.sh:1)
+- `backend/seed.js`: seed canônico da aplicação
+- `scripts/seed-vps.sh`: wrapper para ambiente com `docker compose`
+- `scripts/seed-swarm.sh`: wrapper para Swarm/Portainer
 
 ### Quando usar cada um
 
-- `backend/seed.js`: seed direto pela aplicação
-- `scripts/seed-vps.sh`: seed operacional em ambiente com `docker compose`
+- `backend/seed.js`: fonte única da carga inicial
+- `scripts/seed-vps.sh`: aguarda a API e delega para `node seed.js`
+- `scripts/seed-swarm.sh`: mesma delegação em ambiente Swarm/Portainer
 
 ### Resultado mínimo esperado do seed
 
 - usuário admin ativo
+- perfis, módulos, rotinas e menu seeded
 - plano premium associado ao admin
+- planos seeded
+- dados IBGE carregados no banco auxiliar
 - planos seeded
 - dados IBGE carregados no banco auxiliar
 
@@ -384,3 +389,4 @@ Para que esta documentação continue útil como base de novos projetos:
 - mudanças de infraestrutura devem atualizar `docker-compose*.yml`, scripts e docs ao mesmo tempo
 
 Se isso não for mantido, a documentação deixa de ser uma base de recriação e passa a ser apenas material histórico.
+
