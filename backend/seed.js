@@ -4,16 +4,38 @@
 // clientes vinculados, perfis, módulos, rotinas e associações de menu.
 // Uso: node seed.js
 // Variáveis opcionais: ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME,
-// ADMIN_PLAN_SLUG, ADMIN_PLAN_EXPIRY, FORCE_IBGE_SYNC
+// ADMIN_PLAN_SLUG, ADMIN_PLAN_EXPIRY, FORCE_IBGE_SYNC,
+// BOOTSTRAP_CLIENT_NAME, BOOTSTRAP_CLIENT_EMAIL, BOOTSTRAP_CLIENT_CNPJ, BOOTSTRAP_CLIENT_PHONE,
+// BOOTSTRAP_CLIENT_FANTASY_NAME, BOOTSTRAP_CLIENT_COMPANY_SIZE, BOOTSTRAP_CLIENT_STATUS,
+// BOOTSTRAP_CLIENT_CEP, BOOTSTRAP_CLIENT_STREET, BOOTSTRAP_CLIENT_NUMBER, BOOTSTRAP_CLIENT_DISTRICT,
+// BOOTSTRAP_CLIENT_CITY, BOOTSTRAP_CLIENT_UF, BOOTSTRAP_CLIENT_CNAE,
+// BOOTSTRAP_CLIENT_CNAE_DESC, BOOTSTRAP_CLIENT_LEGAL_NATURE_CODE, BOOTSTRAP_CLIENT_LEGAL_NATURE_DESC
 
 'use strict';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@bjsoft.com.br';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'ricardo@bjsoft.com.br';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Administrador';
 const ADMIN_PLAN_SLUG = process.env.ADMIN_PLAN_SLUG || 'premium';
 const ADMIN_PLAN_EXPIRY = process.env.ADMIN_PLAN_EXPIRY || '2999-12-31';
 const FORCE_IBGE_SYNC = process.env.FORCE_IBGE_SYNC === '1';
+const BOOTSTRAP_CLIENT_NAME = process.env.BOOTSTRAP_CLIENT_NAME || 'RICARDO PATAY SOTOMAYOR';
+const BOOTSTRAP_CLIENT_EMAIL = process.env.BOOTSTRAP_CLIENT_EMAIL || 'conasci@gmail.com';
+const BOOTSTRAP_CLIENT_CNPJ = (process.env.BOOTSTRAP_CLIENT_CNPJ || '19.654.062/0001-45').replace(/\D/g, '') || null;
+const BOOTSTRAP_CLIENT_PHONE = (process.env.BOOTSTRAP_CLIENT_PHONE || '+5567991468448').replace(/\D/g, '') || null;
+const BOOTSTRAP_CLIENT_FANTASY_NAME = process.env.BOOTSTRAP_CLIENT_FANTASY_NAME || 'B. J. INFORMATICA';
+const BOOTSTRAP_CLIENT_COMPANY_SIZE = process.env.BOOTSTRAP_CLIENT_COMPANY_SIZE || 'Micro Empresa';
+const BOOTSTRAP_CLIENT_STATUS = process.env.BOOTSTRAP_CLIENT_STATUS || 'Ativa';
+const BOOTSTRAP_CLIENT_CEP = (process.env.BOOTSTRAP_CLIENT_CEP || '79117130').replace(/\D/g, '') || null;
+const BOOTSTRAP_CLIENT_STREET = process.env.BOOTSTRAP_CLIENT_STREET || 'JOAO GUIMARAES ROSA';
+const BOOTSTRAP_CLIENT_NUMBER = process.env.BOOTSTRAP_CLIENT_NUMBER || '459';
+const BOOTSTRAP_CLIENT_DISTRICT = process.env.BOOTSTRAP_CLIENT_DISTRICT || 'VILA NASSER';
+const BOOTSTRAP_CLIENT_CITY = process.env.BOOTSTRAP_CLIENT_CITY || 'Campo Grande';
+const BOOTSTRAP_CLIENT_UF = process.env.BOOTSTRAP_CLIENT_UF || 'MS';
+const BOOTSTRAP_CLIENT_CNAE = (process.env.BOOTSTRAP_CLIENT_CNAE || '6209100').replace(/\D/g, '') || null;
+const BOOTSTRAP_CLIENT_CNAE_DESC = process.env.BOOTSTRAP_CLIENT_CNAE_DESC || 'Suporte técnico, manutenção e outros serviços em tecnologia da informação';
+const BOOTSTRAP_CLIENT_LEGAL_NATURE_CODE = process.env.BOOTSTRAP_CLIENT_LEGAL_NATURE_CODE || '2135';
+const BOOTSTRAP_CLIENT_LEGAL_NATURE_DESC = process.env.BOOTSTRAP_CLIENT_LEGAL_NATURE_DESC || 'Empresário (Individual)';
 
 const { NestFactory } = require('@nestjs/core');
 const { AppModule } = require('./dist/app.module');
@@ -45,12 +67,128 @@ async function main() {
   `, [ADMIN_NAME, ADMIN_EMAIL, senhaHash]);
   console.log('[seed] Admin da plataforma OK.');
 
+  const [adminRow] = await ds.query(`SELECT id FROM usuarios WHERE email = $1 LIMIT 1`, [ADMIN_EMAIL]);
+  if (!adminRow) throw new Error('Admin não encontrado após insert.');
+
+  console.log('[seed] Garantindo cliente bootstrap vinculado ao admin...');
+  let clienteBootstrap = null;
+
+  if (BOOTSTRAP_CLIENT_CNPJ) {
+    [clienteBootstrap] = await ds.query(`
+      SELECT id, proprietario_id
+      FROM clientes
+      WHERE cnpj = $1
+      LIMIT 1
+    `, [BOOTSTRAP_CLIENT_CNPJ]);
+  }
+
+  if (!clienteBootstrap) {
+    [clienteBootstrap] = await ds.query(`
+      SELECT id, proprietario_id
+      FROM clientes
+      WHERE proprietario_id = $1 OR email = $2
+      ORDER BY CASE WHEN proprietario_id = $1 THEN 0 ELSE 1 END
+      LIMIT 1
+    `, [adminRow.id, BOOTSTRAP_CLIENT_EMAIL]);
+  }
+
+  if (clienteBootstrap) {
+    await ds.query(`
+      UPDATE clientes
+      SET proprietario_id = $2,
+          tipo_pessoa = 'J',
+          nome = $3,
+          email = $4,
+          cnpj = COALESCE($5, cnpj),
+          telefone = COALESCE($6, telefone),
+          cep = COALESCE($7, cep),
+          logradouro = COALESCE($8, logradouro),
+          numero = COALESCE($9, numero),
+          bairro = COALESCE($10, bairro),
+          municipio = COALESCE($11, municipio),
+          uf = COALESCE($12, uf),
+          cnae_principal = COALESCE($13, cnae_principal),
+          cnae_principal_descricao = COALESCE($14, cnae_principal_descricao),
+          natureza_juridica_codigo = COALESCE($15, natureza_juridica_codigo),
+          natureza_juridica_descricao = COALESCE($16, natureza_juridica_descricao),
+          porte_empresa = COALESCE($17, porte_empresa),
+          situacao_cadastral = COALESCE($18, situacao_cadastral),
+          razao_social = COALESCE(NULLIF(razao_social, ''), $3),
+          nome_fantasia = COALESCE(NULLIF(nome_fantasia, ''), $19),
+          ativo = true,
+          onboarding_pendente = false,
+          agendar_exclusao_em = NULL
+      WHERE id = $1
+    `, [
+      clienteBootstrap.id,
+      adminRow.id,
+      BOOTSTRAP_CLIENT_NAME,
+      BOOTSTRAP_CLIENT_EMAIL,
+      BOOTSTRAP_CLIENT_CNPJ,
+      BOOTSTRAP_CLIENT_PHONE,
+      BOOTSTRAP_CLIENT_CEP,
+      BOOTSTRAP_CLIENT_STREET,
+      BOOTSTRAP_CLIENT_NUMBER,
+      BOOTSTRAP_CLIENT_DISTRICT,
+      BOOTSTRAP_CLIENT_CITY,
+      BOOTSTRAP_CLIENT_UF,
+      BOOTSTRAP_CLIENT_CNAE,
+      BOOTSTRAP_CLIENT_CNAE_DESC,
+      BOOTSTRAP_CLIENT_LEGAL_NATURE_CODE,
+      BOOTSTRAP_CLIENT_LEGAL_NATURE_DESC,
+      BOOTSTRAP_CLIENT_COMPANY_SIZE,
+      BOOTSTRAP_CLIENT_STATUS,
+      BOOTSTRAP_CLIENT_FANTASY_NAME,
+    ]);
+  } else {
+    [clienteBootstrap] = await ds.query(`
+      INSERT INTO clientes (
+        proprietario_id, tipo_pessoa, nome, email, cnpj, telefone,
+        cep, logradouro, numero, bairro, municipio, uf,
+        cnae_principal, cnae_principal_descricao,
+        natureza_juridica_codigo, natureza_juridica_descricao,
+        porte_empresa, situacao_cadastral,
+        razao_social, nome_fantasia, ativo, onboarding_pendente, agendar_exclusao_em
+      )
+      VALUES ($1, 'J', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $2, $18, true, false, NULL)
+      RETURNING id, proprietario_id
+    `, [
+      adminRow.id,
+      BOOTSTRAP_CLIENT_NAME,
+      BOOTSTRAP_CLIENT_EMAIL,
+      BOOTSTRAP_CLIENT_CNPJ,
+      BOOTSTRAP_CLIENT_PHONE,
+      BOOTSTRAP_CLIENT_CEP,
+      BOOTSTRAP_CLIENT_STREET,
+      BOOTSTRAP_CLIENT_NUMBER,
+      BOOTSTRAP_CLIENT_DISTRICT,
+      BOOTSTRAP_CLIENT_CITY,
+      BOOTSTRAP_CLIENT_UF,
+      BOOTSTRAP_CLIENT_CNAE,
+      BOOTSTRAP_CLIENT_CNAE_DESC,
+      BOOTSTRAP_CLIENT_LEGAL_NATURE_CODE,
+      BOOTSTRAP_CLIENT_LEGAL_NATURE_DESC,
+      BOOTSTRAP_CLIENT_COMPANY_SIZE,
+      BOOTSTRAP_CLIENT_STATUS,
+      BOOTSTRAP_CLIENT_FANTASY_NAME,
+    ]);
+  }
+
+  await ds.query(`
+    UPDATE usuarios
+    SET cliente_id = $2,
+        telefone = COALESCE($3, telefone),
+        ativo = true,
+        email_verificado = true,
+        onboarding_pendente = false
+    WHERE id = $1
+  `, [adminRow.id, clienteBootstrap.id, BOOTSTRAP_CLIENT_PHONE]);
+
+  console.log(`[seed] Cliente bootstrap OK (${BOOTSTRAP_CLIENT_NAME}).`);
+
   console.log(`[seed] Atribuindo plano ${ADMIN_PLAN_SLUG} ao admin...`);
   const { AssinaturasService } = require('./dist/modules/assinaturas/assinaturas.service');
   const assinaturasService = app.get(AssinaturasService);
-
-  const [adminRow] = await ds.query(`SELECT id FROM usuarios WHERE email = $1 LIMIT 1`, [ADMIN_EMAIL]);
-  if (!adminRow) throw new Error('Admin não encontrado após insert.');
 
   const [activePlan] = await ds.query(`
     SELECT p.slug FROM assinaturas a JOIN planos p ON p.id = a.plano_id

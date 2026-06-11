@@ -84,133 +84,131 @@
           </div>
         </po-container>
 
-        <div class="po-row etl-acoes">
-          <!-- Baixar base -->
-          <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <div class="etl-card etl-card--base">
-              <span class="an an-package etl-card__icon"></span>
-              <div class="etl-card__body">
-                <strong class="etl-card__title">Baixar base</strong>
-                <span class="etl-card__desc">cnpj.tar.gz da raiz do repositorio. Executar apenas na carga inicial (59 GB).</span>
+        <!-- Downloads -->
+        <po-container p-title="Download">
+          <div class="po-row etl-acoes">
+            <div class="po-lg-4 po-sm-12 etl-grid-item">
+              <div class="etl-card etl-card--base">
+                <span class="an an-package etl-card__icon"></span>
+                <div class="etl-card__body">
+                  <strong class="etl-card__title">Baixar base</strong>
+                  <span class="etl-card__desc">cnpj.tar.gz da raiz do repositório. Apenas na carga inicial (~59 GB).</span>
+                </div>
+                <po-button p-label="Baixar base" p-kind="secondary" p-icon="an an-download"
+                  [p-disabled]="status.rodando" (p-click)="executar('download-base')">
+                </po-button>
               </div>
-              <po-button
-                p-label="Baixar base"
-                p-kind="secondary"
-                p-icon="an an-download"
-                [p-disabled]="status.rodando"
-                (p-click)="executar('download-base')">
-              </po-button>
+            </div>
+            <div class="po-lg-4 po-sm-12 etl-grid-item">
+              <div class="etl-card etl-card--tabelas">
+                <span class="an an-list-bullets etl-card__icon"></span>
+                <div class="etl-card__body">
+                  <strong class="etl-card__title">Baixar tabelas</strong>
+                  <span class="etl-card__desc">Cnaes, Motivos, Municipios, Naturezas, Paises, Qualificacoes e Simples.</span>
+                </div>
+                <po-button p-label="Baixar tabelas" p-kind="secondary" p-icon="an an-download"
+                  [p-disabled]="status.rodando" (p-click)="executar('download-tabelas')">
+                </po-button>
+              </div>
+            </div>
+            <div class="po-lg-4 po-sm-12 etl-grid-item">
+              <div class="etl-card etl-card--empresas">
+                <span class="an an-buildings etl-card__icon"></span>
+                <div class="etl-card__body">
+                  <strong class="etl-card__title">Baixar empresas</strong>
+                  <span class="etl-card__desc">Empresas0-9, Estabelecimentos0-9 e Socios0-9 particionados.</span>
+                </div>
+                <po-button p-label="Baixar empresas" p-kind="secondary" p-icon="an an-download"
+                  [p-disabled]="status.rodando" (p-click)="executar('download-empresas')">
+                </po-button>
+              </div>
             </div>
           </div>
+        </po-container>
 
-          <!-- Baixar tabelas -->
-          <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <div class="etl-card etl-card--tabelas">
-              <span class="an an-list-bullets etl-card__icon"></span>
-              <div class="etl-card__body">
-                <strong class="etl-card__title">Baixar tabelas</strong>
-                <span class="etl-card__desc">Cnaes, Motivos, Municipios, Naturezas, Paises, Qualificacoes e Simples (ano-mes).</span>
+        <!-- Pipeline base (cnpj.tar.gz) -->
+        <po-container p-title="Pipeline — Carga base (cnpj.tar.gz)">
+          <div class="etl-pipeline">
+            <div class="etl-pipeline__info">
+              <span class="an an-package"></span>
+              tar.gz: <strong>{{ resumo.tarGzExiste ? 'presente' : 'ausente' }}</strong>
+              &nbsp;|&nbsp;
+              ZIPs em extraidos/: <strong>{{ resumo.zipsEmExtraidos }}</strong>
+              &nbsp;|&nbsp;
+              CSVs prontos: <strong>{{ resumo.csvsExtraidos }}</strong>
+              &nbsp;|&nbsp;
+              Banco: <strong>{{ resumo.bancoPrimeiraUso ? 'vazio' : 'com dados' }}</strong>
+            </div>
+            <div class="etl-pipeline__steps">
+              <div class="etl-pipeline__step">
+                <span class="etl-pipeline__step-num">1</span>
+                <div class="etl-pipeline__step-body">
+                  <strong>Extrair tar.gz → CSVs</strong>
+                  <small>tar.gz → ZIPs em extraidos/ → CSVs</small>
+                </div>
+                <po-button p-label="Extrair" p-kind="secondary" p-icon="an an-arrows-down-up"
+                  [p-disabled]="status.rodando || !resumo.tarGzExiste"
+                  (p-click)="executar('extracao-base')">
+                </po-button>
               </div>
-              <po-button
-                p-label="Baixar tabelas"
-                p-kind="secondary"
-                p-icon="an an-download"
-                [p-disabled]="status.rodando"
-                (p-click)="executar('download-tabelas')">
-              </po-button>
+              <span class="an an-arrow-right etl-pipeline__arrow"></span>
+              <div class="etl-pipeline__step">
+                <span class="etl-pipeline__step-num">2</span>
+                <div class="etl-pipeline__step-body">
+                  <strong>Aplicar base no banco</strong>
+                  <small>Trunca as tabelas e insere todos os CSVs</small>
+                </div>
+                <po-button p-label="Aplicar base" p-kind="primary" p-icon="an an-database"
+                  [p-disabled]="status.rodando || resumo.csvsExtraidos === 0"
+                  (p-click)="executar('carga-base')">
+                </po-button>
+              </div>
             </div>
           </div>
+        </po-container>
 
-          <!-- Baixar empresas -->
-          <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <div class="etl-card etl-card--empresas">
-              <span class="an an-buildings etl-card__icon"></span>
-              <div class="etl-card__body">
-                <strong class="etl-card__title">Baixar empresas</strong>
-                <span class="etl-card__desc">Empresas0-9, Estabelecimentos0-9 e Socios0-9 particionados (ano-mes).</span>
+        <!-- Pipeline incremental -->
+        <po-container p-title="Pipeline — Atualização incremental (mês)">
+          <div class="etl-pipeline">
+            <div class="etl-pipeline__info">
+              <span class="an an-calendar"></span>
+              ZIPs em downloads/: <strong>{{ resumo.zipsIncrementais }}</strong>
+              &nbsp;|&nbsp;
+              CSVs prontos: <strong>{{ resumo.csvsExtraidos }}</strong>
+            </div>
+            <div class="etl-pipeline__steps">
+              <div class="etl-pipeline__step">
+                <span class="etl-pipeline__step-num">1</span>
+                <div class="etl-pipeline__step-body">
+                  <strong>Extrair ZIPs → CSVs</strong>
+                  <small>ZIPs de downloads/ → CSVs em extraidos/</small>
+                </div>
+                <po-button p-label="Extrair" p-kind="secondary" p-icon="an an-arrows-down-up"
+                  [p-disabled]="status.rodando || resumo.zipsIncrementais === 0"
+                  (p-click)="executar('extracao-incrementais')">
+                </po-button>
               </div>
-              <po-button
-                p-label="Baixar empresas"
-                p-kind="secondary"
-                p-icon="an an-download"
-                [p-disabled]="status.rodando"
-                (p-click)="executar('download-empresas')">
-              </po-button>
+              <span class="an an-arrow-right etl-pipeline__arrow"></span>
+              <div class="etl-pipeline__step">
+                <span class="etl-pipeline__step-num">2</span>
+                <div class="etl-pipeline__step-body">
+                  <strong>Aplicar incremental</strong>
+                  <small>Upsert — atualiza registros existentes</small>
+                </div>
+                <po-button p-label="Aplicar incremental" p-kind="primary" p-icon="an an-database"
+                  [p-disabled]="status.rodando || resumo.csvsExtraidos === 0"
+                  (p-click)="executar('carga-incremental')">
+                </po-button>
+              </div>
             </div>
           </div>
-
-          <!-- Extrair -->
-          <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <div class="etl-card etl-card--extracao">
-              <span class="an an-file-text etl-card__icon"></span>
-              <div class="etl-card__body">
-                <strong class="etl-card__title">Extrair ZIPs</strong>
-                <span class="etl-card__desc">Descompacta os arquivos baixados para CSV antes da carga na base.</span>
-              </div>
-              <po-button
-                p-label="Extrair"
-                p-kind="secondary"
-                p-icon="an an-arrows-down-up"
-                [p-disabled]="status.rodando"
-                (p-click)="executar('extracao')">
-              </po-button>
-            </div>
+          <div class="etl-pipeline__limpar">
+            <po-button p-label="Limpar extraidos/" p-kind="danger" p-icon="an an-trash"
+              [p-disabled]="status.rodando"
+              (p-click)="limparExtraidos()">
+            </po-button>
           </div>
-
-          <!-- Limpar extraidos -->
-          <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <div class="etl-card etl-card--danger">
-              <span class="an an-folder-open etl-card__icon"></span>
-              <div class="etl-card__body">
-                <strong class="etl-card__title">Limpar extraidos/</strong>
-                <span class="etl-card__desc">Remove todos os arquivos da pasta extraidos/ (CSVs, ZIPs perdidos etc.).</span>
-              </div>
-              <po-button
-                p-label="Limpar tudo"
-                p-kind="danger"
-                p-icon="an an-trash"
-                [p-disabled]="status.rodando"
-                (p-click)="limparExtraidos()">
-              </po-button>
-            </div>
-          </div>
-
-          <!-- Aplicar -->
-          <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <div class="etl-card etl-card--carga">
-              <span class="an an-terminal-window etl-card__icon"></span>
-              <div class="etl-card__body">
-                <strong class="etl-card__title">Aplicar na base</strong>
-                <span class="etl-card__desc">Carrega os CSVs no PostgreSQL com truncamento previo e insercao em lotes.</span>
-              </div>
-              <po-button
-                p-label="Aplicar"
-                p-kind="secondary"
-                p-icon="an an-arrow-down"
-                [p-disabled]="status.rodando"
-                (p-click)="executar('carga')">
-              </po-button>
-            </div>
-          </div>
-
-          <!-- ETL completo -->
-          <div class="po-lg-4 po-sm-12 etl-grid-item">
-            <div class="etl-card etl-card--completo">
-              <span class="an an-arrow-clockwise etl-card__icon"></span>
-              <div class="etl-card__body">
-                <strong class="etl-card__title">ETL completo</strong>
-                <span class="etl-card__desc">Executa tabelas + empresas, extracao e carga em sequencia automaticamente.</span>
-              </div>
-              <po-button
-                p-label="Executar tudo"
-                p-kind="primary"
-                p-icon="an an-arrow-clockwise"
-                [p-disabled]="status.rodando"
-                (p-click)="executar('completo')">
-              </po-button>
-            </div>
-          </div>
-        </div>
+        </po-container>
       </div>
     </po-tab>
 
@@ -273,49 +271,16 @@
       </div>
     </po-tab>
 
-    <po-tab p-label="Log de Arquivos">
+    <po-tab p-label="Logs">
       <div class="etl-tab-content">
-        <po-container p-title="Log de operações por arquivo">
+        <po-container p-title="Histórico de execuções">
           <div class="etl-toolbar">
-            <po-info p-label="Total de registros" [p-value]="logArquivosTotal.toString()"></po-info>
-            <po-button
-              p-label="Limpar log"
-              p-kind="secondary"
-              p-icon="an an-trash"
-              [p-disabled]="status.rodando || limpandoLogArquivos || !logArquivosTotal"
-              (p-click)="limparLogArquivos()">
-            </po-button>
-          </div>
-
-          <po-table
-            [p-columns]="colunasLogArquivos"
-            [p-items]="logArquivosItens"
-            [p-loading]="carregandoLogArquivos"
-            [p-loading-show-more]="carregandoMaisLogArquivos"
-            [p-show-more-disabled]="showMoreLogArquivosDisabled"
-            [p-hide-table-search]="true"
-            [p-hide-columns-manager]="true"
-            [p-striped]="true"
-            (p-show-more)="carregarMaisLogArquivos()">
-          </po-table>
-        </po-container>
-      </div>
-    </po-tab>
-
-    <po-tab p-label="Historico de execucoes">
-      <div class="etl-tab-content">
-        <po-container p-title="Historico de execucoes">
-          <div class="etl-toolbar">
-            <po-info p-label="Total de logs" [p-value]="status.total.toString()"></po-info>
-            <po-button
-              p-label="Limpar logs"
-              p-kind="secondary"
-              p-icon="an an-trash"
+            <po-info p-label="Total" [p-value]="status.total.toString()"></po-info>
+            <po-button p-label="Limpar" p-kind="secondary" p-icon="an an-trash"
               [p-disabled]="status.rodando || limpandoLogs || !status.total"
               (p-click)="limparLogs()">
             </po-button>
           </div>
-
           <po-table
             [p-columns]="colunasHistorico"
             [p-items]="historicoItens"
@@ -327,6 +292,27 @@
             [p-hide-columns-manager]="true"
             [p-striped]="true"
             (p-show-more)="carregarMaisHistorico()">
+          </po-table>
+        </po-container>
+
+        <po-container p-title="Log por arquivo">
+          <div class="etl-toolbar">
+            <po-info p-label="Total" [p-value]="logArquivosTotal.toString()"></po-info>
+            <po-button p-label="Limpar" p-kind="secondary" p-icon="an an-trash"
+              [p-disabled]="status.rodando || limpandoLogArquivos || !logArquivosTotal"
+              (p-click)="limparLogArquivos()">
+            </po-button>
+          </div>
+          <po-table
+            [p-columns]="colunasLogArquivos"
+            [p-items]="logArquivosItens"
+            [p-loading]="carregandoLogArquivos"
+            [p-loading-show-more]="carregandoMaisLogArquivos"
+            [p-show-more-disabled]="showMoreLogArquivosDisabled"
+            [p-hide-table-search]="true"
+            [p-hide-columns-manager]="true"
+            [p-striped]="true"
+            (p-show-more)="carregarMaisLogArquivos()">
           </po-table>
         </po-container>
       </div>

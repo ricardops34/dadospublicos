@@ -36,6 +36,14 @@ interface EtlArquivoLogItem {
   concluidoEm: string | null;
 }
 
+interface EtlResumo {
+  tarGzExiste: boolean;
+  zipsEmExtraidos: number;
+  csvsExtraidos: number;
+  zipsIncrementais: number;
+  bancoPrimeiraUso: boolean;
+}
+
 interface ArquivoRfb {
   nome: string;
   grupo: string;
@@ -71,6 +79,8 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
   private intervalo: any;
   private intervaloExtracao: any;
   extraindo = false;
+
+  resumo: EtlResumo = { tarGzExiste: false, zipsEmExtraidos: 0, csvsExtraidos: 0, zipsIncrementais: 0, bancoPrimeiraUso: true };
 
   logArquivosItens: EtlArquivoLogItem[] = [];
   logArquivosTotal = 0;
@@ -217,7 +227,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     return `${ano}-${String(mes).padStart(2, '0')}`;
   }
 
-  executar(fase: 'completo' | 'download' | 'download-base' | 'download-tabelas' | 'download-empresas' | 'extracao' | 'carga') {
+  executar(fase: 'completo' | 'download' | 'download-base' | 'download-tabelas' | 'download-empresas' | 'extracao' | 'extracao-base' | 'extracao-incrementais' | 'carga' | 'carga-base' | 'carga-incremental') {
     const labels: Record<string, string> = {
       completo: 'ETL completo iniciado.',
       download: 'Download de tabelas e empresas iniciado.',
@@ -225,7 +235,11 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
       'download-tabelas': 'Download das tabelas de referencia iniciado.',
       'download-empresas': 'Download dos dados de empresas iniciado.',
       extracao: 'Extracao dos ZIPs iniciada.',
+      'extracao-base': 'Extraindo ZIPs da base (extraidos/) → CSVs.',
+      'extracao-incrementais': 'Extraindo ZIPs incrementais (downloads/) → CSVs.',
       carga: 'Carga no banco iniciada.',
+      'carga-base': 'Carga base no banco iniciada (truncate + insert).',
+      'carga-incremental': 'Carga incremental no banco iniciada (upsert).',
     };
 
     const payload: { fase: string; competencia?: string } = { fase };
@@ -250,6 +264,13 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
     this.carregarStatus(true, false, false);
     this.carregarArquivos();
     this.carregarLogArquivos();
+    this.carregarResumo();
+  }
+
+  carregarResumo() {
+    this.http.get<EtlResumo>(`${environment.apiUrl}/etl/resumo`).subscribe({
+      next: (r) => { this.resumo = r; this.cdr.detectChanges(); },
+    });
   }
 
   limparLogs() {
@@ -385,6 +406,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
           this.historicoItens = s.historico;
           this.carregarArquivos();
           this.carregarLogArquivos();
+          this.carregarResumo();
         }
 
         if (origemPolling && s.rodando) {

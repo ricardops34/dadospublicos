@@ -19,6 +19,12 @@ export class EtlController {
     return this.service.status(Number(page), Number(pageSize));
   }
 
+  @Get('resumo')
+  @ApiOperation({ summary: '[Admin] Resumo de contagens para os paineis de pipeline' })
+  resumo() {
+    return this.service.resumo();
+  }
+
   @Get('arquivos')
   @ApiOperation({ summary: '[Admin] Lista arquivos RFB no servidor (ZIP e CSV extraido)' })
   arquivos() {

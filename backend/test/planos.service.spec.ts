@@ -81,25 +81,35 @@ function createService() {
   return { service, planos, recursos, planosRecursos };
 }
 
-test('seed inclui plano gratuito com CEP e limite de 3 CNPJ por hora', async () => {
+test('seed mantém gratuito sem CEP e libera CEP para planos pagos', async () => {
   const { service, planos, recursos, planosRecursos } = createService();
 
   await service.seed();
 
   const planoFree = planos.find((plano) => plano.slug === 'gratuito');
   assert.ok(planoFree);
-  assert.equal(planoFree.nome, 'gratuito');
+  assert.equal(planoFree.nome, 'Gratuito');
   assert.equal(planoFree.acessoCnpj, true);
-  assert.equal(planoFree.acessoGeocode, true);
-  assert.equal(planoFree.rateLimitPorHora, 3);
+  assert.equal(planoFree.acessoGeocode, false);
+  assert.equal(planoFree.rateLimitPorHora, null);
   assert.equal(planoFree.exibirNaLp, true);
 
-  const recursosDoPlano = planosRecursos
+  const recursosDoPlanoFree = planosRecursos
     .filter((assoc) => assoc.planoId === planoFree.id)
     .map((assoc) => recursos.find((recurso) => recurso.id === assoc.recursoId)?.slug);
 
-  assert.ok(recursosDoPlano.includes('consulta-cnpj'));
-  assert.ok(recursosDoPlano.includes('consulta-cep'));
+  assert.ok(recursosDoPlanoFree.includes('consulta-cnpj'));
+  assert.ok(!recursosDoPlanoFree.includes('consulta-cep'));
+
+  const planoBasico = planos.find((plano) => plano.slug === 'basico');
+  assert.ok(planoBasico);
+  assert.equal(planoBasico.acessoGeocode, true);
+
+  const recursosDoPlanoBasico = planosRecursos
+    .filter((assoc) => assoc.planoId === planoBasico.id)
+    .map((assoc) => recursos.find((recurso) => recurso.id === assoc.recursoId)?.slug);
+
+  assert.ok(recursosDoPlanoBasico.includes('consulta-cep'));
 });
 
 test('findAll público retorna apenas planos ativos exibidos na LP', async () => {

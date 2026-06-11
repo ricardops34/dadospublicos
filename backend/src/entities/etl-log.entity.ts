@@ -8,7 +8,11 @@ export type EtlFase =
   | 'download-tabelas'
   | 'download-empresas'
   | 'extracao'
-  | 'carga';
+  | 'extracao-base'
+  | 'extracao-incrementais'
+  | 'carga'
+  | 'carga-base'
+  | 'carga-incremental';
 
 @Entity('etl_logs')
 export class EtlLog {
