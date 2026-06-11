@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { EtlService } from './etl.service';
 import { JwtPortalGuard } from '../portal/jwt-portal.guard';
@@ -35,6 +35,35 @@ export class EtlController {
   @ApiOperation({ summary: '[Admin] Extrai cnpj.tar.gz (ou outro .tar.gz) do downloadDir para o extrairDir. Após isso, execute fase=carga.' })
   extrairTar(@Body('arquivo') arquivo?: string) {
     return this.service.extrairTarGz(arquivo);
+  }
+
+  @Get('log-arquivos')
+  @ApiOperation({ summary: '[Admin] Lista log de operacoes por arquivo (download, extracao, carga)' })
+  logArquivos(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.service.listarLogArquivos(Number(page), Number(pageSize));
+  }
+
+  @Delete('log-arquivos')
+  @ApiOperation({ summary: '[Admin] Limpa o log de operacoes por arquivo' })
+  limparLogArquivos() {
+    return this.service.limparLogArquivos();
+  }
+
+  @Post('baixar-arquivo')
+  @ApiOperation({ summary: '[Admin] Baixa (ou rebaixa) um arquivo especifico do RFB em background' })
+  baixarArquivo(@Body('nome') nome: string, @Body('competencia') competencia: string) {
+    if (!nome || !competencia) throw new BadRequestException('nome e competencia sao obrigatorios.');
+    return this.service.baixarArquivoUnico(nome, competencia);
+  }
+
+  @Delete('arquivo')
+  @ApiOperation({ summary: '[Admin] Apaga o ZIP e o CSV de um arquivo da listagem' })
+  apagarArquivo(@Query('nome') nome: string) {
+    if (!nome) throw new BadRequestException('nome e obrigatorio.');
+    return this.service.apagarArquivo(nome);
   }
 
   @Delete('logs')

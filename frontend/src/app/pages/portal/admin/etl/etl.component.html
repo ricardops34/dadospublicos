@@ -199,13 +199,72 @@
     <po-tab p-label="Arquivos no servidor">
       <div class="etl-tab-content">
         <po-container p-title="Arquivos no servidor">
+
+          <div class="etl-lote-toolbar" *ngIf="selecionados.length > 0">
+            <span class="etl-lote-info">
+              <span class="an an-check-square"></span>
+              {{ selecionados.length }} arquivo(s) selecionado(s)
+            </span>
+            <div class="etl-lote-acoes">
+              <po-button
+                p-label="Baixar selecionados"
+                p-icon="an an-download"
+                p-kind="secondary"
+                (p-click)="baixarLote()">
+              </po-button>
+              <po-button
+                p-label="Apagar selecionados"
+                p-icon="an an-trash"
+                p-kind="danger"
+                (p-click)="apagarLote()">
+              </po-button>
+            </div>
+          </div>
+
           <po-table
             [p-columns]="colunasArquivos"
             [p-items]="arquivos"
+            [p-actions]="acoesArquivos"
+            [p-selectable]="true"
             [p-loading]="carregando"
             [p-hide-table-search]="true"
             [p-hide-columns-manager]="true"
-            [p-striped]="true">
+            [p-hide-batch-actions]="true"
+            [p-striped]="true"
+            (p-selected)="onSelecionado($event)"
+            (p-unselected)="onDeselecionado($event)"
+            (p-all-selected)="onTodosSelecionados()"
+            (p-all-unselected)="onTodosDeselecionados()">
+          </po-table>
+
+        </po-container>
+      </div>
+    </po-tab>
+
+    <po-tab p-label="Log de Arquivos">
+      <div class="etl-tab-content">
+        <po-container p-title="Log de operações por arquivo">
+          <div class="etl-toolbar">
+            <po-info p-label="Total de registros" [p-value]="logArquivosTotal.toString()"></po-info>
+            <po-button
+              p-label="Limpar log"
+              p-kind="secondary"
+              p-icon="an an-trash"
+              [p-disabled]="status.rodando || limpandoLogArquivos || !logArquivosTotal"
+              (p-click)="limparLogArquivos()">
+            </po-button>
+          </div>
+
+          <po-table
+            [p-columns]="colunasLogArquivos"
+            [p-items]="logArquivosItens"
+            [p-loading]="carregandoLogArquivos"
+            [p-loading-show-more]="carregandoMaisLogArquivos"
+            [p-show-more-disabled]="showMoreLogArquivosDisabled"
+            [p-hide-table-search]="true"
+            [p-hide-columns-manager]="true"
+            [p-striped]="true"
+            (p-show-more)="carregarMaisLogArquivos()">
           </po-table>
         </po-container>
       </div>

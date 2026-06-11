@@ -9,6 +9,7 @@ import * as readline from 'readline';
 import * as tar from 'tar';
 import axios from 'axios';
 import { EtlLog, EtlFase } from '../../entities/etl-log.entity';
+import { EtlArquivoLog, EtlArquivoOperacao } from '../../entities/etl-arquivo-log.entity';
 import { ParametrosService } from '../parametros/parametros.service';
 import { competenciaPadraoRfb } from './etl-competencia.util';
 
@@ -69,12 +70,14 @@ export class EtlService {
   private readonly logger = new Logger(EtlService.name);
   private rodando = false;
   private progresso: Progresso = { fase: '', arquivoAtual: '', feitos: 0, total: 0, percentual: 0 };
+  private currentLogId: string | null = null;
 
   private get downloadDir() { return process.env.ETL_DOWNLOAD_DIR ?? './etl-data/downloads'; }
   private get extrairDir()  { return process.env.ETL_EXTRACT_DIR  ?? './etl-data/extraidos'; }
 
   constructor(
     @InjectRepository(EtlLog) private logs: Repository<EtlLog>,
+    @InjectRepository(EtlArquivoLog) private arquivoLogs: Repository<EtlArquivoLog>,
     private dataSource: DataSource,
     private params: ParametrosService,
   ) {}
@@ -128,6 +131,26 @@ export class EtlService {
     const totalAntes = await this.logs.count();
     await this.logs.clear();
     return { removidos: totalAntes };
+  }
+
+  async listarLogArquivos(page = 1, pageSize = 30) {
+    const pageSafe = Math.max(1, Number(page) || 1);
+    const pageSizeSafe = Math.max(1, Math.min(200, Number(pageSize) || 30));
+    const [logs, total] = await this.arquivoLogs.findAndCount({
+      order: { iniciadoEm: 'DESC' },
+      take: pageSizeSafe,
+      skip: (pageSafe - 1) * pageSizeSafe,
+    });
+    return { logs, page: pageSafe, pageSize: pageSizeSafe, total };
+  }
+
+  async limparLogArquivos() {
+    if (this.rodando) {
+      throw new ConflictException('Nao e possivel limpar logs enquanto o ETL estiver em execucao.');
+    }
+    const total = await this.arquivoLogs.count();
+    await this.arquivoLogs.clear();
+    return { removidos: total };
   }
 
   async listarArquivos() {
@@ -197,6 +220,7 @@ export class EtlService {
   // ─── Execução assíncrona ───────────────────────────────────────────────────
 
   private async runAsync(log: EtlLog, fase: EtlFase) {
+    this.currentLogId = log.id;
     try {
       fs.mkdirSync(this.downloadDir, { recursive: true });
       fs.mkdirSync(this.extrairDir,  { recursive: true });
@@ -246,6 +270,7 @@ export class EtlService {
       this.logger.error(`ETL [${fase}] FALHOU:`, err);
     } finally {
       this.rodando = false;
+      this.currentLogId = null;
       this.progresso = { fase: '', arquivoAtual: '', feitos: 0, total: 0, percentual: 0 };
     }
   }
@@ -300,7 +325,7 @@ export class EtlService {
     for (const arq of ARQUIVOS_LOOKUP) {
       this.progresso.arquivoAtual = arq.nome;
       this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
-      await this.download(arq.nome, competencia);
+      await this.downloadComLog(arq.nome, competencia);
       this.progresso.feitos++;
     }
   }
@@ -320,7 +345,7 @@ export class EtlService {
       this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
 
       // Parte 0 é obrigatória — lança erro se não encontrada
-      await this.download(`${pd.prefixo}0.zip`, competencia);
+      await this.downloadComLog(`${pd.prefixo}0.zip`, competencia);
 
       // Partes 1..N — para no primeiro 404/403
       let parte = 1;
@@ -328,8 +353,16 @@ export class EtlService {
         const nome = `${pd.prefixo}${parte}.zip`;
         const destPath = path.join(this.downloadDir, nome);
         if (fs.existsSync(destPath)) { parte++; continue; }
+        const inicio = Date.now();
         const baixou = await this.downloadSemErro(nome, competencia);
         if (!baixou) break;
+        const tamanhoMb = fs.existsSync(destPath)
+          ? +(fs.statSync(destPath).size / 1024 / 1024).toFixed(1) : null;
+        this.arquivoLogs.save(this.arquivoLogs.create({
+          etlLogId: this.currentLogId, arquivo: nome, operacao: 'download',
+          status: 'concluido', competencia, tamanhoMb, duracaoMs: Date.now() - inicio,
+          concluidoEm: new Date(),
+        })).catch(() => {});
         parte++;
       }
 
@@ -357,19 +390,49 @@ export class EtlService {
     log.status = 'extracao';
     await this.logs.save(log);
     this.progresso.fase = 'Extração';
-    this.progresso.total = ARQUIVOS_RFB.length;
     this.progresso.feitos = 0;
 
-    for (const arq of ARQUIVOS_RFB) {
-      const zipPath = path.join(this.downloadDir, arq.nome);
+    // Monta lista completa: lookups + todas as partes particionadas presentes no disco
+    const zipsParaExtrair: string[] = ARQUIVOS_LOOKUP.map((a) => a.nome);
+    for (const pd of PREFIXOS_DADOS) {
+      const re = new RegExp(`^${pd.prefixo}(\\d+)\\.zip$`, 'i');
+      for (const f of fs.readdirSync(this.downloadDir)) {
+        if (re.test(f)) zipsParaExtrair.push(f);
+      }
+    }
+
+    this.progresso.total = zipsParaExtrair.length;
+
+    for (const nome of zipsParaExtrair) {
+      const zipPath = path.join(this.downloadDir, nome);
       if (!fs.existsSync(zipPath)) {
-        this.logger.warn(`ZIP não encontrado para extração: ${arq.nome}`);
+        this.logger.warn(`ZIP não encontrado para extração: ${nome}`);
         this.progresso.feitos++;
         continue;
       }
-      this.progresso.arquivoAtual = arq.nome;
+      this.progresso.arquivoAtual = nome;
       this.progresso.percentual = Math.round((this.progresso.feitos / this.progresso.total) * 100);
-      await this.extrair(zipPath);
+
+      const inicio = Date.now();
+      const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+        etlLogId: this.currentLogId, arquivo: nome, operacao: 'extracao', status: 'iniciando',
+      }));
+      try {
+        await this.extrair(zipPath);
+        const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
+        logEntry.status = 'concluido';
+        logEntry.tamanhoMb = fs.existsSync(csvPath)
+          ? +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1) : null;
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.concluidoEm = new Date();
+      } catch (err) {
+        logEntry.status = 'erro';
+        logEntry.detalhe = String(err);
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.concluidoEm = new Date();
+      }
+      await this.arquivoLogs.save(logEntry);
+
       this.progresso.feitos++;
     }
   }
@@ -454,6 +517,39 @@ export class EtlService {
     });
   }
 
+  /** Baixa com log de início/conclusão/erro na tabela etl_arquivo_logs. */
+  private async downloadComLog(arquivo: string, competencia: string): Promise<void> {
+    const destPath = path.join(this.downloadDir, arquivo);
+    if (fs.existsSync(destPath)) {
+      await this.arquivoLogs.save(this.arquivoLogs.create({
+        etlLogId: this.currentLogId, arquivo, operacao: 'download',
+        status: 'ja_existe', competencia, concluidoEm: new Date(),
+      }));
+      return;
+    }
+
+    const inicio = Date.now();
+    const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+      etlLogId: this.currentLogId, arquivo, operacao: 'download',
+      status: 'iniciando', competencia,
+    }));
+    try {
+      await this.download(arquivo, competencia);
+      logEntry.status = 'concluido';
+      logEntry.tamanhoMb = +(fs.statSync(destPath).size / 1024 / 1024).toFixed(1);
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.concluidoEm = new Date();
+    } catch (err) {
+      logEntry.status = 'erro';
+      logEntry.detalhe = String(err);
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.concluidoEm = new Date();
+      throw err;
+    } finally {
+      await this.arquivoLogs.save(logEntry);
+    }
+  }
+
   /** Tenta baixar um arquivo; retorna false silenciosamente se não existir (404/403). */
   private async downloadSemErro(arquivo: string, competencia: string): Promise<boolean> {
     try {
@@ -464,6 +560,31 @@ export class EtlService {
       if (status === 404 || status === 403) return false;
       throw err;
     }
+  }
+
+  async apagarArquivo(nome: string): Promise<{ apagados: string[] }> {
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) {
+      throw new Error('Nome de arquivo inválido.');
+    }
+    const apagados: string[] = [];
+    const zipPath = path.join(this.downloadDir, nome);
+    const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
+    if (fs.existsSync(zipPath)) { fs.unlinkSync(zipPath); apagados.push(nome); }
+    if (fs.existsSync(csvPath)) { fs.unlinkSync(csvPath); apagados.push(nome.replace(/\.zip$/i, '.csv')); }
+    return { apagados };
+  }
+
+  async baixarArquivoUnico(nome: string, competencia: string): Promise<{ mensagem: string }> {
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) {
+      throw new Error('Nome de arquivo inválido.');
+    }
+    const destPath = path.join(this.downloadDir, nome);
+    if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+    // Fire-and-forget com log (etlLogId null = operação avulsa)
+    this.downloadComLog(nome, competencia).catch((err) =>
+      this.logger.error(`Erro ao baixar ${nome}:`, err),
+    );
+    return { mensagem: `Download de ${nome} iniciado em background.` };
   }
 
   /**
@@ -577,11 +698,25 @@ export class EtlService {
     let total = 0;
     let idx = 0;
     while (true) {
-      const csvPath = path.join(this.extrairDir, `${prefixo}${idx}.csv`);
+      const arquivo = `${prefixo}${idx}.csv`;
+      const csvPath = path.join(this.extrairDir, arquivo);
       if (!fs.existsSync(csvPath)) break;
       this.progresso.arquivoAtual = `${tabela} — parte ${idx}`;
       this.logger.log(`  Carregando ${tabela} parte ${idx}...`);
-      total += await this.carregarCsv(csvPath, tabela, colunas);
+
+      const inicio = Date.now();
+      const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+        etlLogId: this.currentLogId, arquivo, operacao: 'carga', status: 'iniciando',
+      }));
+      const count = await this.carregarCsv(csvPath, tabela, colunas);
+      logEntry.status = 'concluido';
+      logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros → ${tabela}`;
+      logEntry.concluidoEm = new Date();
+      await this.arquivoLogs.save(logEntry);
+
+      total += count;
       idx++;
     }
     return total;

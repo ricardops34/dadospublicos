@@ -137,6 +137,43 @@
   margin-bottom: 16px;
 }
 
+.etl-lote-toolbar {
+  align-items: center;
+  background: var(--color-brand-01-lightest);
+  border: 1px solid var(--color-brand-01-light);
+  border-radius: 4px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+}
+
+.etl-lote-info {
+  align-items: center;
+  color: var(--color-neutral-dark-90);
+  display: flex;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  gap: 8px;
+}
+
+.etl-lote-acoes {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .etl-lote-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .etl-lote-acoes {
+    flex-wrap: wrap;
+  }
+}
+
 .etl-erro-pre {
   margin: 0;
   max-height: 400px;
