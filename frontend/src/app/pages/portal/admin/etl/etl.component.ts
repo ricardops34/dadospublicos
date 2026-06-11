@@ -253,6 +253,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
         next: () => {
           this.notif.information(labels[fase]);
           this.iniciarPolling();
+          setTimeout(() => { this.carregarResumo(); this.carregarArquivos(); }, 2000);
         },
         error: (err) => {
           this.notif.error(err.error?.message ?? 'Erro ao iniciar ETL.');
@@ -410,6 +411,9 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
           this.carregarResumo();
         }
 
+        if (origemPolling) {
+          this.carregarResumo();
+        }
         if (origemPolling && s.rodando) {
           this.carregarLogArquivos();
         }
