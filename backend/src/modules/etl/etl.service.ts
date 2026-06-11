@@ -591,11 +591,17 @@ export class EtlService {
   }
 
   async extrairArquivoUnico(nome: string): Promise<{ mensagem: string }> {
-    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
-    const zipPath = path.join(this.downloadDir, nome);
-    this.logger.log(`extrairArquivoUnico: verificando ${zipPath}`);
-    if (!fs.existsSync(zipPath)) throw new NotFoundException(`Arquivo não encontrado: ${zipPath}`);
-    this.extrairComLog(nome, zipPath).catch((err) =>
+    if (!/^[A-Za-z0-9_.-]+\.(zip|tar\.gz)$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
+    const filePath = path.join(this.downloadDir, nome);
+    this.logger.log(`extrairArquivoUnico: verificando ${filePath}`);
+    if (!fs.existsSync(filePath)) throw new NotFoundException(`Arquivo não encontrado: ${filePath}`);
+
+    if (/\.tar\.gz$/i.test(nome)) {
+      // Delega para o método existente que extrai tar.gz
+      return this.extrairTarGz(nome);
+    }
+
+    this.extrairComLog(nome, filePath).catch((err) =>
       this.logger.error(`Erro ao extrair ${nome}:`, err),
     );
     return { mensagem: `Extração de ${nome} iniciada em background.` };

@@ -127,7 +127,7 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
       icon: 'an an-file-x',
       type: 'danger',
       action: (row: ArquivoRfb) => this.apagarCsvArquivoLinha(row),
-      visible: (row: ArquivoRfb) => row.status === 'extraido',
+      visible: (row: ArquivoRfb) => row.status === 'extraido' && !row.nome.endsWith('.tar.gz'),
     },
     {
       label: 'Apagar tudo',
