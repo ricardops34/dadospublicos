@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { PoNotificationService } from '@po-ui/ng-components';
-import { PoPageDynamicTableComponent, PoPageDynamicTableActions, PoPageDynamicTableCustomTableAction } from '@po-ui/ng-templates';
+import { PoPageDynamicTableActions, PoPageDynamicTableComponent, PoPageDynamicTableCustomTableAction } from '@po-ui/ng-templates';
+import { Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
 import { AdminService } from '../admin.service';
 
@@ -25,15 +26,26 @@ import { AdminService } from '../admin.service';
 export class ClientesListComponent {
   @ViewChild('dynamicTable') dynamicTable!: PoPageDynamicTableComponent;
 
-  apiService = `${environment.apiUrl}/admin/usuarios-poui`;
+  apiService = `${environment.apiUrl}/admin/clientes-poui`;
   breadcrumb = { items: [{ label: 'Início', link: '/portal/dashboard' }, { label: 'Clientes', link: '/portal/clientes' }] };
 
   constructor(
     private adminService: AdminService,
     private notification: PoNotificationService,
+    private router: Router,
   ) {}
 
   tableCustomActions: PoPageDynamicTableCustomTableAction[] = [
+    {
+      label: 'Visualizar',
+      icon: 'an an-eye',
+      action: (row: any) => this.router.navigate(['/portal/clientes/view', row.id]),
+    },
+    {
+      label: 'Editar',
+      icon: 'an an-pencil-simple',
+      action: (row: any) => this.router.navigate(['/portal/clientes/edit', row.id]),
+    },
     {
       label: 'Ativar',
       icon: 'an an-check-circle',
@@ -47,15 +59,21 @@ export class ClientesListComponent {
       action: (row: any) => this.toggleAtivo(row.id, false),
     },
     {
-      label: 'Validar E-mail',
-      icon: 'an an-envelope-simple-check',
-      visible: (row: any) => row.emailVerificado === 0,
-      action: (row: any) => this.validarEmail(row.id),
-    },
-    {
       label: 'Reenviar Senha',
       icon: 'an an-key',
-      action: (row: any) => this.reenviarSenha(row.id),
+      visible: (row: any) => !!row.usuarioPrincipalId,
+      action: (row: any) => this.reenviarSenhaPrincipal(row),
+    },
+    {
+      label: 'Criar Usuário Principal',
+      icon: 'an an-user-plus',
+      visible: (row: any) => !row.usuarioPrincipalId,
+      action: (row: any) => this.criarUsuarioPrincipal(row),
+    },
+    {
+      label: 'Excluir',
+      icon: 'an an-trash',
+      action: (row: any) => this.excluirCliente(row),
     },
   ];
 
@@ -69,20 +87,42 @@ export class ClientesListComponent {
     });
   }
 
-  private validarEmail(id: string) {
-    this.adminService.confirmarEmailCliente(id).subscribe({
-      next: () => {
-        this.notification.success('E-mail validado com sucesso.');
-        this.dynamicTable?.updateDataTable();
-      },
-      error: () => this.notification.error('Erro ao validar e-mail.'),
+  private reenviarSenhaPrincipal(row: any) {
+    if (!row?.usuarioPrincipalId) {
+      this.notification.warning('Cliente sem usuário principal vinculado.');
+      return;
+    }
+
+    this.adminService.enviarResetSenhaCliente(row.usuarioPrincipalId).subscribe({
+      next: () => this.notification.success('Link de definição de senha enviado ao usuário principal.'),
+      error: () => this.notification.error('Erro ao enviar link de senha do usuário principal.'),
     });
   }
 
-  private reenviarSenha(id: string) {
-    this.adminService.enviarResetSenhaCliente(id).subscribe({
-      next: () => this.notification.success('Link de definição de senha enviado.'),
-      error: () => this.notification.error('Erro ao enviar link de senha.'),
+  private criarUsuarioPrincipal(row: any) {
+    if (!window.confirm(`Criar usuário principal para ${row?.nome ?? 'este cliente'}?`)) return;
+
+    this.adminService.criarUsuarioPrincipalCliente(row.id).subscribe({
+      next: () => {
+        this.notification.success('Usuário principal criado e link de definição de senha enviado.');
+        this.dynamicTable?.updateDataTable();
+      },
+      error: (error) => {
+        const mensagem = error?.error?.message || 'Erro ao criar usuário principal.';
+        this.notification.error(mensagem);
+      },
+    });
+  }
+
+  private excluirCliente(row: any) {
+    if (!window.confirm(`Confirma a exclusão do cliente ${row?.nome ?? ''}?`)) return;
+
+    this.adminService.agendarExclusaoCliente(row.id, 'agora').subscribe({
+      next: () => {
+        this.notification.success('Solicitação de exclusão registrada.');
+        this.dynamicTable?.updateDataTable();
+      },
+      error: () => this.notification.error('Erro ao excluir cliente.'),
     });
   }
 
@@ -99,19 +139,9 @@ export class ClientesListComponent {
       ],
     },
     { property: 'nome', label: 'Nome', filter: true },
-    { property: 'email', label: 'E-mail', filter: true },
+    { property: 'email', label: 'E-mail de Contato', filter: true },
     { property: 'cpf', label: 'CPF', filter: true, visible: false },
     { property: 'cnpj', label: 'CNPJ', filter: true, visible: false },
-    {
-      property: 'emailVerificado', label: 'E-mail Verificado', type: 'label',
-      filter: true,
-      forceOptionsComponentType: 'select',
-      options: [{ label: 'Verificado', value: 1 }, { label: 'Pendente', value: 0 }],
-      labels: [
-        { value: 1, color: 'color-10', label: 'Verificado' },
-        { value: 0, color: 'color-07', label: 'Pendente' },
-      ],
-    },
     {
       property: 'ativoStatus', label: 'Status', type: 'label',
       filter: true,
@@ -128,8 +158,5 @@ export class ClientesListComponent {
 
   actions: PoPageDynamicTableActions = {
     new: '/portal/clientes/new',
-    edit: '/portal/clientes/edit/:id',
-    detail: '/portal/clientes/view/:id',
-    remove: true,
   };
 }

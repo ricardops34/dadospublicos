@@ -2,239 +2,209 @@ import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { ValidationPipe } from '@nestjs/common';
 import { ClientesService } from '../src/modules/clientes/clientes.service';
-import { AgendarExclusaoDto, CreateClienteDto, UpdateClienteDto } from '../src/modules/clientes/dto/create-cliente.dto';
+import { AgendarExclusaoDto } from '../src/modules/usuarios/dto/create-usuario.dto';
+import { CreateClienteDto, UpdateClienteDto } from '../src/modules/clientes/dto/create-cliente.dto';
 
 function createService(overrides?: {
   clientesRepo?: Record<string, any>;
+  clienteCnaesRepo?: Record<string, any>;
   assinaturasRepo?: Record<string, any>;
-  params?: Record<string, any>;
-  emailSvc?: Record<string, any>;
+  usuariosRepo?: Record<string, any>;
+  cnpjSvc?: Record<string, any>;
+  usuariosService?: Record<string, any>;
 }) {
   return new ClientesService(
-    (overrides?.clientesRepo ?? {}) as any,
-    (overrides?.assinaturasRepo ?? {}) as any,
-    ({ getValor: async () => '', ...(overrides?.params ?? {}) }) as any,
-    ({ enviar: async () => undefined, ...(overrides?.emailSvc ?? {}) }) as any,
+    ({
+      create: (value: any) => value,
+      save: async (value: any) => value,
+      findOne: async () => null,
+      findAndCount: async () => [[], 0],
+      ...(overrides?.clientesRepo ?? {}),
+    }) as any,
+    ({
+      delete: async () => undefined,
+      save: async () => undefined,
+      create: (value: any) => value,
+      ...(overrides?.clienteCnaesRepo ?? {}),
+    }) as any,
+    ({ ...(overrides?.assinaturasRepo ?? {}) }) as any,
+    ({
+      update: async () => undefined,
+      find: async () => [],
+      ...(overrides?.usuariosRepo ?? {}),
+    }) as any,
+    ({
+      obterCnaesPorCodigos: async () => [],
+      ...(overrides?.cnpjSvc ?? {}),
+    }) as any,
+    ({
+      enviarResetPorAdmin: async () => ({ mensagem: 'ok' }),
+      ...(overrides?.usuariosService ?? {}),
+    }) as any,
   );
 }
 
-test('CreateClienteDto aceita cadastro público mínimo com nome, email e senha', async () => {
+test('CreateClienteDto aceita cadastro admin sem senha e sem perfil', async () => {
   const pipe = new ValidationPipe({ whitelist: true, transform: true });
 
   const result = await pipe.transform(
-    { nome: 'Cliente Teste', email: 'novo@empresa.com', senha: 'Senha@123' },
+    { tipoPessoa: 'J', cnpj: '12.345.678/0001-90', razaoSocial: 'Empresa LTDA', email: 'contato@empresa.com' },
     { type: 'body', metatype: CreateClienteDto },
   );
 
-  assert.equal(result.nome, 'Cliente Teste');
-  assert.equal(result.email, 'novo@empresa.com');
-  assert.equal(result.senha, 'Senha@123');
+  assert.equal(result.razaoSocial, 'Empresa LTDA');
+  assert.equal(result.email, 'contato@empresa.com');
+  assert.equal('senha' in result, false);
 });
 
-test('isOnboardingPendente retorna true para cliente novo sem dados complementares e sem plano', () => {
-  const service = createService();
-
-  const result = service.isOnboardingPendente({
-    nome: 'Cliente Novo',
-    email: 'novo@empresa.com',
-    tipoPessoa: 'J',
-    telefone: null,
-    cnpj: null,
-    razaoSocial: null,
-    cep: null,
-    logradouro: null,
-    numero: null,
-    bairro: null,
-    municipio: null,
-    uf: null,
-    assinaturas: [],
-  } as any);
-
-  assert.equal(result, true);
-});
-
-test('isOnboardingPendente retorna false com cadastro completo e plano ativo', () => {
-  const service = createService();
-
-  const result = service.isOnboardingPendente({
-    nome: 'Cliente Completo',
-    email: 'completo@empresa.com',
-    tipoPessoa: 'J',
-    telefone: '65999999999',
-    cnpj: '12.345.678/0001-90',
-    razaoSocial: 'Empresa LTDA',
-    cep: '78000-000',
-    logradouro: 'Rua A',
-    numero: '10',
-    bairro: 'Centro',
-    municipio: 'Cuiaba',
-    uf: 'MT',
-    assinaturas: [{ status: 'ativa' }],
-  } as any);
-
-  assert.equal(result, false);
-});
-
-test('UpdateClienteDto aceita email e senha no fluxo admin', async () => {
+test('UpdateClienteDto aceita campos empresariais do cadastro admin', async () => {
   const pipe = new ValidationPipe({ whitelist: true, transform: true });
 
   const result = await pipe.transform(
-    { email: 'novo@empresa.com', senha: 'Senha@123' },
+    { nomeFantasia: 'Fantasia', naturezaJuridicaCodigo: '2062', naturezaJuridicaDescricao: 'Sociedade Empresária Limitada' },
     { type: 'body', metatype: UpdateClienteDto },
   );
 
-  assert.equal(result.email, 'novo@empresa.com');
-  assert.equal(result.senha, 'Senha@123');
+  assert.equal(result.nomeFantasia, 'Fantasia');
+  assert.equal(result.naturezaJuridicaCodigo, '2062');
 });
 
-test('atualizar aplica hash de senha e não persiste o campo senha bruto', async () => {
-  let savedCliente: any;
+test('createAdmin cria cliente sem usuário principal obrigatório', async () => {
+  let salvo: any;
 
-  const clientesRepo = {
-    findOne: async ({ where }: any) => {
-      if (where.id) {
-        return {
-          id: where.id,
-          email: 'antigo@empresa.com',
-          senhaHash: 'hash-antigo',
-          nome: 'Cliente',
-          tipoPessoa: 'J',
-          telefone: '65999999999',
-          cnpj: '12.345.678/0001-90',
-          razaoSocial: 'Empresa LTDA',
-          cep: '78000-000',
-          logradouro: 'Rua A',
-          numero: '10',
-          bairro: 'Centro',
-          municipio: 'Cuiaba',
-          uf: 'MT',
-          assinaturas: [{ status: 'ativa' }],
-        };
-      }
+  const service = createService({
+    clientesRepo: {
+      create: (value: any) => ({ id: 'cli-1', ...value }),
+      save: async (value: any) => {
+        salvo = { ...value };
+        return value;
+      },
+    },
+  });
 
-      return null;
-    },
-    save: async (cliente: any) => {
-      savedCliente = { ...cliente };
-      return savedCliente;
-    },
+  const result = await service.createAdmin({
+    tipoPessoa: 'J',
+    cnpj: '12.345.678/0001-90',
+    razaoSocial: 'Empresa LTDA',
+    email: 'contato@empresa.com',
+  });
+
+  assert.equal(result.id, 'cli-1');
+  assert.equal(salvo.proprietarioId, null);
+  assert.equal(salvo.email, 'contato@empresa.com');
+});
+
+test('updateAdmin atualiza dados do cliente sem depender de senha', async () => {
+  const cliente = {
+    id: 'cli-1',
+    tipoPessoa: 'J',
+    cnpj: '12.345.678/0001-90',
+    razaoSocial: 'Empresa LTDA',
+    nomeFantasia: null,
+    cnaesSecundarios: [],
   };
 
-  const service = createService({ clientesRepo });
+  const service = createService({
+    clientesRepo: {
+      findOne: async () => cliente,
+      save: async (value: any) => Object.assign(cliente, value),
+    },
+  });
 
-  await service.atualizar('1', {
-    email: 'novo@empresa.com',
-    senha: 'Senha@123',
-  } as any);
+  await service.updateAdmin('cli-1', {
+    nomeFantasia: 'Fantasia',
+    porteEmpresa: 'Empresa de Pequeno Porte',
+  });
 
-  assert.equal(savedCliente.email, 'novo@empresa.com');
-  assert.equal(savedCliente.senhaHash === 'hash-antigo', false);
-  assert.equal('senha' in savedCliente, false);
+  assert.equal(cliente.nomeFantasia, 'Fantasia');
+  assert.equal((cliente as any).porteEmpresa, 'Empresa de Pequeno Porte');
 });
 
 test('agendarExclusao exclui definitivamente cliente sem plano pago', async () => {
   const cliente = {
-    id: '1',
-    nome: 'Cliente Gratuito',
-    email: 'cliente@empresa.com',
-    senhaHash: 'hash',
-    ativo: true,
+    id: 'cli-1',
     tipoPessoa: 'J',
+    email: 'contato@empresa.com',
+    ativo: true,
     assinaturas: [],
     agendarExclusaoEm: null,
   };
-  const saved: any[] = [];
 
-  const clientesRepo = {
-    findOne: async () => cliente,
-    save: async (value: any) => {
-      saved.push({ ...value });
-      Object.assign(cliente, value);
-      return value;
+  const service = createService({
+    clientesRepo: {
+      findOne: async () => cliente,
+      save: async (value: any) => Object.assign(cliente, value),
     },
-  };
-  const assinaturasRepo = {
-    find: async () => [],
-    save: async (value: any) => value,
-  };
+  });
 
-  const service = createService({ clientesRepo, assinaturasRepo });
-
-  const result = await service.agendarExclusao('1', { agendarPara: 'agora' } as AgendarExclusaoDto);
+  const result = await service.agendarExclusao('cli-1', { agendarPara: 'agora' } as AgendarExclusaoDto);
 
   assert.equal(result.tipoFluxo, 'exclusao-imediata');
   assert.equal(cliente.ativo, false);
-  assert.equal(cliente.agendarExclusaoEm, null);
   assert.match(cliente.email, /@anonimizado\.invalid$/);
-  assert.ok(saved.length >= 1);
 });
 
-test('agendarExclusao agenda anonimização para cliente com plano pago', async () => {
+test('cancelarExclusao limpa agendamento pendente do cliente', async () => {
   const cliente = {
-    id: '1',
-    nome: 'Cliente Pago',
-    email: 'cliente@empresa.com',
-    senhaHash: 'hash',
-    ativo: true,
-    tipoPessoa: 'J',
-    agendarExclusaoEm: null,
-    assinaturas: [{
-      status: 'ativa',
-      proximoVencimento: '2026-07-10',
-      plano: { precoMensal: 199 },
-    }],
-  };
-
-  const clientesRepo = {
-    findOne: async () => cliente,
-    save: async (value: any) => {
-      Object.assign(cliente, value);
-      return value;
-    },
+    id: 'cli-1',
+    agendarExclusaoEm: new Date('2026-07-10T00:00:00.000Z'),
   };
 
   const service = createService({
-    clientesRepo,
-    params: { getValor: async (chave: string, fallback: string) => chave === 'DIAS_RETENCAO_CONTA' ? '30' : fallback },
+    clientesRepo: {
+      findOne: async () => cliente,
+      save: async (value: any) => Object.assign(cliente, value),
+    },
   });
 
-  const result = await service.agendarExclusao('1', { agendarPara: 'fim-plano' } as AgendarExclusaoDto);
-
-  assert.equal(result.tipoFluxo, 'anonimizacao-agendada');
-  assert.ok(result.agendarExclusaoEm);
-  assert.equal(cliente.ativo, true);
-  assert.ok(cliente.agendarExclusaoEm instanceof Date);
-  assert.equal(cliente.email, 'cliente@empresa.com');
-});
-
-test('cancelarExclusao limpa agendamento pendente', async () => {
-  const cliente = {
-    id: '1',
-    nome: 'Cliente Pago',
-    email: 'cliente@empresa.com',
-    senhaHash: 'hash',
-    ativo: true,
-    tipoPessoa: 'J',
-    agendarExclusaoEm: new Date('2026-07-10T00:00:00.000Z'),
-    assinaturas: [{
-      status: 'ativa',
-      proximoVencimento: '2026-07-10',
-      plano: { precoMensal: 199 },
-    }],
-  };
-
-  const clientesRepo = {
-    findOne: async () => cliente,
-    save: async (value: any) => {
-      Object.assign(cliente, value);
-      return value;
-    },
-  };
-
-  const service = createService({ clientesRepo });
-
-  const result = await service.cancelarExclusao('1');
+  const result = await service.cancelarExclusao('cli-1');
 
   assert.equal(result.agendarExclusaoEm, null);
   assert.equal(cliente.agendarExclusaoEm, null);
+});
+
+test('criarUsuarioPrincipal cria usuário principal a partir do cliente e envia reset de senha', async () => {
+  const cliente = {
+    id: 'cli-1',
+    tipoPessoa: 'J',
+    razaoSocial: 'Empresa LTDA',
+    nomeFantasia: 'Fantasia',
+    email: 'contato@empresa.com',
+    telefone: '(65) 3333-4444',
+    proprietarioId: null,
+  };
+  let usuarioSalvo: any;
+  let resetEnviadoPara: string | null = null;
+
+  const service = createService({
+    clientesRepo: {
+      findOne: async () => cliente,
+      save: async (value: any) => Object.assign(cliente, value),
+    },
+    usuariosRepo: {
+      findOne: async ({ where }: any) => {
+        if (where?.email) return null;
+        return null;
+      },
+      create: (value: any) => ({ id: 'usr-1', ...value }),
+      save: async (value: any) => {
+        usuarioSalvo = { ...value };
+        return value;
+      },
+    },
+    usuariosService: {
+      enviarResetPorAdmin: async (id: string) => {
+        resetEnviadoPara = id;
+        return { mensagem: 'ok' };
+      },
+    },
+  });
+
+  const result = await service.criarUsuarioPrincipal('cli-1');
+
+  assert.equal(result.id, 'usr-1');
+  assert.equal(usuarioSalvo.email, 'contato@empresa.com');
+  assert.equal(usuarioSalvo.nome, 'Fantasia');
+  assert.equal(cliente.proprietarioId, 'usr-1');
+  assert.equal(resetEnviadoPara, 'usr-1');
 });

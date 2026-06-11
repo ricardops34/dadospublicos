@@ -13,17 +13,38 @@ export class Cliente {
   id: string;
 
   /** FK para o usuário principal (administrador) do Cliente */
-  @Column({ name: 'proprietario_id', type: 'uuid' })
-  proprietarioId: string;
+  @Column({ name: 'proprietario_id', type: 'uuid', nullable: true })
+  proprietarioId: string | null;
 
   @Column({ name: 'tipo_pessoa', type: 'varchar', length: 1, default: 'J' })
   tipoPessoa: 'F' | 'J';
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  nome: string | null;
+
+  @Column({ type: 'varchar', length: 14, nullable: true })
+  cpf: string | null;
+
+  @Column({ name: 'data_nascimento', type: 'date', nullable: true })
+  dataNascimento: Date | null;
+
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  email: string | null;
 
   @Column({ type: 'varchar', length: 14, nullable: true })
   cnpj: string | null;
 
   @Column({ name: 'razao_social', type: 'varchar', length: 200, nullable: true })
   razaoSocial: string | null;
+
+  @Column({ name: 'nome_fantasia', type: 'varchar', length: 200, nullable: true })
+  nomeFantasia: string | null;
+
+  @Column({ name: 'porte_empresa', type: 'varchar', length: 100, nullable: true })
+  porteEmpresa: string | null;
+
+  @Column({ name: 'situacao_cadastral', type: 'varchar', length: 30, nullable: true })
+  situacaoCadastral: string | null;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   telefone: string | null;
@@ -61,6 +82,12 @@ export class Cliente {
 
   @Column({ name: 'cnae_principal_descricao', type: 'varchar', length: 300, nullable: true })
   cnaePrincipalDescricao: string | null;
+
+  @Column({ name: 'natureza_juridica_codigo', type: 'varchar', length: 10, nullable: true })
+  naturezaJuridicaCodigo: string | null;
+
+  @Column({ name: 'natureza_juridica_descricao', type: 'varchar', length: 300, nullable: true })
+  naturezaJuridicaDescricao: string | null;
 
   @Column({ default: true })
   ativo: boolean;

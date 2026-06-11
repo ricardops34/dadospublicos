@@ -1,9 +1,9 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, HostListener, ViewChild } from '@angular/core';
 import { PoPageDynamicEditActions, PoPageDynamicEditComponent } from '@po-ui/ng-templates';
-import { environment } from '../../../../../environments/environment';
-import { HttpClient } from '@angular/common/http';
-import { catchError, map } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-clientes-form',
@@ -30,23 +30,18 @@ export class ClientesFormComponent {
     if (form?.dirty) form.markAsPristine();
   }
 
-  apiService = `${environment.apiUrl}/admin/usuarios-poui`;
+  apiService = `${environment.apiUrl}/admin/clientes-poui`;
 
   constructor(private http: HttpClient) {}
 
   private atualizarCampo(property: string, changes: Record<string, any>) {
-    this.fields = this.fields.map((field) =>
-      field.property === property ? { ...field, ...changes } : field,
-    );
+    this.fields = this.fields.map((field) => field.property === property ? { ...field, ...changes } : field);
   }
 
-  // Prepara o combo de município e retorna a lista de opções para incluir no retorno do validate
   private prepararMunicipio(uf: string, municipio: string): void {
     this.mudarUf({ value: uf });
     this.http
-      .get<{ items?: Array<{ label: string; value: string }> }>(
-        `${environment.apiUrl}/admin/usuarios-poui/municipios/${uf}`,
-      )
+      .get<{ items?: Array<{ label: string; value: string }> }>(`${environment.apiUrl}/admin/clientes-poui/municipios/${uf}`)
       .pipe(
         map((res) => res.items ?? []),
         catchError(() => of([{ label: municipio, value: municipio }])),
@@ -57,19 +52,27 @@ export class ClientesFormComponent {
       });
   }
 
-  // Converte objeto de dados de endereço em array de fields para o retorno do validate PO-UI
   private enderecoParaFields(d: Record<string, any>): any[] {
-    const campos: Array<[string, string | null]> = [
-      ['logradouro',  d['logradouro']],
+    const campos: Array<[string, any]> = [
+      ['logradouro', d['logradouro']],
       ['complemento', d['complemento']],
-      ['bairro',      d['bairro']],
-      ['uf',          d['uf']],
-      ['municipio',   d['municipio']],
-      ['cep',         d['cep']],
-      ['numero',      d['numero']],
+      ['bairro', d['bairro']],
+      ['uf', d['uf']],
+      ['municipio', d['municipio']],
+      ['cep', d['cep']],
+      ['numero', d['numero']],
       ['razaoSocial', d['razaoSocial']],
+      ['nomeFantasia', d['nomeFantasia']],
+      ['porteEmpresa', d['porteEmpresa']],
+      ['situacaoCadastral', d['situacaoCadastral']],
+      ['naturezaJuridicaCodigo', d['naturezaJuridicaCodigo']],
+      ['naturezaJuridicaDescricao', d['naturezaJuridicaDescricao']],
+      ['telefone', d['telefone']],
+      ['email', d['email']],
       ['cnaePrincipal', d['cnaePrincipal']],
+      ['cnaePrincipalDescricao', d['cnaePrincipalDescricao']],
     ];
+
     const fields: any[] = campos
       .filter(([, val]) => val !== undefined && val !== null && val !== '')
       .map(([property, value]) => ({ property, value }));
@@ -80,22 +83,20 @@ export class ClientesFormComponent {
     return fields;
   }
 
-  validarCpf = (changedValue: any) => {
-    return this.http.post(`${environment.apiUrl}/admin/usuarios-poui/validate-cpf`, changedValue).pipe(
+  validarCpf = (changedValue: any) =>
+    this.http.post(`${environment.apiUrl}/admin/clientes-poui/validate-cpf`, changedValue).pipe(
       catchError(() => of({ value: changedValue })),
     );
-  };
 
-  validarCep = (changedValue: any) => {
-    return this.http.post(`${environment.apiUrl}/admin/usuarios-poui/validate-cep`, changedValue).pipe(
+  validarCep = (changedValue: any) =>
+    this.http.post(`${environment.apiUrl}/admin/clientes-poui/validate-cep`, changedValue).pipe(
       map((res: any) => {
         if (res?.fields?.length) {
           return { value: changedValue?.value ?? changedValue, fields: res.fields };
         }
         const d = res?.value ?? {};
         if (d.uf && d.municipio) this.prepararMunicipio(d.uf, d.municipio);
-        else if (d.uf)           this.mudarUf({ value: d.uf });
-
+        else if (d.uf) this.mudarUf({ value: d.uf });
         return {
           value: changedValue?.value ?? changedValue,
           fields: this.enderecoParaFields(d),
@@ -106,21 +107,19 @@ export class ClientesFormComponent {
         fields: [{ property: 'cep', message: 'CEP não encontrado ou inválido' }],
       })),
     );
-  };
 
   validarCnpj = (changedValue: any) => {
     const cnpj = (changedValue.value ?? '').replace(/\D/g, '');
     if (cnpj.length !== 14) return of({ value: changedValue.value });
 
-    return this.http.post<any>(`${environment.apiUrl}/admin/usuarios-poui/validate-cnpj`, changedValue).pipe(
+    return this.http.post<any>(`${environment.apiUrl}/admin/clientes-poui/validate-cnpj`, changedValue).pipe(
       map((res: any) => {
         if (res?.fields?.length) {
           return { value: changedValue.value, fields: res.fields };
         }
         const d = res?.value ?? {};
         if (d.uf && d.municipio) this.prepararMunicipio(d.uf, d.municipio);
-        else if (d.uf)           this.mudarUf({ value: d.uf });
-
+        else if (d.uf) this.mudarUf({ value: d.uf });
         return {
           value: changedValue.value,
           fields: this.enderecoParaFields(d),
@@ -135,9 +134,8 @@ export class ClientesFormComponent {
 
   mudarTipoPessoa = (changedValue: any) => {
     const tipo = changedValue.value;
-
     this.fields = this.fields.map((field) => {
-      if (field.property === 'cpf' || field.property === 'dataNascimento') {
+      if (['cpf', 'nome', 'dataNascimento'].includes(field.property)) {
         field.visible = tipo === 'F';
         field.required = tipo === 'F';
       }
@@ -145,30 +143,26 @@ export class ClientesFormComponent {
         field.visible = tipo === 'J';
         field.required = tipo === 'J';
       }
-      if (field.property === 'razaoSocial' || field.property === 'cnaePrincipal' || field.property === 'cnaesSecundarios') {
+      if (['razaoSocial', 'nomeFantasia', 'porteEmpresa', 'situacaoCadastral', 'cnaePrincipal', 'cnaesSecundarios', 'naturezaJuridicaCodigo', 'naturezaJuridicaDescricao'].includes(field.property)) {
         field.visible = tipo === 'J';
       }
       return field;
     });
-
     return { value: tipo };
   };
 
   onLoadData = (item: any) => {
     this.mudarTipoPessoa({ value: item.tipoPessoa || 'J' });
-    if (item.uf) {
-      this.mudarUf({ value: item.uf });
-    }
+    if (item.uf) this.mudarUf({ value: item.uf });
     return item;
   };
 
   mudarUf = (changedValue: any) => {
     const uf = changedValue.value;
-
     this.fields = this.fields.map((field) => {
       if (field.property === 'municipio') {
         if (uf) {
-          field.optionsService = `${environment.apiUrl}/admin/usuarios-poui/municipios/${uf}`;
+          field.optionsService = `${environment.apiUrl}/admin/clientes-poui/municipios/${uf}`;
           field.disabled = false;
         } else {
           field.optionsService = undefined;
@@ -177,7 +171,6 @@ export class ClientesFormComponent {
       }
       return field;
     });
-
     return { value: uf };
   };
 
@@ -185,7 +178,7 @@ export class ClientesFormComponent {
     { label: 'Início', link: '/portal/dashboard' },
     { label: 'Clientes', link: '/portal/clientes' },
     { label: 'Formulário' },
-  ]};
+  ] };
 
   actions: PoPageDynamicEditActions = {
     cancel: '/portal/clientes',
@@ -203,35 +196,26 @@ export class ClientesFormComponent {
       gridColumns: 6,
       validate: this.mudarTipoPessoa.bind(this),
     },
-    { property: 'cnpj', label: 'CNPJ', mask: '99.999.999/9999-99', gridColumns: 6, visible: true, required: true, validate: this.validarCnpj.bind(this) },
-    { property: 'razaoSocial', label: 'Razão Social', gridColumns: 6, visible: true },
-    { property: 'cnaePrincipal', label: 'CNAE Principal', type: 'combo', gridColumns: 6, visible: true, optionsService: `${environment.apiUrl}/admin/usuarios-poui/cnaes` },
-    { property: 'cnaesSecundarios', label: 'CNAEs Secundários', gridColumns: 6, visible: true, optionsMulti: true, optionsService: `${environment.apiUrl}/admin/usuarios-poui/cnaes` },
-    { property: 'cpf', label: 'CPF', mask: '999.999.999-99', gridColumns: 6, visible: false, required: false, validate: this.validarCpf.bind(this) },
-    { property: 'dataNascimento', label: 'Data de Nascimento', type: 'date', format: 'dd/MM/yyyy', gridColumns: 6, visible: false },
-    { property: 'nome', label: 'Nome', required: true, gridColumns: 6 },
-    { property: 'email', label: 'E-mail', required: true, gridColumns: 6 },
-    { property: 'telefone', label: 'Telefone', required: true, gridColumns: 6 },
-    { property: 'whatsapp', label: 'WhatsApp', type: 'boolean', booleanTrue: 'Sim', booleanFalse: 'Não', gridColumns: 6 },
-    {
-      property: 'perfil',
-      label: 'Perfil de acesso',
-      required: true,
-      gridColumns: 6,
-      divider: 'Acesso',
-      options: [
-        { label: 'Cliente',        value: 'cliente' },
-        { label: 'Administrador',  value: 'admin' },
-      ],
-    },
-    { property: 'senha', label: 'Senha', secret: true, minLength: 8, gridColumns: 6, help: 'Preencha apenas se quiser alterar a senha' },
+    { property: 'cpf', label: 'CPF', mask: '999.999.999-99', gridColumns: 4, visible: false, required: false, divider: 'Identificação', validate: this.validarCpf.bind(this) },
+    { property: 'nome', label: 'Nome', required: true, gridColumns: 4, visible: false },
+    { property: 'dataNascimento', label: 'Data Nascimento', type: 'date', format: 'dd/MM/yyyy', gridColumns: 4, visible: false },
+    { property: 'cnpj', label: 'CNPJ', mask: '99.999.999/9999-99', gridColumns: 4, visible: true, required: true, divider: 'Identificação', validate: this.validarCnpj.bind(this) },
+    { property: 'razaoSocial', label: 'Nome Empresarial (Razão Social)', gridColumns: 8, visible: true },
+    { property: 'nomeFantasia', label: 'Título do Estabelecimento (Nome Fantasia)', gridColumns: 6, visible: true },
+    { property: 'porteEmpresa', label: 'Porte da Empresa', gridColumns: 3, visible: true },
+    { property: 'situacaoCadastral', label: 'Situação Cadastral', gridColumns: 3, visible: true },
     { property: 'cep', label: 'CEP', required: true, mask: '99999-999', divider: 'Endereço', gridColumns: 3, validate: this.validarCep.bind(this) },
-    { property: 'logradouro', label: 'Rua', required: true, gridColumns: 5 },
+    { property: 'logradouro', label: 'Logradouro', required: true, gridColumns: 5 },
     { property: 'numero', label: 'Número', required: true, gridColumns: 2 },
-    { property: 'bairro', label: 'Bairro', required: true, gridColumns: 4 },
-    { property: 'uf', label: 'Estado', required: true, gridColumns: 4, type: 'combo', optionsService: `${environment.apiUrl}/admin/usuarios-poui/ufs`, validate: this.mudarUf.bind(this) },
+    { property: 'bairro', label: 'Bairro/Distrito', required: true, gridColumns: 4 },
+    { property: 'uf', label: 'UF', required: true, gridColumns: 4, type: 'combo', optionsService: `${environment.apiUrl}/admin/clientes-poui/ufs`, validate: this.mudarUf.bind(this) },
     { property: 'municipio', label: 'Município', required: true, gridColumns: 4, type: 'combo', disabled: true },
     { property: 'complemento', label: 'Complemento', gridColumns: 4 },
+    { property: 'telefone', label: 'Telefone', required: true, divider: 'Contatos', gridColumns: 6 },
+    { property: 'email', label: 'Endereço de E-mail', required: true, gridColumns: 6 },
+    { property: 'cnaePrincipal', label: 'Código e Descrição da Atividade Econômica Principal (CNAE Principal)', type: 'combo', gridColumns: 6, visible: true, divider: 'Atividade Econômica', optionsService: `${environment.apiUrl}/admin/clientes-poui/cnaes` },
+    { property: 'cnaesSecundarios', label: 'Código e Descrição das Atividades Econômicas Secundárias (CNAEs Secundários)', gridColumns: 6, visible: true, optionsMulti: true, optionsService: `${environment.apiUrl}/admin/clientes-poui/cnaes` },
+    { property: 'naturezaJuridicaCodigo', label: 'Natureza Jurídica', gridColumns: 4, visible: true },
+    { property: 'naturezaJuridicaDescricao', label: 'Descrição da Natureza Jurídica', gridColumns: 8, visible: true },
   ];
 }
-

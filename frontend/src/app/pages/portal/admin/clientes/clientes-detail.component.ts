@@ -17,37 +17,42 @@ import { AdminService } from '../admin.service';
 
         <div class="po-row">
           <po-info class="po-md-6" p-label="Nome" [p-value]="cliente.nome"></po-info>
-          <po-info class="po-md-6" p-label="E-mail" [p-value]="cliente.email"></po-info>
+          <po-info class="po-md-6" p-label="E-mail de Contato" [p-value]="cliente.email"></po-info>
         </div>
         <div class="po-row">
           <po-info class="po-md-4" p-label="Tipo" [p-value]="cliente.tipoPessoa === 'F' ? 'Pessoa Física' : 'Pessoa Jurídica'"></po-info>
           <po-info class="po-md-4" p-label="Telefone" [p-value]="cliente.telefone || '—'"></po-info>
-          <po-info class="po-md-4" p-label="WhatsApp" [p-value]="cliente.whatsapp === true ? 'Sim' : cliente.whatsapp === false ? 'Não' : '—'"></po-info>
-        </div>
-        <div class="po-row">
           <po-info class="po-md-4" p-label="Status" [p-value]="cliente.ativo ? 'Ativo' : 'Suspenso'"></po-info>
-          <po-info class="po-md-4" p-label="E-mail Verificado" [p-value]="cliente.emailVerificado ? 'Sim' : 'Não'"></po-info>
         </div>
-        <div class="po-row">
+        <div class="po-row" *ngIf="cliente.tipoPessoa === 'F'">
           <po-info class="po-md-6" p-label="CPF" [p-value]="cliente.cpf || '—'"></po-info>
           <po-info class="po-md-6" p-label="Data de Nascimento" [p-value]="formatarData(cliente.dataNascimento) || '—'"></po-info>
         </div>
-        <div class="po-row">
+        <div class="po-row" *ngIf="cliente.tipoPessoa === 'J'">
           <po-info class="po-md-6" p-label="CNPJ" [p-value]="cliente.cnpj || '—'"></po-info>
           <po-info class="po-md-6" p-label="Razão Social" [p-value]="cliente.razaoSocial || '—'"></po-info>
+        </div>
+        <div class="po-row" *ngIf="cliente.tipoPessoa === 'J'">
+          <po-info class="po-md-4" p-label="Nome Fantasia" [p-value]="cliente.nomeFantasia || '—'"></po-info>
+          <po-info class="po-md-4" p-label="Porte da Empresa" [p-value]="cliente.porteEmpresa || '—'"></po-info>
+          <po-info class="po-md-4" p-label="Situação Cadastral" [p-value]="cliente.situacaoCadastral || '—'"></po-info>
         </div>
         <div class="po-row" *ngIf="cliente.tipoPessoa === 'J'">
           <po-info class="po-md-6" p-label="CNAE Principal" [p-value]="cnaePrincipalLabel"></po-info>
           <po-info class="po-md-6" p-label="CNAEs Secundários" [p-value]="cnaesSecundariosLabel"></po-info>
         </div>
-        <div class="po-row">
-          <po-info class="po-md-3" p-label="CEP" [p-value]="cliente.cep || '—'"></po-info>
-          <po-info class="po-md-5" p-label="Rua" [p-value]="cliente.logradouro || '—'"></po-info>
-          <po-info class="po-md-2" p-label="Número" [p-value]="cliente.numero || '—'"></po-info>
-          <po-info class="po-md-2" p-label="Estado" [p-value]="cliente.uf || '—'"></po-info>
+        <div class="po-row" *ngIf="cliente.tipoPessoa === 'J'">
+          <po-info class="po-md-4" p-label="Natureza Jurídica" [p-value]="cliente.naturezaJuridicaCodigo || '—'"></po-info>
+          <po-info class="po-md-8" p-label="Descrição da Natureza Jurídica" [p-value]="cliente.naturezaJuridicaDescricao || '—'"></po-info>
         </div>
         <div class="po-row">
-          <po-info class="po-md-4" p-label="Bairro" [p-value]="cliente.bairro || '—'"></po-info>
+          <po-info class="po-md-3" p-label="CEP" [p-value]="cliente.cep || '—'"></po-info>
+          <po-info class="po-md-5" p-label="Logradouro" [p-value]="cliente.logradouro || '—'"></po-info>
+          <po-info class="po-md-2" p-label="Número" [p-value]="cliente.numero || '—'"></po-info>
+          <po-info class="po-md-2" p-label="UF" [p-value]="cliente.uf || '—'"></po-info>
+        </div>
+        <div class="po-row">
+          <po-info class="po-md-4" p-label="Bairro/Distrito" [p-value]="cliente.bairro || '—'"></po-info>
           <po-info class="po-md-4" p-label="Município" [p-value]="cliente.municipio || '—'"></po-info>
           <po-info class="po-md-4" p-label="Complemento" [p-value]="cliente.complemento || '—'"></po-info>
         </div>
@@ -136,9 +141,7 @@ export class ClientesDetailComponent implements OnInit {
         ? 'Confirma o agendamento da anonimização para o fim do plano?'
         : 'Confirma o agendamento da anonimização pelo prazo padrão?';
 
-    if (!window.confirm(mensagem)) {
-      return;
-    }
+    if (!window.confirm(mensagem)) return;
 
     this.salvando = true;
     this.adminService.agendarExclusaoCliente(this.clienteId, agendarPara).subscribe({
@@ -159,9 +162,7 @@ export class ClientesDetailComponent implements OnInit {
   }
 
   cancelarExclusao() {
-    if (!window.confirm('Confirma o cancelamento da exclusão agendada deste cliente?')) {
-      return;
-    }
+    if (!window.confirm('Confirma o cancelamento da exclusão agendada deste cliente?')) return;
 
     this.salvando = true;
     this.adminService.cancelarExclusaoCliente(this.clienteId).subscribe({
