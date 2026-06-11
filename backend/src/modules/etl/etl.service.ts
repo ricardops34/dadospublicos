@@ -47,6 +47,19 @@ const PREFIXOS_DADOS: PrefixoDados[] = [
   { prefixo: 'Socios',           tabela: 'socios',          tipo: 'socio' },
 ];
 
+// Chaves de negócio para UPSERT incremental (sem socios — usa truncate por partição)
+const CONFLICT_COLS: Record<string, string[]> = {
+  empresas_rfb:      ['cnpj_basico'],
+  estabelecimentos:  ['cnpj_basico', 'cnpj_ordem', 'cnpj_dv'],
+  simples:           ['cnpj_basico'],
+  cnaes:             ['codigo'],
+  naturezas_juridicas: ['codigo'],
+  qualificacoes:     ['codigo'],
+  motivos:           ['codigo'],
+  municipios:        ['codigo_rfb'],
+  paises:            ['codigo'],
+};
+
 // Classe 3 — cnpj.tar.gz fica na raiz do compartilhamento, sem pasta de competência
 
 // Lista combinada para exibição (usa parte 0 como representante dos particionados)
@@ -231,12 +244,13 @@ export class EtlService {
         if (primeiraUso) {
           await this.faseDownloadBase(log);
           await this.faseExtrairTarGz(log);
+          await this.faseCarga(log, true);   // base completa → truncate + insert
         } else {
           await this.faseDownloadTabelas(log);
           await this.faseDownloadEmpresas(log);
           await this.faseExtracao(log);
+          await this.faseCarga(log, false);  // incremental → upsert, sem truncate
         }
-        await this.faseCarga(log);
       }
       if (fase === 'download') {
         await this.faseDownloadTabelas(log);
@@ -260,7 +274,8 @@ export class EtlService {
         }
       }
       if (fase === 'carga') {
-        await this.faseCarga(log);
+        const truncar = await this.isPrimeiraUso();
+        await this.faseCarga(log, truncar);
       }
 
       log.status = 'concluido';
@@ -442,22 +457,23 @@ export class EtlService {
     }
   }
 
-  private async faseCarga(log: EtlLog) {
+  private async faseCarga(log: EtlLog, truncar: boolean) {
     log.status = 'carga';
     await this.logs.save(log);
     this.progresso.fase = 'Carga no banco';
+    this.logger.log(`faseCarga — modo: ${truncar ? 'substituição (truncate+insert)' : 'incremental (upsert)'}`);
 
     this.progresso.arquivoAtual = 'Tabelas de referência';
-    await this.carregarLookups();
+    await this.carregarLookups(truncar);
 
     const [totalEmp, totalEstab, totalSoc] = await Promise.all([
-      this.carregarCsvParalelo('Empresas', 'empresas_rfb', this.colunasEmpresas()),
-      this.carregarCsvParalelo('Estabelecimentos', 'estabelecimentos', this.colunasEstabelecimentos()),
-      this.carregarCsvParalelo('Socios', 'socios', this.colunasSocios()),
+      this.carregarCsvParalelo('Empresas',         'empresas_rfb',    this.colunasEmpresas(),         truncar),
+      this.carregarCsvParalelo('Estabelecimentos', 'estabelecimentos', this.colunasEstabelecimentos(), truncar),
+      this.carregarCsvParalelo('Socios',           'socios',          this.colunasSocios(),           true),   // socios sempre truncate
     ]);
 
     this.progresso.arquivoAtual = 'Simples Nacional';
-    await this.carregarSimples();
+    await this.carregarSimples(truncar);
 
     log.totalEmpresas = totalEmp;
     log.totalEstabelecimentos = totalEstab;
@@ -761,7 +777,7 @@ export class EtlService {
       etlLogId: null, arquivo: nome, operacao: 'carga' as EtlArquivoOperacao, status: 'iniciando',
     }));
     try {
-      const count = await this.carregarCsv(csvPath, tabela, colunas);
+      const count = await this.carregarCsv(csvPath, tabela, colunas, CONFLICT_COLS[tabela]);
       logEntry.status = 'concluido';
       logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
       logEntry.duracaoMs = Date.now() - inicio;
@@ -824,28 +840,28 @@ export class EtlService {
     });
   }
 
-  private async carregarLookups() {
-    // Simples não tem colunas definidas aqui — é tratado separadamente em carregarSimples()
+  private async carregarLookups(truncar: boolean) {
     const lookups = ARQUIVOS_RFB.filter((a) => a.grupo === 'lookup' && a.colunas?.length);
     for (const lk of lookups) {
       const csvPath = path.join(this.extrairDir, lk.nome.replace('.zip', '.csv'));
       if (!fs.existsSync(csvPath)) { this.logger.warn(`  Não encontrado: ${csvPath}`); continue; }
-      await this.dataSource.query(`TRUNCATE TABLE ${lk.tabela} CASCADE`);
+      if (truncar) await this.dataSource.query(`TRUNCATE TABLE ${lk.tabela} CASCADE`);
       this.progresso.arquivoAtual = lk.tabela;
-      await this.carregarCsv(csvPath, lk.tabela, lk.colunas!);
+      await this.carregarCsv(csvPath, lk.tabela, lk.colunas!, truncar ? undefined : CONFLICT_COLS[lk.tabela]);
     }
   }
 
-  private async carregarSimples() {
+  private async carregarSimples(truncar: boolean) {
     const colunas = ['cnpj_basico','opcao_pelo_simples','data_opcao_simples','data_exclusao_simples',
       'opcao_pelo_mei','data_opcao_mei','data_exclusao_mei'];
-    await this.dataSource.query(`TRUNCATE TABLE simples CASCADE`);
+    if (truncar) await this.dataSource.query(`TRUNCATE TABLE simples CASCADE`);
     const csvPath = path.join(this.extrairDir, 'Simples.csv');
-    if (fs.existsSync(csvPath)) await this.carregarCsv(csvPath, 'simples', colunas);
+    if (fs.existsSync(csvPath)) await this.carregarCsv(csvPath, 'simples', colunas, truncar ? undefined : CONFLICT_COLS['simples']);
   }
 
-  private async carregarCsvParalelo(prefixo: string, tabela: string, colunas: string[]): Promise<number> {
-    await this.dataSource.query(`TRUNCATE TABLE ${tabela} CASCADE`);
+  private async carregarCsvParalelo(prefixo: string, tabela: string, colunas: string[], truncar: boolean): Promise<number> {
+    if (truncar) await this.dataSource.query(`TRUNCATE TABLE ${tabela} CASCADE`);
+    const conflitoCols = truncar ? undefined : CONFLICT_COLS[tabela];
     let total = 0;
     let idx = 0;
     while (true) {
@@ -853,13 +869,13 @@ export class EtlService {
       const csvPath = path.join(this.extrairDir, arquivo);
       if (!fs.existsSync(csvPath)) break;
       this.progresso.arquivoAtual = `${tabela} — parte ${idx}`;
-      this.logger.log(`  Carregando ${tabela} parte ${idx}...`);
+      this.logger.log(`  Carregando ${tabela} parte ${idx} (${truncar ? 'insert' : 'upsert'})...`);
 
       const inicio = Date.now();
       const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
         etlLogId: this.currentLogId, arquivo, operacao: 'carga', status: 'iniciando',
       }));
-      const count = await this.carregarCsv(csvPath, tabela, colunas);
+      const count = await this.carregarCsv(csvPath, tabela, colunas, conflitoCols);
       logEntry.status = 'concluido';
       logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
       logEntry.duracaoMs = Date.now() - inicio;
@@ -873,7 +889,9 @@ export class EtlService {
     return total;
   }
 
-  private async carregarCsv(csvPath: string, tabela: string, colunas: string[]): Promise<number> {
+  // conflitoCols=undefined → INSERT ON CONFLICT DO NOTHING
+  // conflitoCols=[...] → INSERT ON CONFLICT (...) DO UPDATE SET (upsert)
+  private async carregarCsv(csvPath: string, tabela: string, colunas: string[], conflitoCols?: string[]): Promise<number> {
     const LOTE = 5000;
     const rl = readline.createInterface({
       input: fs.createReadStream(csvPath, { encoding: 'latin1' }),
@@ -882,14 +900,21 @@ export class EtlService {
     let lote: string[][] = [];
     let total = 0;
 
+    const colsUpdate = conflitoCols
+      ? colunas.filter((c) => !conflitoCols.includes(c)).map((c) => `${c}=EXCLUDED.${c}`).join(',')
+      : null;
+
     const flush = async () => {
       if (!lote.length) return;
       const placeholders = lote
         .map((row, ri) => `(${row.map((_, ci) => `$${ri * colunas.length + ci + 1}`).join(',')})`)
         .join(',');
       const flat = lote.flat().map((v) => (v === '' ? null : v.trim()));
+      const conflito = conflitoCols && colsUpdate
+        ? `ON CONFLICT (${conflitoCols.join(',')}) DO UPDATE SET ${colsUpdate}`
+        : 'ON CONFLICT DO NOTHING';
       await this.dataSource.query(
-        `INSERT INTO ${tabela} (${colunas.join(',')}) VALUES ${placeholders} ON CONFLICT DO NOTHING`,
+        `INSERT INTO ${tabela} (${colunas.join(',')}) VALUES ${placeholders} ${conflito}`,
         flat,
       );
       total += lote.length;
