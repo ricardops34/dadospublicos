@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
@@ -568,7 +568,7 @@ export class EtlService {
   }
 
   async apagarCsvArquivo(nome: string): Promise<{ apagados: string[] }> {
-    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new Error('Nome de arquivo inválido.');
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
     const csvPath = path.join(this.extrairDir, nome.replace(/\.zip$/i, '.csv'));
     const apagados: string[] = [];
     if (fs.existsSync(csvPath)) {
@@ -591,9 +591,10 @@ export class EtlService {
   }
 
   async extrairArquivoUnico(nome: string): Promise<{ mensagem: string }> {
-    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new Error('Nome de arquivo inválido.');
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
     const zipPath = path.join(this.downloadDir, nome);
-    if (!fs.existsSync(zipPath)) throw new Error(`Arquivo não encontrado: ${nome}`);
+    this.logger.log(`extrairArquivoUnico: verificando ${zipPath}`);
+    if (!fs.existsSync(zipPath)) throw new NotFoundException(`Arquivo não encontrado: ${zipPath}`);
     this.extrairComLog(nome, zipPath).catch((err) =>
       this.logger.error(`Erro ao extrair ${nome}:`, err),
     );
@@ -601,12 +602,13 @@ export class EtlService {
   }
 
   async processarArquivoUnico(nome: string): Promise<{ mensagem: string }> {
-    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new Error('Nome de arquivo inválido.');
+    if (!/^[A-Za-z0-9_-]+\.zip$/i.test(nome)) throw new BadRequestException('Nome de arquivo inválido.');
     const csvNome = nome.replace(/\.zip$/i, '.csv');
     const csvPath = path.join(this.extrairDir, csvNome);
-    if (!fs.existsSync(csvPath)) throw new Error(`CSV não encontrado: ${csvNome}. Execute a extração primeiro.`);
+    this.logger.log(`processarArquivoUnico: verificando ${csvPath}`);
+    if (!fs.existsSync(csvPath)) throw new NotFoundException(`CSV não encontrado: ${csvPath}. Execute a extração primeiro.`);
     const { tabela, colunas } = this.resolverTabelaColunas(nome);
-    if (!tabela || !colunas.length) throw new Error(`Arquivo não reconhecido para carga: ${nome}`);
+    if (!tabela || !colunas.length) throw new BadRequestException(`Arquivo não reconhecido para carga: ${nome}`);
     this.processarComLog(nome, csvPath, tabela, colunas).catch((err) =>
       this.logger.error(`Erro ao processar ${nome}:`, err),
     );
