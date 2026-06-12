@@ -21,30 +21,32 @@ interface ArquivoRfb {
   tabela: string;
   colunas?: string[];
   tipo?: string;
+  rfbExt?: string; // extensão no formato novo RFB (ex: 'CNAECSV')
 }
 
 interface PrefixoDados {
   prefixo: string;
   tabela: string;
   tipo: string;
+  rfbExt?: string; // extensão no formato novo RFB (ex: 'EMPRECSV')
 }
 
 // Classe 1 — arquivos únicos mensais (dentro da pasta de competência)
 const ARQUIVOS_LOOKUP: ArquivoRfb[] = [
-  { grupo: 'lookup', nome: 'Cnaes.zip',        tabela: 'cnaes',               colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Naturezas.zip',     tabela: 'naturezas_juridicas', colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Qualificacoes.zip', tabela: 'qualificacoes',       colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Motivos.zip',       tabela: 'motivos',             colunas: ['codigo', 'descricao'] },
-  { grupo: 'lookup', nome: 'Municipios.zip',    tabela: 'municipios',          colunas: ['codigo_rfb', 'nome'] },
-  { grupo: 'lookup', nome: 'Paises.zip',        tabela: 'paises',              colunas: ['codigo', 'nome'] },
+  { grupo: 'lookup', nome: 'Cnaes.zip',        tabela: 'cnaes',               colunas: ['codigo', 'descricao'],  rfbExt: 'CNAECSV'  },
+  { grupo: 'lookup', nome: 'Naturezas.zip',     tabela: 'naturezas_juridicas', colunas: ['codigo', 'descricao'],  rfbExt: 'NATJUCSV' },
+  { grupo: 'lookup', nome: 'Qualificacoes.zip', tabela: 'qualificacoes',       colunas: ['codigo', 'descricao'],  rfbExt: 'QUALSCSV' },
+  { grupo: 'lookup', nome: 'Motivos.zip',       tabela: 'motivos',             colunas: ['codigo', 'descricao'],  rfbExt: 'MOTICSV'  },
+  { grupo: 'lookup', nome: 'Municipios.zip',    tabela: 'municipios',          colunas: ['codigo_rfb', 'nome'],   rfbExt: 'MUNICCSV' },
+  { grupo: 'lookup', nome: 'Paises.zip',        tabela: 'paises',              colunas: ['codigo', 'nome'],       rfbExt: 'PAISCSV'  },
   { grupo: 'lookup', nome: 'Simples.zip',       tabela: 'simples',             tipo: 'simples' },
 ];
 
 // Classe 2 — arquivos particionados numéricos 0..N (dentro da pasta de competência)
 const PREFIXOS_DADOS: PrefixoDados[] = [
-  { prefixo: 'Empresas',         tabela: 'empresas_rfb',    tipo: 'empresa' },
-  { prefixo: 'Estabelecimentos', tabela: 'estabelecimentos', tipo: 'estabelecimento' },
-  { prefixo: 'Socios',           tabela: 'socios',          tipo: 'socio' },
+  { prefixo: 'Empresas',         tabela: 'empresas_rfb',    tipo: 'empresa',         rfbExt: 'EMPRECSV' },
+  { prefixo: 'Estabelecimentos', tabela: 'estabelecimentos', tipo: 'estabelecimento', rfbExt: 'ESTABELE' },
+  { prefixo: 'Socios',           tabela: 'socios',          tipo: 'socio',           rfbExt: 'SOCIOCSV' },
 ];
 
 // Chaves de negócio para UPSERT incremental (sem socios — usa truncate por partição)
@@ -175,7 +177,9 @@ export class EtlService {
 
     const tarGzExiste = fs.existsSync(path.join(this.downloadDir, 'cnpj.tar.gz'));
     const zipsEmExtraidos  = arquivosExtraidos.filter((f) => /\.zip$/i.test(f)).length;
-    const csvsExtraidos    = arquivosExtraidos.filter((f) => /\.csv$/i.test(f)).length;
+    const csvsExtraidos    = arquivosExtraidos.filter((f) =>
+      !/\.zip$/i.test(f) && fs.statSync(path.join(this.extrairDir, f)).isFile(),
+    ).length;
 
     // Conta ZIPs nas subpastas ano-mes e na raiz
     let zipsIncrementais = arquivosDownloads.filter((f) => /\.zip$/i.test(f) && fs.statSync(path.join(this.downloadDir, f)).isFile()).length;
@@ -644,9 +648,9 @@ export class EtlService {
     await this.carregarLookups(truncar);
 
     const [totalEmp, totalEstab, totalSoc] = await Promise.all([
-      this.carregarCsvParalelo('Empresas',         'empresas_rfb',    this.colunasEmpresas(),         truncar),
-      this.carregarCsvParalelo('Estabelecimentos', 'estabelecimentos', this.colunasEstabelecimentos(), truncar),
-      this.carregarCsvParalelo('Socios',           'socios',          this.colunasSocios(),           true),   // socios sempre truncate
+      this.carregarCsvParalelo('Empresas',         'empresas_rfb',    this.colunasEmpresas(),         truncar, 'EMPRECSV'),
+      this.carregarCsvParalelo('Estabelecimentos', 'estabelecimentos', this.colunasEstabelecimentos(), truncar, 'ESTABELE'),
+      this.carregarCsvParalelo('Socios',           'socios',          this.colunasSocios(),           true,    'SOCIOCSV'),
     ]);
 
     this.progresso.arquivoAtual = 'Simples Nacional';
@@ -1033,11 +1037,25 @@ export class EtlService {
     });
   }
 
+  /** Encontra arquivos na pasta extraidos/ pela extensão RFB (novo formato). */
+  private findExtractedByExt(ext: string): string[] {
+    const re = new RegExp(`\\.${ext}$`, 'i');
+    return fs.readdirSync(this.extrairDir)
+      .filter((f) => re.test(f) && fs.statSync(path.join(this.extrairDir, f)).isFile())
+      .sort()
+      .map((f) => path.join(this.extrairDir, f));
+  }
+
   private async carregarLookups(truncar: boolean) {
     const lookups = ARQUIVOS_RFB.filter((a) => a.grupo === 'lookup' && a.colunas?.length);
     for (const lk of lookups) {
-      const csvPath = path.join(this.extrairDir, lk.nome.replace('.zip', '.csv'));
-      if (!fs.existsSync(csvPath)) { this.logger.warn(`  Não encontrado: ${csvPath}`); continue; }
+      // Tenta formato antigo (ex: Cnaes.csv) e depois novo RFB (ex: *.CNAECSV)
+      let csvPath = path.join(this.extrairDir, lk.nome.replace('.zip', '.csv'));
+      if (!fs.existsSync(csvPath) && lk.rfbExt) {
+        const found = this.findExtractedByExt(lk.rfbExt);
+        if (found.length) csvPath = found[0];
+      }
+      if (!fs.existsSync(csvPath)) { this.logger.warn(`  Não encontrado: ${lk.tabela}`); continue; }
       if (truncar) await this.dataSource.query(`TRUNCATE TABLE ${lk.tabela} CASCADE`);
       this.progresso.arquivoAtual = lk.tabela;
       await this.carregarCsv(csvPath, lk.tabela, lk.colunas!, truncar ? undefined : CONFLICT_COLS[lk.tabela]);
@@ -1048,37 +1066,78 @@ export class EtlService {
     const colunas = ['cnpj_basico','opcao_pelo_simples','data_opcao_simples','data_exclusao_simples',
       'opcao_pelo_mei','data_opcao_mei','data_exclusao_mei'];
     if (truncar) await this.dataSource.query(`TRUNCATE TABLE simples CASCADE`);
-    const csvPath = path.join(this.extrairDir, 'Simples.csv');
-    if (fs.existsSync(csvPath)) await this.carregarCsv(csvPath, 'simples', colunas, truncar ? undefined : CONFLICT_COLS['simples']);
+    // Tenta formato antigo (Simples.csv) e depois novo RFB (*SIMPLES*)
+    let csvPath = path.join(this.extrairDir, 'Simples.csv');
+    if (!fs.existsSync(csvPath)) {
+      const found = fs.readdirSync(this.extrairDir).filter((f) =>
+        /simples/i.test(f) && !/\.zip$/i.test(f) && fs.statSync(path.join(this.extrairDir, f)).isFile(),
+      );
+      if (found.length) csvPath = path.join(this.extrairDir, found[0]);
+    }
+    if (fs.existsSync(csvPath)) {
+      await this.carregarCsv(csvPath, 'simples', colunas, truncar ? undefined : CONFLICT_COLS['simples']);
+    } else {
+      this.logger.warn(`  Simples: arquivo não encontrado em ${this.extrairDir}`);
+    }
   }
 
-  private async carregarCsvParalelo(prefixo: string, tabela: string, colunas: string[], truncar: boolean): Promise<number> {
+  private async carregarCsvParalelo(prefixo: string, tabela: string, colunas: string[], truncar: boolean, rfbExt?: string): Promise<number> {
     if (truncar) await this.dataSource.query(`TRUNCATE TABLE ${tabela} CASCADE`);
     const conflitoCols = truncar ? undefined : CONFLICT_COLS[tabela];
     let total = 0;
-    let idx = 0;
-    while (true) {
-      const arquivo = `${prefixo}${idx}.csv`;
-      const csvPath = path.join(this.extrairDir, arquivo);
-      if (!fs.existsSync(csvPath)) break;
-      this.progresso.arquivoAtual = `${tabela} — parte ${idx}`;
-      this.logger.log(`  Carregando ${tabela} parte ${idx} (${truncar ? 'insert' : 'upsert'})...`);
 
-      const inicio = Date.now();
-      const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
-        etlLogId: this.currentLogId, arquivo, operacao: 'carga', status: 'iniciando',
-      }));
-      const count = await this.carregarCsv(csvPath, tabela, colunas, conflitoCols);
-      logEntry.status = 'concluido';
-      logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
-      logEntry.duracaoMs = Date.now() - inicio;
-      logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros → ${tabela}`;
-      logEntry.concluidoEm = new Date();
-      await this.arquivoLogs.save(logEntry);
+    const temFormatoAntigo = fs.existsSync(path.join(this.extrairDir, `${prefixo}0.csv`));
 
-      total += count;
-      idx++;
+    if (temFormatoAntigo) {
+      // Formato antigo: PrefixoN.csv
+      let idx = 0;
+      while (true) {
+        const arquivo = `${prefixo}${idx}.csv`;
+        const csvPath = path.join(this.extrairDir, arquivo);
+        if (!fs.existsSync(csvPath)) break;
+        this.progresso.arquivoAtual = `${tabela} — parte ${idx}`;
+        this.logger.log(`  Carregando ${tabela} parte ${idx} (${truncar ? 'insert' : 'upsert'})...`);
+
+        const inicio = Date.now();
+        const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+          etlLogId: this.currentLogId, arquivo, operacao: 'carga', status: 'iniciando',
+        }));
+        const count = await this.carregarCsv(csvPath, tabela, colunas, conflitoCols);
+        logEntry.status = 'concluido';
+        logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros → ${tabela}`;
+        logEntry.concluidoEm = new Date();
+        await this.arquivoLogs.save(logEntry);
+
+        total += count;
+        idx++;
+      }
+    } else if (rfbExt) {
+      // Novo formato RFB: arquivos com extensão proprietária (ex: *.EMPRECSV)
+      const arquivos = this.findExtractedByExt(rfbExt);
+      for (let idx = 0; idx < arquivos.length; idx++) {
+        const csvPath = arquivos[idx];
+        const arquivo = path.basename(csvPath);
+        this.progresso.arquivoAtual = `${tabela} — parte ${idx}`;
+        this.logger.log(`  Carregando ${tabela} parte ${idx} [${arquivo}] (${truncar ? 'insert' : 'upsert'})...`);
+
+        const inicio = Date.now();
+        const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+          etlLogId: this.currentLogId, arquivo, operacao: 'carga', status: 'iniciando',
+        }));
+        const count = await this.carregarCsv(csvPath, tabela, colunas, conflitoCols);
+        logEntry.status = 'concluido';
+        logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
+        logEntry.duracaoMs = Date.now() - inicio;
+        logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros → ${tabela}`;
+        logEntry.concluidoEm = new Date();
+        await this.arquivoLogs.save(logEntry);
+
+        total += count;
+      }
     }
+
     return total;
   }
 
