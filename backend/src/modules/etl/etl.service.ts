@@ -1175,11 +1175,49 @@ export class EtlService {
 
     for await (const line of rl) {
       if (!line.trim()) continue;
-      lote.push(line.split(';').map((v) => v.replace(/^"|"$/g, '').trim()));
+      const row = this.parseCsvLine(line);
+      if (row.length !== colunas.length) {
+        throw new Error(
+          `Linha com ${row.length} coluna(s) em ${path.basename(csvPath)}; esperado ${colunas.length} para ${tabela}.`,
+        );
+      }
+      lote.push(row);
       if (lote.length >= LOTE) await flush();
     }
     await flush();
     return total;
+  }
+
+  private parseCsvLine(line: string): string[] {
+    const fields: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+          continue;
+        }
+        inQuotes = !inQuotes;
+        continue;
+      }
+
+      if (char === ';' && !inQuotes) {
+        fields.push(current.trim());
+        current = '';
+        continue;
+      }
+
+      current += char;
+    }
+
+    fields.push(current.trim());
+    return fields;
   }
 
   private fileInfo(filePath: string) {
