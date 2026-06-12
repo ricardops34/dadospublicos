@@ -397,6 +397,9 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
 
         if (s.rodando) {
+          if (origemPolling) {
+            this.carregarLogArquivos();
+          }
           this.iniciarPolling();
           return;
         }
@@ -413,9 +416,6 @@ export class PortalEtlComponent implements OnInit, OnDestroy {
 
         if (origemPolling) {
           this.carregarResumo();
-        }
-        if (origemPolling && s.rodando) {
-          this.carregarLogArquivos();
         }
       },
       error: () => {
