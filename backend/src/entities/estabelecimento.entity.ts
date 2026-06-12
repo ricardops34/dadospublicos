@@ -56,7 +56,7 @@ export class Estabelecimento {
   @Column({ name: 'numero', type: 'varchar', length: 10, nullable: true })
   numero: string | null;
 
-  @Column({ name: 'complemento', type: 'varchar', length: 150, nullable: true })
+  @Column({ name: 'complemento', type: 'varchar', length: 200, nullable: true })
   complemento: string | null;
 
   @Column({ name: 'bairro', type: 'varchar', length: 150, nullable: true })

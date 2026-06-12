@@ -118,7 +118,7 @@ const ETL_VARCHAR_LIMITS: Record<string, Record<string, number>> = {
     tipo_logradouro: 20,
     logradouro: 200,
     numero: 10,
-    complemento: 150,
+    complemento: 200,
     bairro: 150,
     cep: 8,
     uf: 2,

@@ -427,7 +427,8 @@ test('carregarCsv informa coluna e valor quando excede limite de varchar', async
 test('carregarCsv aceita complemento longo de estabelecimentos dentro do novo limite', async () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'etl-complemento-'));
   const csvPath = path.join(tempDir, 'Estabelecimentos0.csv');
-  const complemento = 'SHOPPING CENTER           PARALELA                  SALAO COMERCIAL           C 118                     PISO L1';
+  const complemento = "QUADRAQC 1                      COMPL. C-1, D-5     LOTE  AREA                SALA  402                 ANDAR 4                   EDIF  PLAZA D'ORO OFFICE";
+  assert.equal(complemento.length, 154);
   fs.writeFileSync(
     csvPath,
     `"12345678";"0001";"99";"1";"NOME";"02";"20240101";"00";"";"000";"20240101";"0111301";"";"RUA";"A";"10";"${complemento}";"CENTRO";"78000000";"MT";"9067";"0081";"12345678";"";"";"0081";"12345678";"EMAIL@TESTE.COM";"";"20240101"\n`,
