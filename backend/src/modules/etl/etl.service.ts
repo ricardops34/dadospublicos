@@ -62,6 +62,90 @@ const CONFLICT_COLS: Record<string, string[]> = {
   paises:            ['codigo'],
 };
 
+const ETL_VARCHAR_LIMITS: Record<string, Record<string, number>> = {
+  cnaes: {
+    codigo: 7,
+    descricao: 300,
+    secao: 1,
+    divisao: 2,
+    grupo: 3,
+    classe: 5,
+  },
+  naturezas_juridicas: {
+    codigo: 4,
+    descricao: 200,
+  },
+  qualificacoes: {
+    codigo: 2,
+    descricao: 200,
+  },
+  motivos: {
+    codigo: 2,
+    descricao: 200,
+  },
+  municipios: {
+    codigo_rfb: 4,
+    nome: 100,
+  },
+  paises: {
+    codigo: 3,
+    nome: 100,
+  },
+  simples: {
+    cnpj_basico: 8,
+    opcao_pelo_simples: 1,
+    opcao_pelo_mei: 1,
+  },
+  empresas_rfb: {
+    cnpj_basico: 8,
+    razao_social: 200,
+    natureza_juridica: 4,
+    qualificacao_responsavel: 2,
+    porte_empresa: 2,
+    ente_federativo: 200,
+  },
+  estabelecimentos: {
+    cnpj_basico: 8,
+    cnpj_ordem: 4,
+    cnpj_dv: 2,
+    identificador_matriz_filial: 1,
+    nome_fantasia: 200,
+    situacao_cadastral: 2,
+    motivo_situacao_cadastral: 2,
+    nome_cidade_exterior: 100,
+    pais: 3,
+    cnae_fiscal_principal: 7,
+    tipo_logradouro: 20,
+    logradouro: 200,
+    numero: 10,
+    complemento: 100,
+    bairro: 80,
+    cep: 8,
+    uf: 2,
+    municipio: 4,
+    ddd1: 3,
+    telefone1: 10,
+    ddd2: 3,
+    telefone2: 10,
+    ddd_fax: 3,
+    fax: 10,
+    email: 200,
+    situacao_especial: 100,
+  },
+  socios: {
+    cnpj_basico: 8,
+    identificador_socio: 1,
+    nome_socio: 200,
+    cnpj_cpf_socio: 14,
+    qualificacao_socio: 2,
+    pais: 3,
+    representante_legal: 14,
+    nome_representante: 200,
+    qualificacao_representante: 2,
+    faixa_etaria: 1,
+  },
+};
+
 // Classe 3 — cnpj.tar.gz fica na raiz do compartilhamento, sem pasta de competência
 
 // Lista combinada para exibição (usa parte 0 como representante dos particionados)
@@ -1158,6 +1242,7 @@ export class EtlService {
     });
     let lote: string[][] = [];
     let total = 0;
+    let numeroLinha = 0;
 
     const colsUpdate = conflitoCols
       ? colunas.filter((c) => !conflitoCols.includes(c)).map((c) => `${c}=EXCLUDED.${c}`).join(',')
@@ -1188,12 +1273,14 @@ export class EtlService {
 
     for await (const line of rl) {
       if (!line.trim()) continue;
+      numeroLinha += 1;
       const row = this.normalizeRowForTable(tabela, this.parseCsvLine(line));
       if (row.length !== colunas.length) {
         throw new Error(
           `Linha com ${row.length} coluna(s) em ${path.basename(csvPath)}; esperado ${colunas.length} para ${tabela}.`,
         );
       }
+      this.validarComprimentosDeLinha(tabela, colunas, row, csvPath, numeroLinha);
       if (lote.length && (lote.length + 1) * colunas.length > MAX_PARAMS_POR_QUERY) {
         await flush();
       }
@@ -1247,13 +1334,14 @@ export class EtlService {
   }
 
   private montarDetalheErroComPreview(err: unknown, csvPath: string): string {
+    const arquivo = path.basename(csvPath);
     const preview = this.lerPrimeirasLinhas(csvPath, 3);
     if (!preview.length) {
-      return String(err);
+      return `${String(err)}\nArquivo: ${arquivo}`;
     }
 
     const linhas = preview.map((line, index) => `${index + 1}: ${line}`).join('\n');
-    return `${String(err)}\nPrimeiras 3 linhas do arquivo:\n${linhas}`;
+    return `${String(err)}\nArquivo: ${arquivo}\nPrimeiras 3 linhas do arquivo:\n${linhas}`;
   }
 
   private montarDetalheErroPrincipal(err: unknown): string {
@@ -1285,6 +1373,34 @@ export class EtlService {
       return valor.replace(/\./g, '').replace(',', '.');
     }
     return valor;
+  }
+
+  private validarComprimentosDeLinha(
+    tabela: string,
+    colunas: string[],
+    row: string[],
+    csvPath: string,
+    numeroLinha: number,
+  ): void {
+    const limites = ETL_VARCHAR_LIMITS[tabela];
+    if (!limites) return;
+
+    for (let i = 0; i < colunas.length; i++) {
+      const coluna = colunas[i];
+      const limite = limites[coluna];
+      if (!limite) continue;
+
+      const valorBruto = row[i];
+      if (valorBruto == null || valorBruto === '') continue;
+
+      const valorNormalizado = this.normalizarValorCsvParaColuna(tabela, coluna, valorBruto.trim());
+      if (!valorNormalizado || valorNormalizado.length <= limite) continue;
+
+      throw new Error(
+        `Valor '${valorNormalizado}' excede o limite ${limite} da coluna ${coluna} em ${tabela}. ` +
+        `Arquivo: ${path.basename(csvPath)}. Linha: ${numeroLinha}.`,
+      );
+    }
   }
 
   private normalizarDataRfb(valor: string): string {
