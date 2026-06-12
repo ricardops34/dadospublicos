@@ -1167,7 +1167,12 @@ export class EtlService {
       const placeholders = lote
         .map((row, ri) => `(${row.map((_, ci) => `$${ri * colunas.length + ci + 1}`).join(',')})`)
         .join(',');
-      const flat = lote.flat().map((v) => (v === '' ? null : v.trim()));
+      const flat = lote.flat().map((v, index) => {
+        if (v === '') return null;
+        const valor = v.trim();
+        const colIndex = index % colunas.length;
+        return this.normalizarValorCsvParaColuna(tabela, colunas[colIndex], valor);
+      });
       const conflito = conflitoCols && colsUpdate
         ? `ON CONFLICT (${conflitoCols.join(',')}) DO UPDATE SET ${colsUpdate}`
         : 'ON CONFLICT DO NOTHING';
@@ -1254,6 +1259,13 @@ export class EtlService {
     } catch {
       return [];
     }
+  }
+
+  private normalizarValorCsvParaColuna(tabela: string, coluna: string, valor: string): string {
+    if (tabela === 'empresas_rfb' && coluna === 'capital_social') {
+      return valor.replace(/\./g, '').replace(',', '.');
+    }
+    return valor;
   }
 
   private normalizeRowForTable(tabela: string, row: string[]): string[] {
