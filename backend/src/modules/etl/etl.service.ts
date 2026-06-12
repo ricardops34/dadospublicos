@@ -33,7 +33,7 @@ interface PrefixoDados {
 
 // Classe 1 — arquivos únicos mensais (dentro da pasta de competência)
 const ARQUIVOS_LOOKUP: ArquivoRfb[] = [
-  { grupo: 'lookup', nome: 'Cnaes.zip',        tabela: 'cnaes',               colunas: ['codigo', 'descricao'],  rfbExt: 'CNAECSV'  },
+  { grupo: 'lookup', nome: 'Cnaes.zip',        tabela: 'cnaes',               colunas: ['codigo', 'descricao', 'secao', 'divisao', 'grupo', 'classe'],  rfbExt: 'CNAECSV'  },
   { grupo: 'lookup', nome: 'Naturezas.zip',     tabela: 'naturezas_juridicas', colunas: ['codigo', 'descricao'],  rfbExt: 'NATJUCSV' },
   { grupo: 'lookup', nome: 'Qualificacoes.zip', tabela: 'qualificacoes',       colunas: ['codigo', 'descricao'],  rfbExt: 'QUALSCSV' },
   { grupo: 'lookup', nome: 'Motivos.zip',       tabela: 'motivos',             colunas: ['codigo', 'descricao'],  rfbExt: 'MOTICSV'  },
@@ -1089,56 +1089,62 @@ export class EtlService {
     const temFormatoAntigo = fs.existsSync(path.join(this.extrairDir, `${prefixo}0.csv`));
 
     if (temFormatoAntigo) {
-      // Formato antigo: PrefixoN.csv
       let idx = 0;
       while (true) {
         const arquivo = `${prefixo}${idx}.csv`;
         const csvPath = path.join(this.extrairDir, arquivo);
         if (!fs.existsSync(csvPath)) break;
-        this.progresso.arquivoAtual = `${tabela} — parte ${idx}`;
+        this.progresso.arquivoAtual = `${tabela} ??? parte ${idx}`;
         this.logger.log(`  Carregando ${tabela} parte ${idx} (${truncar ? 'insert' : 'upsert'})...`);
 
-        const inicio = Date.now();
-        const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
-          etlLogId: this.currentLogId, arquivo, operacao: 'carga', status: 'iniciando',
-        }));
-        const count = await this.carregarCsv(csvPath, tabela, colunas, conflitoCols);
-        logEntry.status = 'concluido';
-        logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
-        logEntry.duracaoMs = Date.now() - inicio;
-        logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros → ${tabela}`;
-        logEntry.concluidoEm = new Date();
-        await this.arquivoLogs.save(logEntry);
-
+        const count = await this.carregarCsvComLogDeErro(arquivo, csvPath, tabela, colunas, conflitoCols);
         total += count;
         idx++;
       }
     } else if (rfbExt) {
-      // Novo formato RFB: arquivos com extensão proprietária (ex: *.EMPRECSV)
       const arquivos = this.findExtractedByExt(rfbExt);
       for (let idx = 0; idx < arquivos.length; idx++) {
         const csvPath = arquivos[idx];
         const arquivo = path.basename(csvPath);
-        this.progresso.arquivoAtual = `${tabela} — parte ${idx}`;
+        this.progresso.arquivoAtual = `${tabela} ??? parte ${idx}`;
         this.logger.log(`  Carregando ${tabela} parte ${idx} [${arquivo}] (${truncar ? 'insert' : 'upsert'})...`);
 
-        const inicio = Date.now();
-        const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
-          etlLogId: this.currentLogId, arquivo, operacao: 'carga', status: 'iniciando',
-        }));
-        const count = await this.carregarCsv(csvPath, tabela, colunas, conflitoCols);
-        logEntry.status = 'concluido';
-        logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
-        logEntry.duracaoMs = Date.now() - inicio;
-        logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros → ${tabela}`;
-        logEntry.concluidoEm = new Date();
-        await this.arquivoLogs.save(logEntry);
-
+        const count = await this.carregarCsvComLogDeErro(arquivo, csvPath, tabela, colunas, conflitoCols);
         total += count;
       }
     }
 
     return total;
+  }
+
+  private async carregarCsvComLogDeErro(
+    arquivo: string,
+    csvPath: string,
+    tabela: string,
+    colunas: string[],
+    conflitoCols?: string[],
+  ): Promise<number> {
+    const inicio = Date.now();
+    const logEntry = await this.arquivoLogs.save(this.arquivoLogs.create({
+      etlLogId: this.currentLogId,
+      arquivo,
+      operacao: 'carga',
+      status: 'iniciando',
+    }));
+
+    try {
+      const count = await this.carregarCsv(csvPath, tabela, colunas, conflitoCols);
+      logEntry.status = 'concluido';
+      logEntry.tamanhoMb = +(fs.statSync(csvPath).size / 1024 / 1024).toFixed(1);
+      logEntry.duracaoMs = Date.now() - inicio;
+      logEntry.detalhe = `${count.toLocaleString('pt-BR')} registros ??? ${tabela}`;
+      logEntry.concluidoEm = new Date();
+      await this.arquivoLogs.save(logEntry);
+      return count;
+    } catch (err) {
+      await this.marcarLogArquivoComoErro(logEntry, csvPath, inicio, err);
+      throw err;
+    }
   }
 
   // conflitoCols=undefined → INSERT ON CONFLICT DO NOTHING
@@ -1175,7 +1181,7 @@ export class EtlService {
 
     for await (const line of rl) {
       if (!line.trim()) continue;
-      const row = this.parseCsvLine(line);
+      const row = this.normalizeRowForTable(tabela, this.parseCsvLine(line));
       if (row.length !== colunas.length) {
         throw new Error(
           `Linha com ${row.length} coluna(s) em ${path.basename(csvPath)}; esperado ${colunas.length} para ${tabela}.`,
@@ -1218,6 +1224,83 @@ export class EtlService {
 
     fields.push(current.trim());
     return fields;
+  }
+
+  private async marcarLogArquivoComoErro(logEntry: EtlArquivoLog, csvPath: string, inicio: number, err: unknown): Promise<void> {
+    logEntry.status = 'erro';
+    logEntry.detalhe = this.montarDetalheErroComPreview(err, csvPath);
+    logEntry.duracaoMs = Date.now() - inicio;
+    logEntry.concluidoEm = new Date();
+    await this.arquivoLogs.save(logEntry);
+  }
+
+  private montarDetalheErroComPreview(err: unknown, csvPath: string): string {
+    const preview = this.lerPrimeirasLinhas(csvPath, 3);
+    if (!preview.length) {
+      return String(err);
+    }
+
+    const linhas = preview.map((line, index) => `${index + 1}: ${line}`).join('\n');
+    return `${String(err)}\nPrimeiras 3 linhas do arquivo:\n${linhas}`;
+  }
+
+  private lerPrimeirasLinhas(csvPath: string, limite: number): string[] {
+    try {
+      const content = fs.readFileSync(csvPath, { encoding: 'latin1' });
+      return content
+        .split(/\r?\n/)
+        .filter((line) => line.trim().length > 0)
+        .slice(0, limite);
+    } catch {
+      return [];
+    }
+  }
+
+  private normalizeRowForTable(tabela: string, row: string[]): string[] {
+    if (tabela === 'cnaes' && row.length === 2) {
+      return this.expandirLinhaCnae(row[0], row[1]);
+    }
+    return row;
+  }
+
+  private expandirLinhaCnae(codigo: string, descricao: string): string[] {
+    const codigoLimpo = (codigo ?? '').replace(/\D/g, '');
+    if (codigoLimpo.length < 5) {
+      throw new Error(`Codigo CNAE invalido para derivar hierarquia: '${codigo}'.`);
+    }
+
+    const divisao = codigoLimpo.slice(0, 2);
+    const grupo = codigoLimpo.slice(0, 3);
+    const classe = codigoLimpo.slice(0, 5);
+    const secao = this.obterSecaoCnae(divisao);
+
+    return [codigoLimpo, descricao, secao, divisao, grupo, classe];
+  }
+
+  private obterSecaoCnae(divisao: string): string {
+    const numero = Number(divisao);
+    if (numero >= 1 && numero <= 3) return 'A';
+    if (numero >= 5 && numero <= 9) return 'B';
+    if (numero >= 10 && numero <= 33) return 'C';
+    if (numero === 35) return 'D';
+    if (numero >= 36 && numero <= 39) return 'E';
+    if (numero >= 41 && numero <= 43) return 'F';
+    if (numero >= 45 && numero <= 47) return 'G';
+    if (numero >= 49 && numero <= 53) return 'H';
+    if (numero >= 55 && numero <= 56) return 'I';
+    if (numero >= 58 && numero <= 63) return 'J';
+    if (numero >= 64 && numero <= 66) return 'K';
+    if (numero === 68) return 'L';
+    if (numero >= 69 && numero <= 75) return 'M';
+    if (numero >= 77 && numero <= 82) return 'N';
+    if (numero === 84) return 'O';
+    if (numero === 85) return 'P';
+    if (numero >= 86 && numero <= 88) return 'Q';
+    if (numero >= 90 && numero <= 93) return 'R';
+    if (numero >= 94 && numero <= 96) return 'S';
+    if (numero === 97) return 'T';
+    if (numero === 99) return 'U';
+    throw new Error(`Divisao CNAE invalida para derivar secao: '${divisao}'.`);
   }
 
   private fileInfo(filePath: string) {
