@@ -474,3 +474,51 @@ test('carregarCsv aceita complemento longo de estabelecimentos dentro do novo li
 
   fs.rmSync(tempDir, { recursive: true, force: true });
 });
+
+test('carregarCsv remove byte nulo de linhas de socios antes do insert', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'etl-socios-null-'));
+  const csvPath = path.join(tempDir, 'Socios0.csv');
+  fs.writeFileSync(
+    csvPath,
+    '"12345678";"2";"JOSE\0 DA SILVA";"12345678901";"49";"20240101";"";"";"";"";"3"\n',
+    'latin1',
+  );
+
+  const executed: Array<{ sql: string; params: unknown[] }> = [];
+  const dataSource = {
+    query: async (sql: string, params: unknown[]) => {
+      executed.push({ sql, params });
+      return [];
+    },
+  };
+
+  const service = new EtlService(
+    {
+      create: (data: Partial<EtlLog>) => data,
+      save: async (data: Partial<EtlLog>) => data,
+    } as any,
+    {
+      create: (data: unknown) => data,
+      save: async (data: unknown) => data,
+    } as any,
+    dataSource as any,
+    { getValor: async (_key: string, fallback: string) => fallback } as any,
+  );
+
+  const total = await (service as any).carregarCsv(
+    csvPath,
+    'socios',
+    [
+      'cnpj_basico', 'identificador_socio', 'nome_socio', 'cnpj_cpf_socio', 'qualificacao_socio',
+      'data_entrada_sociedade', 'pais', 'representante_legal', 'nome_representante',
+      'qualificacao_representante', 'faixa_etaria',
+    ],
+    undefined,
+  );
+
+  assert.equal(total, 1);
+  assert.equal(executed.length, 1);
+  assert.equal(executed[0].params[2], 'JOSE DA SILVA');
+
+  fs.rmSync(tempDir, { recursive: true, force: true });
+});

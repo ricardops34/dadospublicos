@@ -1294,13 +1294,14 @@ export class EtlService {
   }
 
   private parseCsvLine(line: string): string[] {
+    const sanitizedLine = line.replace(/\u0000/g, '');
     const fields: string[] = [];
     let current = '';
     let inQuotes = false;
 
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      const nextChar = line[i + 1];
+    for (let i = 0; i < sanitizedLine.length; i++) {
+      const char = sanitizedLine[i];
+      const nextChar = sanitizedLine[i + 1];
 
       if (char === '"') {
         if (inQuotes && nextChar === '"') {
