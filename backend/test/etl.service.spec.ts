@@ -366,3 +366,19 @@ test('carregarCsv converte sentinelas invalidas de data para null', async () => 
 
   fs.rmSync(tempDir, { recursive: true, force: true });
 });
+
+test('detalhe do erro principal inclui o arquivo atual quando houver', () => {
+  const service = new EtlService(
+    { create: (data: Partial<EtlLog>) => data, save: async (data: Partial<EtlLog>) => data } as any,
+    { create: (data: unknown) => data, save: async (data: unknown) => data } as any,
+    { query: async () => [] } as any,
+    { getValor: async (_key: string, fallback: string) => fallback } as any,
+  );
+
+  (service as any).progresso.arquivoAtual = 'Empresas42.csv';
+
+  const detalhe = (service as any).montarDetalheErroPrincipal(new Error('falha de carga'));
+
+  assert.match(detalhe, /Arquivo atual: Empresas42\.csv/);
+  assert.match(detalhe, /Error: falha de carga/);
+});

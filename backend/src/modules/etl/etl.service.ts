@@ -346,7 +346,7 @@ export class EtlService {
       this.logger.log(`ETL [${fase}] concluído.`);
     } catch (err) {
       log.status = 'erro';
-      log.detalhe = String(err);
+      log.detalhe = this.montarDetalheErroPrincipal(err);
       log.concluidoEm = new Date();
       await this.logs.save(log);
       this.logger.error(`ETL [${fase}] FALHOU:`, err);
@@ -1172,7 +1172,8 @@ export class EtlService {
         if (v === '') return null;
         const valor = v.trim();
         const colIndex = index % colunas.length;
-        return this.normalizarValorCsvParaColuna(tabela, colunas[colIndex], valor);
+        const normalizado = this.normalizarValorCsvParaColuna(tabela, colunas[colIndex], valor);
+        return normalizado === '' ? null : normalizado;
       });
       const conflito = conflitoCols && colsUpdate
         ? `ON CONFLICT (${conflitoCols.join(',')}) DO UPDATE SET ${colsUpdate}`
@@ -1255,6 +1256,14 @@ export class EtlService {
     return `${String(err)}\nPrimeiras 3 linhas do arquivo:\n${linhas}`;
   }
 
+  private montarDetalheErroPrincipal(err: unknown): string {
+    const arquivoAtual = this.progresso.arquivoAtual?.trim();
+    if (!arquivoAtual) {
+      return String(err);
+    }
+    return `${String(err)}\nArquivo atual: ${arquivoAtual}`;
+  }
+
   private lerPrimeirasLinhas(csvPath: string, limite: number): string[] {
     try {
       const content = fs.readFileSync(csvPath, { encoding: 'latin1' });
@@ -1268,10 +1277,30 @@ export class EtlService {
   }
 
   private normalizarValorCsvParaColuna(tabela: string, coluna: string, valor: string): string {
+    if (coluna.startsWith('data_')) {
+      return this.normalizarDataRfb(valor);
+    }
+
     if (tabela === 'empresas_rfb' && coluna === 'capital_social') {
       return valor.replace(/\./g, '').replace(',', '.');
     }
     return valor;
+  }
+
+  private normalizarDataRfb(valor: string): string {
+    const limpo = valor.trim();
+    if (!limpo || limpo === '0' || limpo === '00000000') {
+      return '';
+    }
+
+    if (/^\d{8}$/.test(limpo)) {
+      const ano = limpo.slice(0, 4);
+      const mes = limpo.slice(4, 6);
+      const dia = limpo.slice(6, 8);
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    return limpo;
   }
 
   private normalizeRowForTable(tabela: string, row: string[]): string[] {
