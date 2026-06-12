@@ -270,3 +270,47 @@ test('carregarCsv normaliza decimal brasileiro em capital_social antes do insert
 
   fs.rmSync(tempDir, { recursive: true, force: true });
 });
+
+test('carregarCsv divide inserts grandes para evitar excesso de parametros por query', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'etl-chunk-'));
+  const csvPath = path.join(tempDir, 'Empresas0.csv');
+  const linhas = Array.from({ length: 1500 }, (_, i) =>
+    `"${String(10000000 + i)}";"EMPRESA ${i}";"2062";"49";"0,00";"01";""`,
+  );
+  fs.writeFileSync(csvPath, `${linhas.join('\n')}\n`, 'latin1');
+
+  const executed: Array<{ sql: string; params: unknown[] }> = [];
+  const dataSource = {
+    query: async (sql: string, params: unknown[]) => {
+      executed.push({ sql, params });
+      return [];
+    },
+  };
+
+  const service = new EtlService(
+    {
+      create: (data: Partial<EtlLog>) => data,
+      save: async (data: Partial<EtlLog>) => data,
+    } as any,
+    {
+      create: (data: unknown) => data,
+      save: async (data: unknown) => data,
+    } as any,
+    dataSource as any,
+    { getValor: async (_key: string, fallback: string) => fallback } as any,
+  );
+
+  const total = await (service as any).carregarCsv(
+    csvPath,
+    'empresas_rfb',
+    ['cnpj_basico', 'razao_social', 'natureza_juridica', 'qualificacao_responsavel', 'capital_social', 'porte_empresa', 'ente_federativo'],
+    ['cnpj_basico'],
+  );
+
+  assert.equal(total, 1500);
+  assert.equal(executed.length, 2);
+  assert.equal(executed[0].params.length, 9996);
+  assert.equal(executed[1].params.length, 504);
+
+  fs.rmSync(tempDir, { recursive: true, force: true });
+});

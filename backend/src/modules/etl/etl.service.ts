@@ -1151,6 +1151,7 @@ export class EtlService {
   // conflitoCols=[...] → INSERT ON CONFLICT (...) DO UPDATE SET (upsert)
   private async carregarCsv(csvPath: string, tabela: string, colunas: string[], conflitoCols?: string[]): Promise<number> {
     const LOTE = 5000;
+    const MAX_PARAMS_POR_QUERY = 10000;
     const rl = readline.createInterface({
       input: fs.createReadStream(csvPath, { encoding: 'latin1' }),
       crlfDelay: Infinity,
@@ -1192,8 +1193,13 @@ export class EtlService {
           `Linha com ${row.length} coluna(s) em ${path.basename(csvPath)}; esperado ${colunas.length} para ${tabela}.`,
         );
       }
+      if (lote.length && (lote.length + 1) * colunas.length > MAX_PARAMS_POR_QUERY) {
+        await flush();
+      }
       lote.push(row);
-      if (lote.length >= LOTE) await flush();
+      if (lote.length >= LOTE) {
+        await flush();
+      }
     }
     await flush();
     return total;
