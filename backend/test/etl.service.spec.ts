@@ -314,3 +314,55 @@ test('carregarCsv divide inserts grandes para evitar excesso de parametros por q
 
   fs.rmSync(tempDir, { recursive: true, force: true });
 });
+
+test('carregarCsv converte sentinelas invalidas de data para null', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'etl-date-'));
+  const csvPath = path.join(tempDir, 'Estabelecimentos0.csv');
+  fs.writeFileSync(
+    csvPath,
+    '"12345678";"0001";"99";"1";"NOME";"02";"0";"00";"";"000";"00000000";"0111301";"";"RUA";"A";"10";"";"CENTRO";"78000000";"MT";"9067";"65";"12345678";"";"";"";"";"EMAIL@TESTE.COM";"";"0"\n',
+    'latin1',
+  );
+
+  const executed: Array<{ sql: string; params: unknown[] }> = [];
+  const dataSource = {
+    query: async (sql: string, params: unknown[]) => {
+      executed.push({ sql, params });
+      return [];
+    },
+  };
+
+  const service = new EtlService(
+    {
+      create: (data: Partial<EtlLog>) => data,
+      save: async (data: Partial<EtlLog>) => data,
+    } as any,
+    {
+      create: (data: unknown) => data,
+      save: async (data: unknown) => data,
+    } as any,
+    dataSource as any,
+    { getValor: async (_key: string, fallback: string) => fallback } as any,
+  );
+
+  const total = await (service as any).carregarCsv(
+    csvPath,
+    'estabelecimentos',
+    [
+      'cnpj_basico', 'cnpj_ordem', 'cnpj_dv', 'identificador_matriz_filial', 'nome_fantasia',
+      'situacao_cadastral', 'data_situacao_cadastral', 'motivo_situacao_cadastral', 'nome_cidade_exterior', 'pais',
+      'data_inicio_atividade', 'cnae_fiscal_principal', 'cnae_fiscal_secundaria', 'tipo_logradouro', 'logradouro',
+      'numero', 'complemento', 'bairro', 'cep', 'uf', 'municipio', 'ddd1', 'telefone1', 'ddd2', 'telefone2',
+      'ddd_fax', 'fax', 'email', 'situacao_especial', 'data_situacao_especial',
+    ],
+    ['cnpj_basico', 'cnpj_ordem', 'cnpj_dv'],
+  );
+
+  assert.equal(total, 1);
+  assert.equal(executed.length, 1);
+  assert.equal(executed[0].params[6], null);
+  assert.equal(executed[0].params[10], null);
+  assert.equal(executed[0].params[29], null);
+
+  fs.rmSync(tempDir, { recursive: true, force: true });
+});
