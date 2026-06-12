@@ -62,8 +62,8 @@ Dados de cada **filial/unidade** (inclui a matriz como `cnpj_ordem = 0001`).
 | `data_inicio_atividade` | date | — |
 | `logradouro` | varchar | — |
 | `numero` | varchar | — |
-| `complemento` | varchar | — |
-| `bairro` | varchar | — |
+| `complemento` | varchar(150) | — |
+| `bairro` | varchar(150) | — |
 | `cep` | varchar(8) | — |
 | `uf` | varchar(2) | — |
 | `municipio` | varchar(4) | FK → munic |

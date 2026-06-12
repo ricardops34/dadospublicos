@@ -423,3 +423,53 @@ test('carregarCsv informa coluna e valor quando excede limite de varchar', async
 
   fs.rmSync(tempDir, { recursive: true, force: true });
 });
+
+test('carregarCsv aceita complemento longo de estabelecimentos dentro do novo limite', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'etl-complemento-'));
+  const csvPath = path.join(tempDir, 'Estabelecimentos0.csv');
+  const complemento = 'SHOPPING CENTER           PARALELA                  SALAO COMERCIAL           C 118                     PISO L1';
+  fs.writeFileSync(
+    csvPath,
+    `"12345678";"0001";"99";"1";"NOME";"02";"20240101";"00";"";"000";"20240101";"0111301";"";"RUA";"A";"10";"${complemento}";"CENTRO";"78000000";"MT";"9067";"0081";"12345678";"";"";"0081";"12345678";"EMAIL@TESTE.COM";"";"20240101"\n`,
+    'latin1',
+  );
+
+  const executed: Array<{ sql: string; params: unknown[] }> = [];
+  const dataSource = {
+    query: async (sql: string, params: unknown[]) => {
+      executed.push({ sql, params });
+      return [];
+    },
+  };
+
+  const service = new EtlService(
+    {
+      create: (data: Partial<EtlLog>) => data,
+      save: async (data: Partial<EtlLog>) => data,
+    } as any,
+    {
+      create: (data: unknown) => data,
+      save: async (data: unknown) => data,
+    } as any,
+    dataSource as any,
+    { getValor: async (_key: string, fallback: string) => fallback } as any,
+  );
+
+  const total = await (service as any).carregarCsv(
+    csvPath,
+    'estabelecimentos',
+    [
+      'cnpj_basico', 'cnpj_ordem', 'cnpj_dv', 'identificador_matriz_filial', 'nome_fantasia',
+      'situacao_cadastral', 'data_situacao_cadastral', 'motivo_situacao_cadastral', 'nome_cidade_exterior', 'pais',
+      'data_inicio_atividade', 'cnae_fiscal_principal', 'cnae_fiscal_secundaria', 'tipo_logradouro', 'logradouro',
+      'numero', 'complemento', 'bairro', 'cep', 'uf', 'municipio', 'ddd1', 'telefone1', 'ddd2', 'telefone2',
+      'ddd_fax', 'fax', 'email', 'situacao_especial', 'data_situacao_especial',
+    ],
+    ['cnpj_basico', 'cnpj_ordem', 'cnpj_dv'],
+  );
+
+  assert.equal(total, 1);
+  assert.equal(executed.length, 1);
+
+  fs.rmSync(tempDir, { recursive: true, force: true });
+});

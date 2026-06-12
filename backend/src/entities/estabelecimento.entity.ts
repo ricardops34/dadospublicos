@@ -56,10 +56,10 @@ export class Estabelecimento {
   @Column({ name: 'numero', type: 'varchar', length: 10, nullable: true })
   numero: string | null;
 
-  @Column({ name: 'complemento', type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'complemento', type: 'varchar', length: 150, nullable: true })
   complemento: string | null;
 
-  @Column({ name: 'bairro', type: 'varchar', length: 80, nullable: true })
+  @Column({ name: 'bairro', type: 'varchar', length: 150, nullable: true })
   bairro: string | null;
 
   @Column({ name: 'cep', type: 'varchar', length: 8, nullable: true })
