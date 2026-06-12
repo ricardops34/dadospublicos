@@ -1,91 +1,102 @@
-<po-page-default p-title="Painel 360 - Admin">
-  <div class="painel-360-page">
-    <div class="painel-360-page__hero">
-      <div>
-        <span class="painel-360-page__eyebrow">Lotes geograficos</span>
-        <h2>Envio, acompanhamento e distribuicao dos resultados em um unico painel.</h2>
-        <p>Use upload via PO-UI para criar lotes, acompanhe o historico e visualize o GeoJSON retornado pelo backend.</p>
-      </div>
+<po-page-default p-title="Painel 360 — Admin">
+  <div class="p360">
 
-      <div class="painel-360-page__upload">
-        <po-upload
-          name="painel360AdminUpload"
-          p-label="Criar lote"
-          [p-url]="uploadUrl"
-          p-form-field="arquivo"
-          [p-headers]="uploadHeaders"
-          [p-auto-upload]="true"
-          [p-drag-drop]="true"
-          [p-restrictions]="uploadRestricoes"
-          p-help="Aceita CSV e planilhas de ate 25 MB."
-          (p-success)="onUploadSuccess($event)"
-          (p-error)="onUploadError()">
-        </po-upload>
-      </div>
-    </div>
-
-    <div class="painel-360-page__cards">
-      <div class="painel-360-card">
-        <span class="an an-stack painel-360-card__icon"></span>
-        <div>
-          <strong>{{ lotes.length }}</strong>
-          <small>Lotes disponiveis</small>
-        </div>
-      </div>
-      <div class="painel-360-card">
-        <span class="an an-map-pin-line painel-360-card__icon painel-360-card__icon--green"></span>
-        <div>
-          <strong>{{ resumoSelecionado.geocodificados ?? 0 }}</strong>
-          <small>Pontos no mapa</small>
-        </div>
-      </div>
-      <div class="painel-360-card">
-        <span class="an an-files painel-360-card__icon painel-360-card__icon--magenta"></span>
-        <div>
-          <strong>{{ totalResultados }}</strong>
-          <small>Resultados carregados</small>
-        </div>
-      </div>
-    </div>
-
-    <po-divider p-label="Historico de lotes"></po-divider>
-
-    <po-table
-      [p-columns]="colunasLotes"
-      [p-items]="lotes"
-      [p-actions]="acoesLotes"
-      [p-loading]="carregandoLotes"
-      p-striped="true">
-    </po-table>
-
-    <div *ngIf="loteSelecionado" class="painel-360-page__detalhes">
+    <!-- Barra de filtros -->
+    <div class="p360__filtros">
       <div class="po-row">
-        <po-info class="po-md-3" p-label="Arquivo" [p-value]="loteSelecionado.arquivoExibicao"></po-info>
-        <po-info class="po-md-3" p-label="Status" [p-value]="loteSelecionado.status"></po-info>
-        <po-info class="po-md-3" p-label="Registros" [p-value]="(loteSelecionado.totalExibicao || 0).toString()"></po-info>
-        <po-info class="po-md-3" p-label="Concluido em" [p-value]="loteSelecionado.concluidoEm || '-'"></po-info>
+        <po-select
+          class="po-md-2 po-sm-12"
+          name="uf"
+          p-label="Estado"
+          [ngModel]="filtros.uf"
+          (ngModelChange)="filtros.uf = $event; onUfChange($event)"
+          [p-options]="ufOptions"
+          p-placeholder="Selecione">
+        </po-select>
+
+        <po-combo
+          class="po-md-3 po-sm-12"
+          name="municipio"
+          p-label="Município"
+          [ngModel]="filtros.municipio"
+          (ngModelChange)="filtros.municipio = $event"
+          [p-options]="municipioOptions"
+          [p-disabled]="!filtros.uf"
+          [p-loading]="carregandoMunicipios"
+          p-placeholder="Selecione um município">
+        </po-combo>
+
+        <po-input
+          class="po-md-2 po-sm-12"
+          name="bairro"
+          p-label="Bairro"
+          [(ngModel)]="filtros.bairro"
+          p-placeholder="Digite o bairro">
+        </po-input>
+
+        <po-multiselect
+          class="po-md-3 po-sm-12"
+          name="cnaes"
+          p-label="CNAE"
+          [(ngModel)]="filtros.cnaes"
+          [p-options]="cnaeOptions"
+          [p-loading]="carregandoCnaes"
+          p-placeholder="Selecione atividades"
+          p-placeholder-search="Buscar CNAE">
+        </po-multiselect>
+
+        <div class="po-md-2 po-sm-12 p360__acoes">
+          <po-button
+            p-label="Pesquisar"
+            p-kind="primary"
+            p-icon="an an-magnifying-glass"
+            [p-loading]="pesquisando"
+            (p-click)="pesquisar()">
+          </po-button>
+          <po-button
+            p-label="Relatório"
+            p-kind="secondary"
+            p-icon="an an-download-simple"
+            [p-disabled]="!consultaId"
+            (p-click)="gerarRelatorio()">
+          </po-button>
+          <po-button
+            p-label="Limpar"
+            p-kind="tertiary"
+            p-icon="an an-x"
+            (p-click)="limparFiltros()">
+          </po-button>
+        </div>
       </div>
 
-      <div class="painel-360-page__toolbar">
-        <h3>Mapa e resultados</h3>
-        <po-button
-          p-label="Download"
-          p-kind="secondary"
-          p-icon="an an-download-simple"
-          (p-click)="baixarLote(loteSelecionado)">
-        </po-button>
+      <div *ngIf="consultaId" class="p360__resumo">
+        <span class="an an-map-pin-line p360__resumo-icon"></span>
+        <strong>{{ totalGeocod }}</strong> pontos no mapa
+        <span class="p360__resumo-sep">•</span>
+        <strong>{{ totalResultados }}</strong> registros encontrados
       </div>
+    </div>
 
-      <app-painel-360-mapa [geoJson]="geoJson" [loading]="carregandoDetalhes"></app-painel-360-mapa>
+    <!-- Mapa -->
+    <div class="p360__mapa">
+      <app-painel-360-mapa
+        [geoJson]="geoJson"
+        [loading]="pesquisando"
+        altura="500px">
+      </app-painel-360-mapa>
+    </div>
 
-      <po-divider p-label="Resultados do lote"></po-divider>
-
+    <!-- Histórico de consultas -->
+    <div class="p360__historico">
+      <po-divider p-label="Consultas salvas"></po-divider>
       <po-table
-        [p-columns]="colunasResultados"
-        [p-items]="resultados"
-        [p-loading]="carregandoDetalhes"
+        [p-columns]="colunasConsultas"
+        [p-items]="consultasView"
+        [p-actions]="acoesConsultas"
+        [p-loading]="carregandoConsultas"
         p-striped="true">
       </po-table>
     </div>
+
   </div>
 </po-page-default>

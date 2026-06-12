@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
@@ -16,6 +17,7 @@ import { JwtPortalGuard } from '../portal/jwt-portal.guard';
 import { Perfil } from '../portal/perfil.decorator';
 import { RecursoPortal } from '../portal/recurso.decorator';
 import { RecursoGuard } from '../portal/recurso.guard';
+import { Painel360BuscaDto } from './dto/painel-360-busca.dto';
 
 @Controller('painel-360')
 @UseGuards(JwtPortalGuard, RecursoGuard)
@@ -23,6 +25,45 @@ import { RecursoGuard } from '../portal/recurso.guard';
 @RecursoPortal('painel-360')
 export class Painel360Controller {
   constructor(private readonly service: Painel360Service) {}
+
+  // ─── Lookup (sem prefixo de perfil) ─────────────────────────────────────────
+
+  @Get('lookup/cnaes')
+  lookupCnaes(@Query('q') q?: string) {
+    return this.service.lookupCnaes(q);
+  }
+
+  @Get('lookup/municipios')
+  lookupMunicipios(@Query('uf') uf?: string) {
+    return this.service.lookupMunicipios(uf);
+  }
+
+  // ─── Busca por filtros ───────────────────────────────────────────────────────
+
+  @Post(['busca', ':perfil/busca'])
+  buscar(@Req() req: any, @Body() dto: Painel360BuscaDto) {
+    return this.service.buscar(req['usuario'], dto);
+  }
+
+  @Get(['consultas', ':perfil/consultas'])
+  listarConsultas(@Req() req: any) {
+    return this.service.listarConsultas(req['usuario']);
+  }
+
+  @Get(['consultas/:id/geojson', ':perfil/consultas/:id/geojson'])
+  recarregarGeoJson(@Req() req: any, @Param('id') id: string) {
+    return this.service.recarregarGeoJson(id, req['usuario']);
+  }
+
+  @Get(['consultas/:id/relatorio', ':perfil/consultas/:id/relatorio'])
+  async relatorio(@Req() req: any, @Param('id') id: string, @Res() res: any) {
+    const arquivo = await this.service.gerarRelatorio(id, req['usuario']);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${arquivo.nome}"`);
+    res.send(arquivo.conteudo);
+  }
+
+  // ─── Lotes CSV (fluxo legado) ────────────────────────────────────────────────
 
   @Post(['lotes', ':perfil/lotes'])
   @UseInterceptors(FileInterceptor('arquivo'))
@@ -48,8 +89,7 @@ export class Painel360Controller {
     @Query('limite') limite?: string,
   ) {
     return this.service.obterResultados(
-      id,
-      req['usuario'],
+      id, req['usuario'],
       pagina ? Number(pagina) : undefined,
       limite ? Number(limite) : undefined,
     );

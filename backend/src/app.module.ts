@@ -32,6 +32,7 @@ import { InterPixModule } from './modules/inter-pix/inter-pix.module';
 import { Painel360Module } from './modules/painel-360/painel-360.module';
 import { NotificacoesModule } from './modules/notificacoes/notificacoes.module';
 import { MenuModule } from './modules/menu/menu.module';
+import { ClienteConfiguracaoModule } from './modules/cliente-configuracao/cliente-configuracao.module';
 
 @Module({
   imports: [
@@ -124,6 +125,7 @@ import { MenuModule } from './modules/menu/menu.module';
     AssinaturasModule,
     FaturasModule,
     Painel360Module,
+    ClienteConfiguracaoModule,
     NotificacoesModule,
     MenuModule,
   ],

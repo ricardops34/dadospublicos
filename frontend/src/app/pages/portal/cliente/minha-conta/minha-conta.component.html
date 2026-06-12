@@ -298,6 +298,79 @@
 
       </po-tab>
 
+      <!-- ─── ABA 5: Integrações ──────────────────────────────────────── -->
+      <po-tab p-label="Integrações" p-icon="an an-plugs">
+
+        <po-loading-overlay *ngIf="carregandoIntegracoes"></po-loading-overlay>
+
+        <ng-container *ngFor="let integ of integracoes">
+          <po-divider [p-label]="labelIntegracao(integ.chave)"></po-divider>
+
+          <div class="po-row">
+            <div class="po-md-8 po-sm-12">
+              <ng-container *ngIf="integ.configurada; else semChave">
+                <po-info
+                  p-label="Chave configurada"
+                  [p-value]="integ.valorParcial ?? '****'"
+                  p-icon="an an-check-circle">
+                </po-info>
+                <po-info
+                  *ngIf="integ.atualizadoEm"
+                  p-label="Atualizado em"
+                  [p-value]="(integ.atualizadoEm | date:'dd/MM/yyyy HH:mm') ?? ''">
+                </po-info>
+              </ng-container>
+              <ng-template #semChave>
+                <po-info p-label="Status" p-value="Não configurada" p-icon="an an-warning-circle"></po-info>
+              </ng-template>
+            </div>
+
+            <div class="po-md-4 po-sm-12" style="display:flex; gap:8px; align-items:flex-end; justify-content:flex-end;">
+              <po-button
+                *ngIf="integ.configurada"
+                p-label="Remover"
+                p-kind="tertiary"
+                p-icon="an an-trash"
+                (p-click)="removerIntegracao(integ.chave)">
+              </po-button>
+            </div>
+          </div>
+
+          <div class="po-row" style="margin-top:8px;">
+            <po-password
+              class="po-md-9 po-sm-12"
+              [name]="integ.chave"
+              [p-label]="integ.configurada ? 'Nova chave (substitui a atual)' : 'Chave de API'"
+              [p-placeholder]="integ.chave === 'GOOGLE_MAPS_API_KEY' ? 'AIzaSy...' : 'Cole a chave aqui'"
+              [(ngModel)]="formIntegracoes[integ.chave]">
+            </po-password>
+            <div class="po-md-3 po-sm-12" style="display:flex; align-items:flex-end; padding-bottom:4px;">
+              <po-button
+                p-label="Salvar"
+                p-kind="primary"
+                p-icon="an an-floppy-disk"
+                [p-loading]="salvandoIntegracao"
+                [p-disabled]="!formIntegracoes[integ.chave]"
+                (p-click)="salvarIntegracao(integ.chave)">
+              </po-button>
+            </div>
+          </div>
+
+          <div *ngIf="integ.chave === 'GOOGLE_MAPS_API_KEY'" class="po-mt-2" style="font-size:0.85rem; color: var(--color-neutral-mid-60);">
+            Obtenha sua chave em
+            <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">
+              Google Cloud Console
+            </a>
+            — ative a API <strong>Geocoding API</strong>.
+          </div>
+        </ng-container>
+
+        <po-container *ngIf="!carregandoIntegracoes && integracoes.length === 0">
+          <span>Nenhuma integração disponível para o seu plano.</span>
+        </po-container>
+
+      </po-tab>
+
     </po-tabs>
 
   </ng-container>

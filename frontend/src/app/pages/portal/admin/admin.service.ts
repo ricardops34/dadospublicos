@@ -4,9 +4,12 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Painel360Service } from '../painel-360/painel-360.service';
 import {
+  Painel360BuscaResult,
+  Painel360CnaeOption,
+  Painel360Consulta,
+  Painel360FiltrosBusca,
   Painel360GeoJsonCollection,
-  Painel360Lote,
-  Painel360ResultadosResponse,
+  Painel360MunicipioOption,
 } from '../painel-360/painel-360.types';
 
 const API = environment.apiUrl;
@@ -149,27 +152,27 @@ export class AdminService {
     return this.http.delete<any>(`${API}/planos/${planoId}/recursos/${assocId}`);
   }
 
-  uploadPainel360Url() {
-    return this.painel360Service.obterUploadUrl('admin');
+  buscarPainel360(filtros: Painel360FiltrosBusca): Observable<Painel360BuscaResult> {
+    return this.painel360Service.buscar('admin', filtros);
   }
 
-  listarPainel360Lotes(): Observable<Painel360Lote[]> {
-    return this.painel360Service.listarLotes('admin');
+  listarConsultasPainel360(): Observable<Painel360Consulta[]> {
+    return this.painel360Service.listarConsultas('admin');
   }
 
-  detalharPainel360Lote(loteId: string): Observable<Painel360Lote> {
-    return this.painel360Service.obterLote('admin', loteId);
+  recarregarGeoJsonPainel360(consultaId: string): Observable<Painel360GeoJsonCollection> {
+    return this.painel360Service.recarregarGeoJson('admin', consultaId);
   }
 
-  listarPainel360Resultados(loteId: string, pagina = 1, limite = 50): Observable<Painel360ResultadosResponse> {
-    return this.painel360Service.listarResultados('admin', loteId, pagina, limite);
+  gerarRelatorioPainel360(consultaId: string) {
+    return this.painel360Service.gerarRelatorio('admin', consultaId);
   }
 
-  obterPainel360GeoJson(loteId: string): Observable<Painel360GeoJsonCollection> {
-    return this.painel360Service.obterGeoJson('admin', loteId);
+  lookupCnaePainel360(q?: string): Observable<Painel360CnaeOption[]> {
+    return this.painel360Service.lookupCnaes(q);
   }
 
-  baixarPainel360Resultado(loteId: string) {
-    return this.painel360Service.baixarResultado('admin', loteId);
+  lookupMunicipiosPainel360(uf: string): Observable<Painel360MunicipioOption[]> {
+    return this.painel360Service.lookupMunicipios(uf);
   }
 }

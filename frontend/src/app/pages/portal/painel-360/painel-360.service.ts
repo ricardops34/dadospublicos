@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
-  extrairLista,
-  extrairTotal,
+  Painel360BuscaResult,
+  Painel360CnaeOption,
+  Painel360Consulta,
+  Painel360FiltrosBusca,
   Painel360GeoJsonCollection,
-  Painel360Lote,
+  Painel360MunicipioOption,
   Painel360Perfil,
-  Painel360Resultado,
-  Painel360ResultadosResponse,
 } from './painel-360.types';
 
 const API = environment.apiUrl;
@@ -18,48 +18,36 @@ const API = environment.apiUrl;
 export class Painel360Service {
   constructor(private http: HttpClient) {}
 
-  obterUploadUrl(perfil: Painel360Perfil): string {
-    return `${this.baseUrl(perfil)}/lotes`;
+  buscar(perfil: Painel360Perfil, filtros: Painel360FiltrosBusca): Observable<Painel360BuscaResult> {
+    return this.http.post<Painel360BuscaResult>(`${this.baseUrl(perfil)}/busca`, filtros);
   }
 
-  listarLotes(perfil: Painel360Perfil): Observable<Painel360Lote[]> {
-    return this.http
-      .get<unknown>(`${this.baseUrl(perfil)}/lotes`)
-      .pipe(map((response) => extrairLista<Painel360Lote>(response)));
+  listarConsultas(perfil: Painel360Perfil): Observable<Painel360Consulta[]> {
+    return this.http.get<Painel360Consulta[]>(`${this.baseUrl(perfil)}/consultas`);
   }
 
-  obterLote(perfil: Painel360Perfil, loteId: string): Observable<Painel360Lote> {
-    return this.http.get<Painel360Lote>(`${this.baseUrl(perfil)}/lotes/${loteId}`);
+  recarregarGeoJson(perfil: Painel360Perfil, consultaId: string): Observable<Painel360GeoJsonCollection> {
+    return this.http.get<Painel360GeoJsonCollection>(`${this.baseUrl(perfil)}/consultas/${consultaId}/geojson`);
   }
 
-  listarResultados(
-    perfil: Painel360Perfil,
-    loteId: string,
-    pagina = 1,
-    limite = 50,
-  ): Observable<Painel360ResultadosResponse> {
-    const params = new HttpParams().set('pagina', pagina).set('limite', limite);
-
-    return this.http.get<unknown>(`${this.baseUrl(perfil)}/lotes/${loteId}/resultados`, { params }).pipe(
-      map((response) => {
-        const items = extrairLista<Painel360Resultado>(response);
-        return {
-          items,
-          total: extrairTotal(response, items.length),
-        };
-      }),
-    );
-  }
-
-  obterGeoJson(perfil: Painel360Perfil, loteId: string): Observable<Painel360GeoJsonCollection> {
-    return this.http.get<Painel360GeoJsonCollection>(`${this.baseUrl(perfil)}/lotes/${loteId}/geojson`);
-  }
-
-  baixarResultado(perfil: Painel360Perfil, loteId: string): Observable<HttpResponse<Blob>> {
-    return this.http.get(`${this.baseUrl(perfil)}/lotes/${loteId}/download`, {
+  gerarRelatorio(perfil: Painel360Perfil, consultaId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl(perfil)}/consultas/${consultaId}/relatorio`, {
       observe: 'response',
       responseType: 'blob',
     });
+  }
+
+  lookupCnaes(q?: string): Observable<Painel360CnaeOption[]> {
+    const url = q
+      ? `${API}/painel-360/lookup/cnaes?q=${encodeURIComponent(q)}`
+      : `${API}/painel-360/lookup/cnaes`;
+    return this.http.get<Painel360CnaeOption[]>(url);
+  }
+
+  lookupMunicipios(uf: string): Observable<Painel360MunicipioOption[]> {
+    return this.http.get<Painel360MunicipioOption[]>(
+      `${API}/painel-360/lookup/municipios?uf=${encodeURIComponent(uf)}`,
+    );
   }
 
   private baseUrl(perfil: Painel360Perfil): string {

@@ -134,6 +134,13 @@ export class MinhaContaComponent implements OnInit {
   salvandoSenha = false;
   formSenha = { senhaAtual: '', novaSenha: '', confirmarSenha: '' };
 
+  // ─── Integrações ───────────────────────────────────────────────────────────
+  integracoes: { chave: string; configurada: boolean; valorParcial: string | null; atualizadoEm: string | null }[] = [];
+  carregandoIntegracoes = false;
+  salvandoIntegracao = false;
+  formIntegracoes: Record<string, string> = {};
+  mostrarChave: Record<string, boolean> = {};
+
   // Avatares disponíveis em frontend/public/avatar (avatar_01 é o padrão)
   avatares = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map((n) => `avatar_${n}.png`);
   avatarSelecionado: string | null = null;
@@ -251,6 +258,7 @@ export class MinhaContaComponent implements OnInit {
 
         this.carregando = false;
         this.cdr.detectChanges();
+        this.carregarIntegracoes();
       },
       error: () => {
         this.carregando = false;
@@ -672,5 +680,60 @@ export class MinhaContaComponent implements OnInit {
   formatarData(iso: string | null): string {
     if (!iso) return '';
     return new Date(iso).toLocaleDateString('pt-BR');
+  }
+
+  // ─── Integrações ───────────────────────────────────────────────────────────
+
+  carregarIntegracoes() {
+    this.carregandoIntegracoes = true;
+    this.http.get<any[]>(`${environment.apiUrl}/integracoes`).subscribe({
+      next: (lista) => {
+        this.integracoes = lista;
+        this.formIntegracoes = {};
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.carregandoIntegracoes = false;
+        this.cdr.detectChanges();
+      },
+      complete: () => {
+        this.carregandoIntegracoes = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  salvarIntegracao(chave: string) {
+    const valor = (this.formIntegracoes[chave] ?? '').trim();
+    if (!valor) return;
+    this.salvandoIntegracao = true;
+    this.http.put(`${environment.apiUrl}/integracoes/${chave}`, { valor }).subscribe({
+      next: () => {
+        this.notif.success('Integração salva com sucesso.');
+        this.formIntegracoes[chave] = '';
+        this.carregarIntegracoes();
+      },
+      error: () => {
+        this.notif.error('Erro ao salvar integração.');
+        this.salvandoIntegracao = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  removerIntegracao(chave: string) {
+    this.http.delete(`${environment.apiUrl}/integracoes/${chave}`).subscribe({
+      next: () => {
+        this.notif.success('Integração removida.');
+        this.carregarIntegracoes();
+      },
+    });
+  }
+
+  labelIntegracao(chave: string): string {
+    const labels: Record<string, string> = {
+      GOOGLE_MAPS_API_KEY: 'Google Maps API Key',
+    };
+    return labels[chave] ?? chave;
   }
 }

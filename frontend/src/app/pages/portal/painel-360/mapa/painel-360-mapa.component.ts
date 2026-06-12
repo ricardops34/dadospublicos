@@ -152,19 +152,19 @@ export class Painel360MapaComponent implements AfterViewInit, OnChanges, OnDestr
 
   private construirPopup(feature: Painel360GeoJsonFeature): string {
     const props = feature.properties;
-    const razaoSocial = this.escapeHtml(String(props.razao_social ?? props.razaoSocial ?? 'Registro sem nome'));
-    const cnpj = this.escapeHtml(String(props.cnpj ?? ''));
-    const situacao = this.escapeHtml(String(props.situacao ?? props.status ?? ''));
-    const cidade = this.escapeHtml(String(props.cidade ?? ''));
-    const uf = this.escapeHtml(String(props.uf ?? ''));
-    const endereco = this.escapeHtml(String(props.endereco ?? ''));
+    const razaoSocial = this.escapeHtml(String(props['razao_social'] ?? props['razaoSocial'] ?? 'Registro sem nome'));
+    const cnpj = this.escapeHtml(String(props['cnpj'] ?? ''));
+    const situacao = this.escapeHtml(String(props['situacao_cadastral'] ?? props['situacao'] ?? props['status'] ?? ''));
+    const municipio = this.escapeHtml(String(props['municipio'] ?? props['cidade'] ?? ''));
+    const uf = this.escapeHtml(String(props['uf'] ?? ''));
+    const endereco = this.escapeHtml(String(props['endereco'] ?? ''));
 
     return `
       <div class="painel-360-popup">
         <strong>${razaoSocial}</strong>
         ${cnpj ? `<span>CNPJ: ${cnpj}</span>` : ''}
         ${situacao ? `<span>Status: ${situacao}</span>` : ''}
-        ${(cidade || uf) ? `<span>${cidade}${cidade && uf ? '/' : ''}${uf}</span>` : ''}
+        ${(municipio || uf) ? `<span>${municipio}${municipio && uf ? '/' : ''}${uf}</span>` : ''}
         ${endereco ? `<span>${endereco}</span>` : ''}
       </div>
     `;

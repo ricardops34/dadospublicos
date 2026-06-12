@@ -1243,6 +1243,7 @@ export class EtlService {
     let lote: string[][] = [];
     let total = 0;
     let numeroLinha = 0;
+    let registroPendente = '';
 
     const colsUpdate = conflitoCols
       ? colunas.filter((c) => !conflitoCols.includes(c)).map((c) => `${c}=EXCLUDED.${c}`).join(',')
@@ -1272,9 +1273,20 @@ export class EtlService {
     };
 
     for await (const line of rl) {
-      if (!line.trim()) continue;
       numeroLinha += 1;
-      const row = this.normalizeRowForTable(tabela, this.parseCsvLine(line));
+      const linhaSanitizada = line.replace(/\u0000/g, '');
+      if (!linhaSanitizada.trim() && !registroPendente) continue;
+
+      registroPendente = registroPendente
+        ? `${registroPendente}\n${linhaSanitizada}`
+        : linhaSanitizada;
+
+      if (!this.isCompleteCsvRecord(registroPendente)) {
+        continue;
+      }
+
+      const row = this.normalizeRowForTable(tabela, this.parseCsvLine(registroPendente));
+      registroPendente = '';
       if (row.length !== colunas.length) {
         throw new Error(
           `Linha com ${row.length} coluna(s) em ${path.basename(csvPath)}; esperado ${colunas.length} para ${tabela}.`,
@@ -1288,6 +1300,9 @@ export class EtlService {
       if (lote.length >= LOTE) {
         await flush();
       }
+    }
+    if (registroPendente.trim()) {
+      throw new Error(`Registro CSV incompleto em ${path.basename(csvPath)}; aspas não foram fechadas.`);
     }
     await flush();
     return total;
@@ -1324,6 +1339,27 @@ export class EtlService {
 
     fields.push(current.trim());
     return fields;
+  }
+
+  private isCompleteCsvRecord(line: string): boolean {
+    const sanitizedLine = line.replace(/\u0000/g, '');
+    let inQuotes = false;
+
+    for (let i = 0; i < sanitizedLine.length; i++) {
+      const char = sanitizedLine[i];
+      const nextChar = sanitizedLine[i + 1];
+
+      if (char !== '"') continue;
+
+      if (inQuotes && nextChar === '"') {
+        i++;
+        continue;
+      }
+
+      inQuotes = !inQuotes;
+    }
+
+    return !inQuotes;
   }
 
   private async marcarLogArquivoComoErro(logEntry: EtlArquivoLog, csvPath: string, inicio: number, err: unknown): Promise<void> {

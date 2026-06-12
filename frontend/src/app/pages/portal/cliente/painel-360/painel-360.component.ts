@@ -1,21 +1,15 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { HttpResponse } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
-import { PoTableAction, PoTableColumn, PoUploadFileRestrictions } from '@po-ui/ng-components';
-import { AuthService } from '../../../../services/auth.service';
-import { NotifService } from '../../../../services/notif.service';
+import { PoSelectOption, PoTableAction, PoTableColumn } from '@po-ui/ng-components';
 import { UsuarioPortalService } from '../usuario.service';
+import { NotifService } from '../../../../services/notif.service';
 import {
+  Painel360BuscaResult,
+  Painel360CnaeOption,
+  Painel360Consulta,
+  Painel360FiltrosBusca,
   Painel360GeoJsonCollection,
-  Painel360Lote,
-  Painel360Resultado,
-  Painel360ResumoLote,
+  Painel360MunicipioOption,
 } from '../../painel-360/painel-360.types';
-
-type Painel360LoteView = Painel360Lote & {
-  arquivoExibicao: string;
-  totalExibicao: number;
-};
 
 @Component({
   selector: 'app-painel-360',
@@ -24,180 +18,217 @@ type Painel360LoteView = Painel360Lote & {
   styleUrls: ['./painel-360.component.scss'],
 })
 export class Painel360Component implements OnInit {
-  lotes: Painel360LoteView[] = [];
-  resultados: Painel360Resultado[] = [];
+  filtros: Painel360FiltrosBusca = {};
   geoJson: Painel360GeoJsonCollection | null = null;
-  loteSelecionado: Painel360LoteView | null = null;
-  carregandoLotes = true;
-  carregandoDetalhes = false;
+  consultas: Painel360Consulta[] = [];
+  consultaId: string | null = null;
   totalResultados = 0;
+  totalGeocod = 0;
 
-  readonly uploadUrl: string;
-  readonly uploadHeaders: { [name: string]: string | string[] } = {};
-  readonly uploadRestricoes: PoUploadFileRestrictions = {
-    allowedExtensions: ['.csv', '.xlsx', '.xls'],
-    maxFiles: 1,
-    maxFileSize: 25 * 1024 * 1024,
-  };
+  pesquisando = false;
+  carregandoConsultas = false;
+  carregandoCnaes = false;
+  carregandoMunicipios = false;
 
-  readonly colunasLotes: PoTableColumn[] = [
-    { property: 'arquivoExibicao', label: 'Arquivo', width: '32%' },
-    {
-      property: 'status',
-      label: 'Status',
-      type: 'label',
-      width: '14%',
-      labels: [
-        { value: 'pendente', label: 'Pendente', color: 'color-08' },
-        { value: 'processando', label: 'Processando', color: 'color-07' },
-        { value: 'concluido', label: 'Concluido', color: 'color-10' },
-        { value: 'erro', label: 'Erro', color: 'color-05' },
-      ],
-    },
-    { property: 'criadoEm', label: 'Criado em', type: 'dateTime', width: '18%' },
-    { property: 'concluidoEm', label: 'Concluido em', type: 'dateTime', width: '18%' },
-    { property: 'totalExibicao', label: 'Registros', type: 'number', width: '12%' },
+  cnaeOptions: Painel360CnaeOption[] = [];
+  municipioOptions: Painel360MunicipioOption[] = [];
+
+  readonly ufOptions: PoSelectOption[] = [
+    { value: 'AC', label: 'AC — Acre' },
+    { value: 'AL', label: 'AL — Alagoas' },
+    { value: 'AP', label: 'AP — Amapá' },
+    { value: 'AM', label: 'AM — Amazonas' },
+    { value: 'BA', label: 'BA — Bahia' },
+    { value: 'CE', label: 'CE — Ceará' },
+    { value: 'DF', label: 'DF — Distrito Federal' },
+    { value: 'ES', label: 'ES — Espírito Santo' },
+    { value: 'GO', label: 'GO — Goiás' },
+    { value: 'MA', label: 'MA — Maranhão' },
+    { value: 'MT', label: 'MT — Mato Grosso' },
+    { value: 'MS', label: 'MS — Mato Grosso do Sul' },
+    { value: 'MG', label: 'MG — Minas Gerais' },
+    { value: 'PA', label: 'PA — Pará' },
+    { value: 'PB', label: 'PB — Paraíba' },
+    { value: 'PR', label: 'PR — Paraná' },
+    { value: 'PE', label: 'PE — Pernambuco' },
+    { value: 'PI', label: 'PI — Piauí' },
+    { value: 'RJ', label: 'RJ — Rio de Janeiro' },
+    { value: 'RN', label: 'RN — Rio Grande do Norte' },
+    { value: 'RS', label: 'RS — Rio Grande do Sul' },
+    { value: 'RO', label: 'RO — Rondônia' },
+    { value: 'RR', label: 'RR — Roraima' },
+    { value: 'SC', label: 'SC — Santa Catarina' },
+    { value: 'SP', label: 'SP — São Paulo' },
+    { value: 'SE', label: 'SE — Sergipe' },
+    { value: 'TO', label: 'TO — Tocantins' },
   ];
 
-  readonly colunasResultados: PoTableColumn[] = [
-    { property: 'cnpj', label: 'CNPJ', width: '16%' },
-    { property: 'razaoSocial', label: 'Razao social', width: '30%' },
-    { property: 'cidade', label: 'Cidade', width: '18%' },
-    { property: 'uf', label: 'UF', width: '8%' },
-    { property: 'status', label: 'Status', width: '14%' },
-    { property: 'mensagem', label: 'Mensagem', width: '14%' },
+  readonly colunasConsultas: PoTableColumn[] = [
+    { property: 'criadoEm', label: 'Data', type: 'dateTime', width: '18%' },
+    { property: 'ufLabel', label: 'Estado', width: '10%' },
+    { property: 'municipioLabel', label: 'Município', width: '16%' },
+    { property: 'bairroLabel', label: 'Bairro', width: '16%' },
+    { property: 'cnaesLabel', label: 'CNAEs', width: '20%' },
+    { property: 'totalResultados', label: 'Resultados', type: 'number', width: '10%' },
+    { property: 'totalGeocod', label: 'No mapa', type: 'number', width: '10%' },
   ];
 
-  readonly acoesLotes: PoTableAction[] = [
-    { label: 'Abrir', icon: 'an an-eye', action: (lote: Painel360LoteView) => this.selecionarLote(lote) },
-    { label: 'Download', icon: 'an an-download-simple', action: (lote: Painel360LoteView) => this.baixarLote(lote) },
+  readonly acoesConsultas: PoTableAction[] = [
+    { label: 'Ver no mapa', icon: 'an an-map-pin-line', action: (c: any) => this.recarregarConsulta(c) },
+    { label: 'Relatório', icon: 'an an-download-simple', action: (c: any) => this.baixarRelatorio(c.id) },
   ];
 
   constructor(
     private clienteService: UsuarioPortalService,
-    private auth: AuthService,
     private notif: NotifService,
     private cdr: ChangeDetectorRef,
-  ) {
-    this.uploadUrl = this.clienteService.uploadPainel360Url();
-    const token = this.auth.getToken();
-    if (token) {
-      this.uploadHeaders['Authorization'] = `Bearer ${token}`;
-    }
-  }
+  ) {}
 
   ngOnInit() {
-    this.carregarLotes();
+    this.carregarCnaes();
+    this.carregarConsultas();
   }
 
-  carregarLotes(loteIdSelecionado?: string) {
-    this.carregandoLotes = true;
-    this.clienteService.listarPainel360Lotes().subscribe({
-      next: (lotes) => {
-        this.lotes = lotes.map((lote) => this.normalizarLote(lote));
-        this.carregandoLotes = false;
-
-        const lote =
-          this.lotes.find((item) => item.id === loteIdSelecionado) ??
-          this.lotes.find((item) => item.id === this.loteSelecionado?.id) ??
-          this.lotes[0];
-
-        if (lote) {
-          this.selecionarLote(lote);
-        } else {
-          this.limparDetalhes();
-        }
+  onUfChange(uf: string) {
+    this.filtros.municipio = undefined;
+    this.municipioOptions = [];
+    if (!uf) return;
+    this.carregandoMunicipios = true;
+    this.clienteService.lookupMunicipiosPainel360(uf).subscribe({
+      next: (items) => {
+        this.municipioOptions = items;
+        this.carregandoMunicipios = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.carregandoLotes = false;
+        this.carregandoMunicipios = false;
         this.cdr.detectChanges();
-        this.notif.error('Erro ao carregar seus lotes do Painel 360.');
       },
     });
   }
 
-  selecionarLote(lote: Painel360LoteView) {
-    this.loteSelecionado = lote;
-    this.carregandoDetalhes = true;
+  pesquisar() {
+    const semFiltro = !this.filtros.uf && !this.filtros.municipio && !this.filtros.bairro && !this.filtros.cnaes?.length;
+    if (semFiltro) {
+      this.notif.warning('Informe ao menos um filtro para pesquisar.');
+      return;
+    }
 
-    forkJoin({
-      resultados: this.clienteService.listarPainel360Resultados(lote.id, 1, 200),
-      geoJson: this.clienteService.obterPainel360GeoJson(lote.id),
-    }).subscribe({
-      next: ({ resultados, geoJson }) => {
-        this.resultados = resultados.items.map((item) => this.normalizarResultado(item));
-        this.totalResultados = resultados.total;
-        this.geoJson = geoJson;
-        this.carregandoDetalhes = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.resultados = [];
-        this.totalResultados = 0;
-        this.geoJson = null;
-        this.carregandoDetalhes = false;
-        this.cdr.detectChanges();
-        this.notif.error('Erro ao carregar o lote selecionado.');
-      },
-    });
-  }
-
-  onUploadSuccess(event: any) {
-    const loteId = event?.body?.lote?.id ?? event?.body?.id ?? event?.lote?.id ?? event?.id;
-    this.notif.success('Arquivo enviado com sucesso.');
-    this.carregarLotes(loteId);
-  }
-
-  onUploadError() {
-    this.notif.error('Nao foi possivel enviar o arquivo do lote.');
-  }
-
-  baixarLote(lote: Painel360LoteView) {
-    this.clienteService.baixarPainel360Resultado(lote.id).subscribe({
-      next: (response) => {
-        this.salvarArquivo(response, lote.arquivoExibicao);
-      },
-      error: () => {
-        this.notif.error('Erro ao baixar o resultado do lote.');
-      },
-    });
-  }
-
-  get resumoSelecionado(): Painel360ResumoLote {
-    return this.loteSelecionado?.resumo ?? {};
-  }
-
-  private limparDetalhes() {
-    this.loteSelecionado = null;
-    this.resultados = [];
-    this.totalResultados = 0;
+    this.pesquisando = true;
     this.geoJson = null;
+    this.clienteService.buscarPainel360(this.filtros).subscribe({
+      next: (result: Painel360BuscaResult) => {
+        this.geoJson = result.geojson;
+        this.consultaId = result.consultaId;
+        this.totalResultados = result.total;
+        this.totalGeocod = result.totalGeocod;
+        this.pesquisando = false;
+        this.carregarConsultas();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.pesquisando = false;
+        this.cdr.detectChanges();
+        this.notif.error('Erro ao executar a pesquisa.');
+      },
+    });
   }
 
-  private normalizarLote(lote: Painel360Lote): Painel360LoteView {
-    return {
-      ...lote,
-      arquivoExibicao: lote.nomeArquivo ?? lote.arquivoOriginal ?? lote.nome ?? `Lote ${lote.id}`,
-      totalExibicao: lote.resumo?.total ?? lote.totalLinhas ?? lote.totalResultados ?? 0,
-    };
+  gerarRelatorio() {
+    if (!this.consultaId) return;
+    this.baixarRelatorio(this.consultaId);
   }
 
-  private normalizarResultado(item: Painel360Resultado): Painel360Resultado {
-    return {
-      ...item,
-      razaoSocial: item.razaoSocial ?? (item as any).razao_social ?? item.nomeFantasia ?? '-',
-      cidade: item.cidade ?? (item as any).municipio ?? '-',
-      uf: item.uf ?? '-',
-      status: item.status ?? ((item as any).erro ? 'erro' : 'sucesso'),
-      mensagem: item.mensagem ?? '',
-    };
+  limparFiltros() {
+    this.filtros = {};
+    this.municipioOptions = [];
+    this.geoJson = null;
+    this.consultaId = null;
+    this.totalResultados = 0;
+    this.totalGeocod = 0;
+    this.cdr.detectChanges();
   }
 
-  private salvarArquivo(response: HttpResponse<Blob>, fallback: string) {
-    const disposition = response.headers.get('content-disposition') ?? '';
+  get consultasView() {
+    return this.consultas.map((c) => ({
+      ...c,
+      ufLabel: c.filtros.uf ?? '—',
+      municipioLabel: this.labelMunicipio(c.filtros.municipio) ?? '—',
+      bairroLabel: c.filtros.bairro ?? '—',
+      cnaesLabel: c.filtros.cnaes?.length ? c.filtros.cnaes.join(', ') : '—',
+    }));
+  }
+
+  private carregarCnaes() {
+    this.carregandoCnaes = true;
+    this.clienteService.lookupCnaePainel360().subscribe({
+      next: (items) => {
+        this.cnaeOptions = items;
+        this.carregandoCnaes = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.carregandoCnaes = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private carregarConsultas() {
+    this.carregandoConsultas = true;
+    this.clienteService.listarConsultasPainel360().subscribe({
+      next: (lista) => {
+        this.consultas = lista;
+        this.carregandoConsultas = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.carregandoConsultas = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private recarregarConsulta(consulta: Painel360Consulta) {
+    this.pesquisando = true;
+    this.filtros = { ...consulta.filtros };
+    if (consulta.filtros.uf) {
+      this.onUfChange(consulta.filtros.uf);
+    }
+    this.clienteService.recarregarGeoJsonPainel360(consulta.id).subscribe({
+      next: (geojson) => {
+        this.geoJson = geojson;
+        this.consultaId = consulta.id;
+        this.totalResultados = consulta.totalResultados;
+        this.totalGeocod = consulta.totalGeocod;
+        this.pesquisando = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.pesquisando = false;
+        this.cdr.detectChanges();
+        this.notif.error('Erro ao recarregar a consulta.');
+      },
+    });
+  }
+
+  private baixarRelatorio(consultaId: string) {
+    this.clienteService.gerarRelatorioPainel360(consultaId).subscribe({
+      next: (response) => this.salvarArquivo(response, `painel-360-${consultaId}`),
+      error: () => this.notif.error('Erro ao gerar o relatório.'),
+    });
+  }
+
+  private labelMunicipio(codigoRfb?: string): string | null {
+    if (!codigoRfb) return null;
+    const found = this.municipioOptions.find((m) => m.value === codigoRfb);
+    return found?.label ?? codigoRfb;
+  }
+
+  private salvarArquivo(response: any, fallback: string) {
+    const disposition = response.headers?.get('content-disposition') ?? '';
     const match = disposition.match(/filename="?([^"]+)"?/i);
-    const fileName = match?.[1] ?? `${fallback.replace(/\.[^.]+$/, '') || 'painel-360'}-resultado.csv`;
+    const fileName = match?.[1] ?? `${fallback}.csv`;
     const blobUrl = URL.createObjectURL(response.body as Blob);
     const link = document.createElement('a');
     link.href = blobUrl;

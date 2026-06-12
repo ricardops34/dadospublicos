@@ -122,6 +122,41 @@ export class GeocodeService {
     return dados;
   }
 
+  /**
+   * Geocodifica um CEP usando Google Maps Geocoding API.
+   * Retorna as coordenadas e atualiza o registro em ceps_geo.
+   * Não substitui o fluxo padrão — é chamado como alternativa quando o cliente fornece a chave.
+   */
+  async geocodificarComGoogle(cep: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
+    const cepLimpo = cep.replace(/\D/g, '');
+    try {
+      this.logger.log(`[Google] Geocodificando CEP ${cepLimpo}`);
+      const { data } = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+        params: { address: cepLimpo, components: 'country:BR', key: apiKey },
+        timeout: 8000,
+      });
+
+      if (data.status !== 'OK' || !data.results?.length) {
+        this.logger.warn(`[Google] CEP ${cepLimpo} sem resultado: ${data.status}`);
+        return null;
+      }
+
+      const { lat, lng } = data.results[0].geometry.location;
+      this.logger.log(`[Google] CEP ${cepLimpo} geocodificado: ${lat},${lng}`);
+
+      // Atualiza coordenadas no banco — mantém dados de endereço já existentes
+      await this.ceps.update(
+        { cep: cepLimpo },
+        { lat, lng, geocodificadoEm: new Date(), origemDados: 'google' },
+      );
+
+      return { lat, lng };
+    } catch (err: any) {
+      this.logger.warn(`[Google] Falha ao geocodificar CEP ${cepLimpo}: ${err.message}`);
+      return null;
+    }
+  }
+
   // ─── Persistência ─────────────────────────────────────────────────────────
 
   private async criarRegistro(cep: string, dados: Partial<CepGeo>): Promise<CepGeo> {
