@@ -388,7 +388,7 @@ test('carregarCsv informa coluna e valor quando excede limite de varchar', async
   const csvPath = path.join(tempDir, 'Estabelecimentos0.csv');
   fs.writeFileSync(
     csvPath,
-    '"12345678";"0001";"99";"1";"NOME";"02";"20240101";"00";"";"000";"20240101";"0111301";"";"RUA";"A";"10";"";"CENTRO";"78000000";"MT";"9067";"1234";"12345678";"";"";"";"";"EMAIL@TESTE.COM";"";"20240101"\n',
+    '"12345678";"0001";"99";"1";"NOME";"02";"20240101";"00";"";"000";"20240101";"0111301";"";"RUA";"A";"10";"";"CENTRO";"78000000";"MT";"9067";"12345";"12345678";"";"";"";"";"EMAIL@TESTE.COM";"";"20240101"\n',
     'latin1',
   );
 
@@ -418,7 +418,7 @@ test('carregarCsv informa coluna e valor quando excede limite de varchar', async
       ],
       ['cnpj_basico', 'cnpj_ordem', 'cnpj_dv'],
     ),
-    /Valor '1234' excede o limite 3 da coluna ddd1 em estabelecimentos/,
+    /Valor '12345' excede o limite 4 da coluna ddd1 em estabelecimentos/,
   );
 
   fs.rmSync(tempDir, { recursive: true, force: true });

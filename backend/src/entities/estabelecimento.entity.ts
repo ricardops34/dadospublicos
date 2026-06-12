@@ -71,19 +71,19 @@ export class Estabelecimento {
   @Column({ name: 'municipio', type: 'varchar', length: 4, nullable: true })
   municipio: string | null;
 
-  @Column({ name: 'ddd1', type: 'varchar', length: 3, nullable: true })
+  @Column({ name: 'ddd1', type: 'varchar', length: 4, nullable: true })
   ddd1: string | null;
 
   @Column({ name: 'telefone1', type: 'varchar', length: 10, nullable: true })
   telefone1: string | null;
 
-  @Column({ name: 'ddd2', type: 'varchar', length: 3, nullable: true })
+  @Column({ name: 'ddd2', type: 'varchar', length: 4, nullable: true })
   ddd2: string | null;
 
   @Column({ name: 'telefone2', type: 'varchar', length: 10, nullable: true })
   telefone2: string | null;
 
-  @Column({ name: 'ddd_fax', type: 'varchar', length: 3, nullable: true })
+  @Column({ name: 'ddd_fax', type: 'varchar', length: 4, nullable: true })
   dddFax: string | null;
 
   @Column({ name: 'fax', type: 'varchar', length: 10, nullable: true })

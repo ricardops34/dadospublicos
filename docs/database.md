@@ -67,11 +67,11 @@ Dados de cada **filial/unidade** (inclui a matriz como `cnpj_ordem = 0001`).
 | `cep` | varchar(8) | — |
 | `uf` | varchar(2) | — |
 | `municipio` | varchar(4) | FK → munic |
-| `ddd_telefone_1` | varchar(2) | — |
+| `ddd_telefone_1` | varchar(4) | — |
 | `telefone_1` | varchar | — |
-| `ddd_telefone_2` | varchar(2) | — |
+| `ddd_telefone_2` | varchar(4) | — |
 | `telefone_2` | varchar | — |
-| `ddd_fax` | varchar(2) | — |
+| `ddd_fax` | varchar(4) | — |
 | `fax` | varchar | — |
 | `email` | varchar | — |
 | `situacao_especial` | varchar | — |
